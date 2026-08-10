@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+
+# Builds — se regeneran con npm run build / npm run apk
+dist/
+*.apk
+tsconfig.tsbuildinfo
+
+# Android: el proyecto trae su propio .gitignore (android/.gitignore) que
+# cubre build/, local.properties, etc. Esto es lo que queda fuera de ahí.
+android/local.properties
+
+# Config local del harness, no del proyecto
+.claude/settings.local.json
+
+# Sistema
+.DS_Store
+Thumbs.db

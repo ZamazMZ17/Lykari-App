@@ -1,0 +1,321 @@
+/* Sistema de diseño — CLAUDE.md §4. Los tokens son exactos, no se improvisan otros. */
+:root {
+  --ground: #dce0d9;
+  --paper: #f3f5f0;
+  --ink: #151a12;
+  --ink2: #5d6656;
+  --line: #c6ccc0;
+  --pino: #1f4d3f;
+  --ambar: #c98209;
+  --musica: #7b4ea3;
+  --video: #1e6e8c;
+  --negocio: #a66200;
+  --diario: #9c3f5c;
+  --pend: #2f6b4f;
+
+  --sombra: 0 6px 20px rgba(21, 26, 18, 0.22);
+  /* En el APK la WebView ocupa toda la pantalla, incluida la franja del reloj
+     y la de los botones del sistema. Sin estos márgenes el título queda
+     debajo de la hora. En la web valen 0 y no cambian nada. */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+
+  color-scheme: light;
+}
+
+/*
+ * Modo oscuro. Se deriva del claro respetando §4: sigue siendo "negro con
+ * verde dentro" (el fondo no es negro puro), no aparece el rojo, el ámbar
+ * mantiene su único significado, y las cinco secciones conservan un valor y
+ * saturación equivalentes entre sí, solo elevados para leerse sobre lo oscuro.
+ * El tema efectivo lo estampa el JS en data-theme (ver src/lib/tema.ts).
+ */
+:root[data-theme="dark"] {
+  --ground: #12160f;
+  --paper: #1b211a;
+  --ink: #e9ede4;
+  --ink2: #9aa295;
+  --line: #313a2e;
+  --pino: #4a9c7e;
+  --ambar: #e0a02a;
+  --musica: #a683cc;
+  --video: #52a6c4;
+  --negocio: #d18f38;
+  --diario: #c9758f;
+  --pend: #57a37d;
+
+  --sombra: 0 6px 20px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  /* Android infla por su cuenta el texto de los bloques que cree que son
+     lectura larga. Eso rompe los tamaños del sistema de diseño y parte las
+     filas del tablón en varias líneas. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: "Instrument Sans Variable", "Instrument Sans", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--ground);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.disp {
+  font-family: "Fraunces Variable", "Fraunces", Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink2);
+}
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  touch-action: manipulation;
+  padding: 0;
+}
+
+/* `.btn` limpia el fondo, así que un botón que además es tarjeta necesita
+   recuperarlo: si no, gana `.btn` por orden y el botón sale sin relieve. */
+.btn.card {
+  background: var(--paper);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--pino);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  cursor: default;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  color: var(--ink);
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--pino);
+  outline-offset: 1px;
+}
+
+.sheet {
+  animation: up 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+@keyframes up {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.fade {
+  animation: fade 0.18s ease-out;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── la mascota ──────────────────────────────────────────────────── */
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes respirar {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.018, 0.985);
+  }
+}
+@keyframes mecer {
+  0%,
+  100% {
+    transform: rotate(-3.5deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes parpadear {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(0);
+  }
+  95%,
+  97% {
+    transform: scaleY(1);
+  }
+}
+@keyframes orejear {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0);
+  }
+  91% {
+    transform: rotate(-7deg);
+  }
+  94% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes ladear {
+  0%,
+  100% {
+    transform: rotate(-1.2deg);
+  }
+  50% {
+    transform: rotate(1.6deg);
+  }
+}
+@keyframes bufanda {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.f-float {
+  animation: flotar 5.5s ease-in-out infinite;
+}
+/* Los orígenes están en unidades del viewBox del husky (320 × 380). */
+.f-breath {
+  animation: respirar 3.8s ease-in-out infinite;
+  transform-origin: 160px 356px;
+}
+.f-tail {
+  animation: mecer 5s ease-in-out infinite;
+  transform-origin: 240px 318px;
+}
+.f-blink {
+  animation: parpadear 6.2s linear infinite;
+  transform-origin: center top;
+}
+.f-ear {
+  animation: orejear 9s ease-in-out infinite;
+  transform-origin: 96px 118px;
+}
+.f-head {
+  animation: ladear 7s ease-in-out infinite;
+  transform-origin: 160px 244px;
+}
+.f-scarf {
+  animation: bufanda 4.4s ease-in-out infinite;
+  transform-origin: 160px 250px;
+}
+
+.girando {
+  animation: giro 1s linear infinite;
+}
+@keyframes giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pulse {
+  animation: p 2.4s ease-in-out infinite;
+}
+@keyframes p {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .pulse,
+  .fade,
+  .girando,
+  .f-float,
+  .f-breath,
+  .f-tail,
+  .f-blink,
+  .f-ear,
+  .f-head,
+  .f-scarf {
+    animation: none;
+  }
+}
+
+.noscroll::-webkit-scrollbar {
+  display: none;
+}
+.noscroll {
+  scrollbar-width: none;
+}

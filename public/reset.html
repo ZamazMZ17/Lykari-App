@@ -1,0 +1,51 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Empezar de cero — Lykari</title>
+<body
+  style="
+    font-family: system-ui, sans-serif;
+    background: #dce0d9;
+    color: #151a12;
+    margin: 0;
+    padding: 32px 24px;
+    line-height: 1.55;
+  "
+>
+  <h1 style="font-size: 20px; margin: 0 0 10px">Borrar todo el registro</h1>
+  <p style="font-size: 14px; color: #5d6656; margin: 0 0 24px">
+    Esto borra las actividades, las sesiones y todo lo guardado en este dispositivo.
+    Es para probar la app desde cero, no para uso normal. No se puede deshacer.
+  </p>
+  <button
+    id="borrar"
+    style="
+      padding: 14px 20px;
+      border: none;
+      border-radius: 14px;
+      background: #1f4d3f;
+      color: #f3f5f0;
+      font: inherit;
+      font-size: 15px;
+    "
+  >
+    Sí, borrar todo
+  </button>
+  <p id="estado" style="font-size: 14px; margin-top: 20px"></p>
+  <script>
+    document.getElementById("borrar").onclick = () => {
+      const estado = document.getElementById("estado");
+      estado.textContent = "Borrando…";
+      const peticion = indexedDB.deleteDatabase("lykari");
+      peticion.onsuccess = () => {
+        estado.innerHTML = 'Listo. <a href="/">Volver a la app</a>';
+      };
+      peticion.onblocked = () => {
+        estado.textContent = "Cierra las otras pestañas de Lykari y vuelve a intentar.";
+      };
+      peticion.onerror = () => {
+        estado.textContent = "No se pudo borrar.";
+      };
+    };
+  </script>
+</body>
