@@ -40,7 +40,9 @@ jobs:
 
       - name: Compilar el APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Renombrar el APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Lykari.apk
