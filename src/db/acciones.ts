@@ -1,5 +1,5 @@
 import { db, type Actividad, type Alcance, type Sesion, type TipoActividad } from "./db";
-import { aISO, diaDe, finDeAlcance, hoyISO, type DiaISO } from "../lib/fecha";
+import { aISO, desdeISO, diaDe, finDeAlcance, hoyISO, type DiaISO } from "../lib/fecha";
 import {
   LIMITE_ENFOQUE,
   estaPausada,
@@ -32,6 +32,21 @@ export async function crearActividad(datos: NuevaActividad): Promise<number> {
 /** Quitar del tablón no borra el historial: las sesiones ya registradas quedan. */
 export async function retirarActividad(id: number): Promise<void> {
   await db.actividades.update(id, { activa: 0 });
+}
+
+/**
+ * Todo lo que se eligió al crear la actividad —incluido el alcance— se puede
+ * cambiar después. El alcance sigue sin ser retroactivo: `hasta` se
+ * recalcula desde el día en que se creó, no desde hoy.
+ */
+export async function actualizarActividad(id: number, datos: NuevaActividad): Promise<void> {
+  const act = await db.actividades.get(id);
+  if (!act) return;
+  await db.actividades.update(id, {
+    ...datos,
+    nombre: datos.nombre.trim(),
+    hasta: finDeAlcance(datos.alcance, desdeISO(act.desde)),
+  });
 }
 
 /**

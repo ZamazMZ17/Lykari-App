@@ -1,6 +1,6 @@
 import { Check, Target } from "lucide-react";
 import { useState } from "react";
-import type { Alcance, TipoActividad } from "../db/db";
+import type { Actividad, Alcance, TipoActividad } from "../db/db";
 import type { NuevaActividad as Datos } from "../db/acciones";
 import { ICONOS, ICONO_POR_DEFECTO } from "../lib/iconos";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
@@ -20,23 +20,30 @@ const TIPOS: [TipoActividad, string, string][] = [
   ],
 ];
 
-export function NuevaActividad({
-  onClose,
-  onCrear,
+/**
+ * Los campos, sin la `Hoja` que los envuelve. Así se puede montar dentro de
+ * una hoja que ya está abierta (ej. el detalle de una actividad pasando a
+ * modo edición) sin abrir una segunda hoja: `useAtras` espera que cada hoja
+ * montada empuje y consuma una sola entrada del historial, y abrir una
+ * segunda encima de la primera sin cerrarla rompe esa cuenta.
+ */
+export function FormularioActividad({
+  inicial,
+  onGuardar,
 }: {
-  onClose: () => void;
-  onCrear: (datos: Datos) => void;
+  inicial?: Actividad;
+  onGuardar: (datos: Datos) => void;
 }) {
-  const [nombre, setNombre] = useState("");
-  const [alcance, setAlcance] = useState<Alcance>("semana");
-  const [tipo, setTipo] = useState<TipoActividad>("enfoque");
-  const [referenciaMin, setReferencia] = useState(30);
-  const [icono, setIcono] = useState(ICONO_POR_DEFECTO);
+  const [nombre, setNombre] = useState(inicial?.nombre ?? "");
+  const [alcance, setAlcance] = useState<Alcance>(inicial?.alcance ?? "semana");
+  const [tipo, setTipo] = useState<TipoActividad>(inicial?.tipo ?? "enfoque");
+  const [referenciaMin, setReferencia] = useState(inicial?.referenciaMin ?? 30);
+  const [icono, setIcono] = useState(inicial?.icono ?? ICONO_POR_DEFECTO);
 
   const listo = nombre.trim().length > 0;
 
   return (
-    <Hoja onClose={onClose} eyebrow="Tablón" titulo="Nueva actividad">
+    <>
       <input
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
@@ -184,10 +191,24 @@ export function NuevaActividad({
 
       <BotonPrincipal
         disabled={!listo}
-        onClick={() => onCrear({ nombre, icono, alcance, referenciaMin, tipo })}
+        onClick={() => onGuardar({ nombre, icono, alcance, referenciaMin, tipo })}
       >
-        Agregar al tablón
+        {inicial ? "Guardar cambios" : "Agregar al tablón"}
       </BotonPrincipal>
+    </>
+  );
+}
+
+export function NuevaActividad({
+  onClose,
+  onGuardar,
+}: {
+  onClose: () => void;
+  onGuardar: (datos: Datos) => void;
+}) {
+  return (
+    <Hoja onClose={onClose} eyebrow="Tablón" titulo="Nueva actividad">
+      <FormularioActividad onGuardar={onGuardar} />
     </Hoja>
   );
 }

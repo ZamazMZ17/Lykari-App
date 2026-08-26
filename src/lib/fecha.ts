@@ -130,6 +130,24 @@ export function mesCorto(iso: DiaISO): string {
   return MESES_CORTOS[desdeISO(iso).getMonth()];
 }
 
+/** Mismo orden que `indiceSemana` (lunes = 0 … domingo = 6). */
+export const NOMBRES_SEMANA = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+];
+export const NOMBRES_SEMANA_CORTOS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+/** El lunes de la semana que contiene `iso` (mismo criterio que el resto de la app). */
+export function lunesDeLaSemana(iso: DiaISO): DiaISO {
+  const d = desdeISO(iso);
+  return aISO(sumarDias(d, -indiceSemana(d)));
+}
+
 /** Milisegundos que faltan para la próxima medianoche. */
 export function msHastaMedianoche(ahora = new Date()): number {
   const m = new Date(ahora);

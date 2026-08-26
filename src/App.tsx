@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Activity, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
+import { Activity, CalendarDays, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
 
-import { db, type Actividad, type Sesion } from "./db/db";
+import { db, type Actividad, type Curso, type Sesion } from "./db/db";
 import {
   actividadesDelTablon,
+  actualizarActividad,
   continuarSesion,
   crearActividad,
   finalizarSesion,
@@ -16,6 +17,13 @@ import {
   sesionesDelDia,
   type NuevaActividad as DatosActividad,
 } from "./db/acciones";
+import {
+  actualizarCurso,
+  crearCurso,
+  cursosActivos,
+  eliminarCurso,
+  type NuevoCurso as DatosCurso,
+} from "./db/cursos";
 import {
   capturasDe,
   capturasSinProcesar,
@@ -35,8 +43,10 @@ import { Hoy } from "./pantallas/Hoy";
 import { Sesion as PantallaSesion } from "./pantallas/Sesion";
 import { NuevaActividad } from "./pantallas/NuevaActividad";
 import { CerrarSesion } from "./pantallas/CerrarSesion";
-import { DetalleActividad, SesionEnCurso } from "./pantallas/HojasCortas";
+import { DetalleActividad, DetalleCurso, SesionEnCurso } from "./pantallas/HojasCortas";
 import { Camino } from "./pantallas/Camino";
+import { Horario } from "./pantallas/Horario";
+import { NuevoCurso } from "./pantallas/NuevoCurso";
 import { Capturar, type Seccion } from "./pantallas/Capturar";
 import { Ideas } from "./pantallas/Ideas";
 import { Diario } from "./pantallas/Diario";
@@ -45,7 +55,7 @@ import { Ajustes } from "./pantallas/Ajustes";
 import { HojaMascota } from "./pantallas/HojaMascota";
 import { Burbuja } from "./ui/Burbuja";
 
-type Tab = "hoy" | "capturar" | "camino";
+type Tab = "hoy" | "capturar" | "camino" | "horario";
 
 type HojaAbierta =
   | { t: "nueva" }
@@ -55,11 +65,14 @@ type HojaAbierta =
   | { t: "autocierre"; nombres: string[] }
   | { t: "ajustes" }
   | { t: "mascota" }
+  | { t: "nuevoCurso" }
+  | { t: "detalleCurso"; curso: Curso }
   | null;
 
 const TABS: [Tab, string, typeof LayoutGrid][] = [
   ["hoy", "Hoy", LayoutGrid],
   ["capturar", "Capturar", Mic],
+  ["horario", "Horario", CalendarDays],
   ["camino", "Camino", Activity],
 ];
 
@@ -94,6 +107,7 @@ export default function App() {
     [],
   );
   const tareas = useLiveQuery(leerTareas, [], []);
+  const cursos = useLiveQuery(cursosActivos, [], []);
 
   const corriendo = !!abierta && !estaPausada(abierta);
   const ahora = useTic(corriendo);
@@ -190,6 +204,12 @@ export default function App() {
     setHoja(null);
   };
 
+  const guardarCurso = async (id: number | undefined, datos: DatosCurso) => {
+    if (id) await actualizarCurso(id, datos);
+    else await crearCurso(datos);
+    setHoja(null);
+  };
+
   /* ── pantalla ──────────────────────────────────────────────────── */
   let pantalla;
   if (enSesion && abierta && actividadAbierta) {
@@ -256,6 +276,15 @@ export default function App() {
     );
   } else if (tab === "camino") {
     pantalla = <Camino tieneKey={tieneKey} amplia={amplia} />;
+  } else if (tab === "horario") {
+    pantalla = (
+      <Horario
+        cursos={cursos ?? []}
+        amplia={amplia}
+        onNuevo={() => setHoja({ t: "nuevoCurso" })}
+        onDetalle={(curso) => setHoja({ t: "detalleCurso", curso })}
+      />
+    );
   } else {
     pantalla = (
       <Hoy
@@ -502,7 +531,23 @@ export default function App() {
         </div>
 
         {hoja?.t === "nueva" && (
-          <NuevaActividad onClose={() => setHoja(null)} onCrear={nueva} />
+          <NuevaActividad onClose={() => setHoja(null)} onGuardar={nueva} />
+        )}
+
+        {hoja?.t === "nuevoCurso" && (
+          <NuevoCurso onClose={() => setHoja(null)} onGuardar={(datos) => void guardarCurso(undefined, datos)} />
+        )}
+
+        {hoja?.t === "detalleCurso" && (
+          <DetalleCurso
+            curso={hoja.curso}
+            onGuardar={(datos) => void guardarCurso(hoja.curso.id, datos)}
+            onEliminar={async () => {
+              await eliminarCurso(hoja.curso.id!);
+              setHoja(null);
+            }}
+            onClose={() => setHoja(null)}
+          />
         )}
 
         {hoja?.t === "ajustes" && (
@@ -533,6 +578,10 @@ export default function App() {
           <DetalleActividad
             act={hoja.act}
             msHoy={resumen.msPorActividad.get(hoja.act.id!) ?? 0}
+            onGuardar={async (datos) => {
+              await actualizarActividad(hoja.act.id!, datos);
+              setHoja(null);
+            }}
             onRetirar={async () => {
               await retirarActividad(hoja.act.id!);
               setHoja(null);
