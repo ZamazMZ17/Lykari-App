@@ -1,12 +1,19 @@
 name: Publicar APK
 
-# Se dispara al empujar un tag "v1.2.3". La pantalla de Ajustes compara la
-# versión instalada contra el último release publicado aquí, así que sin
-# esto el chequeo de actualización no tiene nada real a qué apuntar.
+# Se dispara al empujar un tag "v1.2.3", o a mano desde la pestaña Actions
+# de GitHub (botón "Run workflow") sin necesitar git ni la terminal. La
+# pantalla de Ajustes compara la versión instalada contra el último release
+# publicado aquí, así que sin esto el chequeo de actualización no tiene
+# nada real a qué apuntar.
 on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versión a publicar (ej. 0.1.0). Vacío = la del package.json."
+        required: false
 
 permissions:
   contents: write
@@ -37,8 +44,20 @@ jobs:
       - name: Renombrar el APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Lykari.apk
 
+      - name: Calcular el tag del release
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "nombre=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            version="${{ inputs.version }}"
+            if [ -z "$version" ]; then version=$(node -p "require('./package.json').version"); fi
+            echo "nombre=v$version" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publicar el release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.nombre }}
           files: Lykari.apk
           generate_release_notes: true
