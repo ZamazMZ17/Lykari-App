@@ -136,6 +136,30 @@ export interface Racha {
   diaLibreUsadoEnSemana: DiaISO | null;
 }
 
+/**
+ * Un bloque de horario dentro de la semana de un curso. `dia` usa la misma
+ * convención que `indiceSemana` (lunes = 0 … domingo = 6). Un curso puede
+ * tener varios bloques (ej. lunes y miércoles a horas distintas).
+ */
+export interface BloqueCurso {
+  dia: number;
+  horaInicio: string; // 'HH:MM'
+  horaFin: string; // 'HH:MM'
+  salon?: string;
+}
+
+export interface Curso {
+  id?: number;
+  nombre: string;
+  codigo?: string;
+  /** Rango del ciclo/periodo, ej. del 24-08 al 06-12. */
+  desde: DiaISO;
+  hasta: DiaISO;
+  bloques: BloqueCurso[];
+  activo: Bandera;
+  creada: number;
+}
+
 class BaseLykari extends Dexie {
   actividades!: Table<Actividad, number>;
   sesiones!: Table<Sesion, number>;
@@ -144,6 +168,7 @@ class BaseLykari extends Dexie {
   cierres!: Table<Cierre, string>;
   racha!: Table<Racha, number>;
   ajustes!: Table<Ajuste, string>;
+  cursos!: Table<Curso, number>;
 
   constructor() {
     super("lykari");
@@ -163,6 +188,9 @@ class BaseLykari extends Dexie {
     });
     this.version(3).stores({
       tareas: "++id, vence, hecha, origenCapturaId, origenCierre, caduca",
+    });
+    this.version(4).stores({
+      cursos: "++id, activo, desde, hasta, creada",
     });
   }
 }

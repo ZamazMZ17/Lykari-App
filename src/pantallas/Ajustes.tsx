@@ -1,4 +1,15 @@
-import { Bell, Check, Eye, EyeOff, Loader2, Moon, Sun, SunMoon } from "lucide-react";
+import {
+  Bell,
+  Check,
+  Download,
+  Eye,
+  EyeOff,
+  Loader2,
+  Moon,
+  RotateCcw,
+  Sun,
+  SunMoon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
 import {
@@ -14,6 +25,7 @@ import {
   leerAjuste,
 } from "../ia/ajustes";
 import { procesarPendientes } from "../ia/procesar";
+import { APP_VERSION, buscarActualizacion, type EstadoActualizacion } from "../lib/version";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
 import { Respaldo } from "./Respaldo";
 
@@ -30,7 +42,13 @@ export function Ajustes({
   const [cargado, setCargado] = useState(false);
   const [estado, setEstado] = useState<"quieto" | "guardando" | "listo">("quieto");
   const [avisos, setAvisos] = useState({ disponible: false, concedido: false, programadas: 0 });
+  const [actualizacion, setActualizacion] = useState<EstadoActualizacion>({ estado: "revisando" });
   const { tema } = useTema();
+
+  const revisarActualizacion = () => {
+    setActualizacion({ estado: "revisando" });
+    void buscarActualizacion().then(setActualizacion);
+  };
 
   useEffect(() => {
     void (async () => {
@@ -39,6 +57,7 @@ export function Ajustes({
       setAvisos(await estadoNotificaciones());
       setCargado(true);
     })();
+    revisarActualizacion();
   }, []);
 
   const guardar = async () => {
@@ -194,6 +213,50 @@ export function Ajustes({
           {avisos.disponible
             ? "El diario a las 8:00 pm, y cada pendiente la mañana del día en que vence. Si ya grabaste el diario, ese día no te avisa."
             : "En el navegador no se pueden programar avisos con la app cerrada. Instala el APK para tenerlos."}
+        </p>
+      </div>
+
+      <div className="eyebrow" style={{ marginBottom: 8 }}>
+        Actualizaciones
+      </div>
+      <div className="card" style={{ padding: "12px 14px", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <Download
+            size={16}
+            color={actualizacion.estado === "disponible" ? "var(--pino)" : "var(--ink2)"}
+          />
+          <div style={{ flex: 1, fontSize: 13 }}>
+            {actualizacion.estado === "revisando" && "Buscando…"}
+            {actualizacion.estado === "al-dia" && `Tienes la última versión (v${APP_VERSION})`}
+            {actualizacion.estado === "sin-releases" &&
+              `Estás en v${APP_VERSION}. Todavía no hay releases publicadas en GitHub.`}
+            {actualizacion.estado === "error" && "No se pudo revisar ahora."}
+            {actualizacion.estado === "disponible" && `Hay una versión nueva: v${actualizacion.version}`}
+          </div>
+          {actualizacion.estado === "disponible" ? (
+            <button
+              className="btn chip"
+              onClick={() => window.open(actualizacion.url, "_blank")}
+              style={{ padding: "5px 10px" }}
+            >
+              Descargar
+            </button>
+          ) : (
+            <button
+              className="btn"
+              onClick={revisarActualizacion}
+              disabled={actualizacion.estado === "revisando"}
+              aria-label="Revisar de nuevo"
+              style={{ color: "var(--ink2)", display: "flex" }}
+            >
+              <RotateCcw size={15} className={actualizacion.estado === "revisando" ? "girando" : undefined} />
+            </button>
+          )}
+        </div>
+        <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
+          {actualizacion.estado === "disponible"
+            ? "Descargar te lleva a la página del release en GitHub, donde está el APK."
+            : "Se compara contra los releases publicados en el repositorio de GitHub."}
         </p>
       </div>
 
