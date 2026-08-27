@@ -61,7 +61,8 @@ const CURSOS: CursoSemilla[] = [
       bloques: [
         { dia: 0, horaInicio: "07:00", horaFin: "08:59", salon: "San Miguel · SB709" },
         { dia: 1, horaInicio: "07:00", horaFin: "08:59", salon: "San Miguel · SB310" },
-        { dia: 3, horaInicio: "08:00", horaFin: "09:59", salon: "San Miguel · SD404" },
+        // El bloque de jueves (SD404) era una sesión de recuperación puntual,
+        // no parte del horario semanal fijo del curso.
       ],
     },
     evaluaciones: evaluaciones7("dd-tb"),
