@@ -136,6 +136,7 @@ export function DetalleCurso({
   onClose: () => void;
 }) {
   const [vista, setVista] = useState<VistaCurso>({ t: "ver" });
+  const [confirmando, setConfirmando] = useState(false);
   const evaluaciones = useLiveQuery(() => evaluacionesDeCurso(curso.id!), [curso.id], []);
 
   if (vista.t === "editarCurso") {
@@ -280,25 +281,63 @@ export function DetalleCurso({
           <Pencil size={15} /> Editar curso
         </span>
       </BotonPrincipal>
-      <button
-        className="btn"
-        onClick={onEliminar}
-        style={{
-          width: "100%",
-          padding: "13px 0",
-          marginTop: 8,
-          borderRadius: 14,
-          border: "1px solid var(--line)",
-          color: "var(--ink2)",
-          display: "flex",
-          gap: 8,
-          justifyContent: "center",
-          alignItems: "center",
-          fontSize: 14,
-        }}
-      >
-        <Trash2 size={15} /> Eliminar curso
-      </button>
+
+      {confirmando ? (
+        <div className="card" style={{ marginTop: 8, padding: 14, borderStyle: "dashed" }}>
+          <p style={{ fontSize: 13, color: "var(--ink2)", lineHeight: 1.5, margin: "0 0 12px" }}>
+            Se quita «{curso.nombre}» de todo el horario, no solo de un día. ¿Seguro?
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn"
+              onClick={() => setConfirmando(false)}
+              style={{
+                flex: 1,
+                padding: "11px 0",
+                borderRadius: 12,
+                border: "1px solid var(--line)",
+                fontSize: 13.5,
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn"
+              onClick={onEliminar}
+              style={{
+                flex: 1,
+                padding: "11px 0",
+                borderRadius: 12,
+                border: "1px solid var(--line)",
+                color: "var(--ink2)",
+                fontSize: 13.5,
+              }}
+            >
+              Sí, eliminar curso
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          className="btn"
+          onClick={() => setConfirmando(true)}
+          style={{
+            width: "100%",
+            padding: "13px 0",
+            marginTop: 8,
+            borderRadius: 14,
+            border: "1px solid var(--line)",
+            color: "var(--ink2)",
+            display: "flex",
+            gap: 8,
+            justifyContent: "center",
+            alignItems: "center",
+            fontSize: 14,
+          }}
+        >
+          <Trash2 size={15} /> Eliminar curso
+        </button>
+      )}
     </Hoja>
   );
 }
