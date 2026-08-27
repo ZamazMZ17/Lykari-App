@@ -161,6 +161,7 @@ export function Hoja({
           padding: "18px 20px calc(24px + var(--safe-b))",
           maxHeight: "88%",
           overflowY: "auto",
+          overflowX: "hidden",
           borderTop: "1px solid var(--line)",
         }}
       >
