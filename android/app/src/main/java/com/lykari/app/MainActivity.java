@@ -11,8 +11,6 @@ import android.webkit.WebView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
@@ -37,27 +35,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        fijarBordeABorde();
         responderPermisosDeLaWebView();
         pedirPermisosQueFalten();
         excluirGestoDeAtrasEnLosBordes();
-    }
-
-    /**
-     * Sin esto, Android decide por su cuenta cuándo la barra de gestos de
-     * abajo queda "flotando" (fina, con poco margen real) o "asentada" (más
-     * alta, empujando el layout hacia arriba) — y esa decisión puede cambiar
-     * entre pantallas dentro de la misma app sin que la web tenga control.
-     * Fijar edge-to-edge explícito en la ventana hace que el tamaño que
-     * `env(safe-area-inset-bottom)` le pasa al CSS sea siempre el mismo, en
-     * vez de depender de un comportamiento que varía por fabricante.
-     */
-    private void fijarBordeABorde() {
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        WindowInsetsControllerCompat controlador =
-                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        controlador.setSystemBarsBehavior(
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
     }
 
     /**
