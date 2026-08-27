@@ -25,7 +25,7 @@ android {
     // directamente encima.
     signingConfigs {
         debug {
-            storeFile file('lykari.keystore')
+            storeFile file('../lykari.keystore')
             storePassword 'lykariAPK2026'
             keyAlias 'lykari'
             keyPassword 'lykariAPK2026'
