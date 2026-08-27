@@ -54,10 +54,16 @@
 }
 
 html,
-body,
-#root {
+body {
   height: 100%;
   margin: 0;
+}
+
+#root {
+  /* 100vh como base: si el WebView no soporta dvh, el layout sigue teniendo
+     una altura fija y la navegación no desaparece debajo del contenido. */
+  height: 100vh;
+  height: 100dvh;
 }
 
 html {

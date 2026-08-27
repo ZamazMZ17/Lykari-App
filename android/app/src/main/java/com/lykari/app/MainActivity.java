@@ -11,6 +11,9 @@ import android.webkit.WebView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
@@ -32,12 +35,42 @@ public class MainActivity extends BridgeActivity {
 
     private static final int PERMISOS = 1001;
 
+    private Runnable reinyectarInsets;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        inyectarInsetsEnCSS();
         responderPermisosDeLaWebView();
         pedirPermisosQueFalten();
         excluirGestoDeAtrasEnLosBordes();
+    }
+
+    /**
+     * Android 15+ (API 35) fuerza edge-to-edge: la WebView se extiende detrás
+     * de la barra de navegación del sistema, pero env(safe-area-inset-bottom)
+     * puede devolver 0 en algunas WebView de Android. Sin el inset correcto,
+     * la navegación de la app queda tapada por los botones del sistema.
+     *
+     * Se leen los insets reales del sistema y se inyectan como variables CSS
+     * (--safe-t, --safe-b) directamente en el documento. Se reintenta una vez
+     * con retardo para cubrir el caso de que la página aún no haya cargado.
+     */
+    private void inyectarInsetsEnCSS() {
+        WebView webView = getBridge().getWebView();
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (v, windowInsets) -> {
+            Insets barras = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            float d = getResources().getDisplayMetrics().density;
+            String arriba = String.format(java.util.Locale.US, "%.1f", barras.top / d);
+            String abajo = String.format(java.util.Locale.US, "%.1f", barras.bottom / d);
+            String js = "document.documentElement.style.setProperty('--safe-t','" + arriba + "px');"
+                      + "document.documentElement.style.setProperty('--safe-b','" + abajo + "px');";
+            webView.evaluateJavascript(js, null);
+            if (reinyectarInsets != null) webView.removeCallbacks(reinyectarInsets);
+            reinyectarInsets = () -> webView.evaluateJavascript(js, null);
+            webView.postDelayed(reinyectarInsets, 800);
+            return windowInsets;
+        });
     }
 
     /**

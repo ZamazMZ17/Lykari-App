@@ -376,7 +376,7 @@ export default function App() {
   return (
     <div
       style={{
-        height: "100dvh",
+        height: "100%",
         display: "flex",
         justifyContent: "center",
         background: "var(--ground)",
@@ -387,7 +387,7 @@ export default function App() {
           {
             width: "100%",
             maxWidth: amplia ? 1180 : 560,
-            height: "100dvh",
+            height: "100%",
             position: "relative",
             overflow: "hidden",
             background: "var(--ground)",
