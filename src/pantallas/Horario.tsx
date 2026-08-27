@@ -1,10 +1,12 @@
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Plus } from "lucide-react";
+import { CalendarDays, CalendarClock, ChevronLeft, ChevronRight, MapPin, Plus } from "lucide-react";
 import { useState } from "react";
-import type { Curso } from "../db/db";
+import type { Curso, Evaluacion } from "../db/db";
 import { bloquesDelDia, type BloqueDelDia } from "../db/cursos";
+import { evaluacionesDelDia } from "../db/evaluaciones";
 import {
   aISO,
   desdeISO,
+  fechaCorta,
   fechaLarga,
   hoyISO,
   indiceSemana,
@@ -19,13 +21,22 @@ import { Header, Nota } from "../ui/piezas";
 
 type Vista = "dia" | "semana" | "mes";
 
+export interface ProximaEntrega extends Evaluacion {
+  cursoNombre: string;
+}
+
 export function Horario({
   cursos,
+  evaluaciones,
+  proxima,
   amplia,
   onNuevo,
   onDetalle,
 }: {
   cursos: Curso[];
+  evaluaciones: Evaluacion[];
+  /** La entrega sin rendir más próxima entre todos los cursos, si hay alguna. */
+  proxima?: ProximaEntrega | null;
   amplia?: boolean;
   onNuevo: () => void;
   onDetalle: (curso: Curso) => void;
@@ -55,6 +66,42 @@ export function Horario({
           </button>
         }
       />
+
+      {proxima && (
+        <button
+          className="btn card"
+          onClick={() => {
+            const curso = cursos.find((c) => c.id === proxima.cursoId);
+            if (curso) onDetalle(curso);
+          }}
+          style={{
+            display: "flex",
+            gap: 11,
+            alignItems: "center",
+            textAlign: "left",
+            margin: "0 20px 14px",
+            padding: "12px 14px",
+            width: "calc(100% - 40px)",
+          }}
+        >
+          <CalendarClock size={17} color="var(--pino)" style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="eyebrow" style={{ marginBottom: 2 }}>
+              Próxima entrega · {fechaCorta(proxima.fecha!)}
+            </div>
+            <div
+              style={{
+                fontSize: 13.5,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {proxima.cursoNombre} — {proxima.nombre}
+            </div>
+          </div>
+        </button>
+      )}
 
       <div style={{ display: "flex", gap: 6, padding: "4px 20px 14px" }}>
         {(
@@ -91,7 +138,14 @@ export function Horario({
           horas se dicta cada semana.
         </Nota>
       ) : vista === "dia" ? (
-        <VistaDia sel={sel} hoy={hoy} cursos={cursos} onCambiar={setSel} onDetalle={onDetalle} />
+        <VistaDia
+          sel={sel}
+          hoy={hoy}
+          cursos={cursos}
+          evaluaciones={evaluaciones}
+          onCambiar={setSel}
+          onDetalle={onDetalle}
+        />
       ) : vista === "semana" ? (
         <VistaSemana
           sel={sel}
@@ -103,7 +157,14 @@ export function Horario({
           onDetalle={onDetalle}
         />
       ) : (
-        <VistaMes sel={sel} hoy={hoy} cursos={cursos} onCambiar={setSel} onIrADia={irADia} />
+        <VistaMes
+          sel={sel}
+          hoy={hoy}
+          cursos={cursos}
+          evaluaciones={evaluaciones}
+          onCambiar={setSel}
+          onIrADia={irADia}
+        />
       )}
     </div>
   );
@@ -162,16 +223,19 @@ function VistaDia({
   sel,
   hoy,
   cursos,
+  evaluaciones,
   onCambiar,
   onDetalle,
 }: {
   sel: DiaISO;
   hoy: DiaISO;
   cursos: Curso[];
+  evaluaciones: Evaluacion[];
   onCambiar: (d: DiaISO) => void;
   onDetalle: (c: Curso) => void;
 }) {
   const bloques = bloquesDelDia(cursos, sel);
+  const entregas = evaluacionesDelDia(evaluaciones, sel);
   return (
     <div>
       <NavPeriodo
@@ -181,16 +245,64 @@ function VistaDia({
         onHoy={() => onCambiar(hoy)}
         mostrarHoy={sel !== hoy}
       />
-      {bloques.length === 0 ? (
-        <Nota>No tienes clases este día.</Nota>
+      {bloques.length === 0 && entregas.length === 0 ? (
+        <Nota>No tienes clases ni entregas este día.</Nota>
       ) : (
         <div style={{ padding: "0 20px", display: "grid", gap: 8 }}>
+          {entregas.map((ev) => {
+            const curso = cursos.find((c) => c.id === ev.cursoId);
+            if (!curso) return null;
+            return <FilaEntrega key={`ev-${ev.id}`} ev={ev} curso={curso} onDetalle={onDetalle} />;
+          })}
           {bloques.map((b, i) => (
             <FilaBloque key={i} b={b} onDetalle={onDetalle} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function FilaEntrega({
+  ev,
+  curso,
+  onDetalle,
+}: {
+  ev: Evaluacion;
+  curso: Curso;
+  onDetalle: (c: Curso) => void;
+}) {
+  return (
+    <button
+      className="btn card"
+      onClick={() => onDetalle(curso)}
+      style={{
+        padding: "13px 14px",
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+        textAlign: "left",
+        borderStyle: "dashed",
+      }}
+    >
+      <CalendarClock size={17} color="var(--pino)" style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 14.5,
+            fontWeight: 500,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {ev.nombre}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--ink2)", marginTop: 3 }}>
+          {curso.nombre} · {ev.peso}%{ev.hecha ? " · ya rendida" : ""}
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -349,12 +461,14 @@ function VistaMes({
   sel,
   hoy,
   cursos,
+  evaluaciones,
   onCambiar,
   onIrADia,
 }: {
   sel: DiaISO;
   hoy: DiaISO;
   cursos: Curso[];
+  evaluaciones: Evaluacion[];
   onCambiar: (d: DiaISO) => void;
   onIrADia: (d: DiaISO) => void;
 }) {
@@ -405,7 +519,8 @@ function VistaMes({
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
           {celdas.map((dia, i) => {
             if (!dia) return <div key={i} />;
-            const tieneClases = bloquesDelDia(cursos, dia).length > 0;
+            const tieneAlgo =
+              bloquesDelDia(cursos, dia).length > 0 || evaluacionesDelDia(evaluaciones, dia).length > 0;
             const esHoy = dia === hoy;
             return (
               <button
@@ -430,7 +545,7 @@ function VistaMes({
                     width: 4,
                     height: 4,
                     borderRadius: 999,
-                    background: tieneClases ? "var(--pino)" : "transparent",
+                    background: tieneAlgo ? "var(--pino)" : "transparent",
                   }}
                 />
               </button>

@@ -24,6 +24,7 @@ import {
   eliminarCurso,
   type NuevoCurso as DatosCurso,
 } from "./db/cursos";
+import { proximaEvaluacion, todasConFecha } from "./db/evaluaciones";
 import {
   capturasDe,
   capturasSinProcesar,
@@ -108,6 +109,8 @@ export default function App() {
   );
   const tareas = useLiveQuery(leerTareas, [], []);
   const cursos = useLiveQuery(cursosActivos, [], []);
+  const evaluaciones = useLiveQuery(todasConFecha, [], []);
+  const proxima = useLiveQuery(() => proximaEvaluacion(dia), [dia]);
 
   const corriendo = !!abierta && !estaPausada(abierta);
   const ahora = useTic(corriendo);
@@ -280,6 +283,8 @@ export default function App() {
     pantalla = (
       <Horario
         cursos={cursos ?? []}
+        evaluaciones={evaluaciones ?? []}
+        proxima={proxima}
         amplia={amplia}
         onNuevo={() => setHoja({ t: "nuevoCurso" })}
         onDetalle={(curso) => setHoja({ t: "detalleCurso", curso })}

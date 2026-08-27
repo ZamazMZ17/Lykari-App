@@ -148,6 +148,8 @@ export interface BloqueCurso {
   salon?: string;
 }
 
+export type Modalidad = "presencial" | "semipresencial" | "distancia";
+
 export interface Curso {
   id?: number;
   nombre: string;
@@ -156,7 +158,36 @@ export interface Curso {
   desde: DiaISO;
   hasta: DiaISO;
   bloques: BloqueCurso[];
+  /** Lo que trae el sílabo. Todo opcional: el curso sirve igual sin nada de esto. */
+  nrc?: string;
+  profesor?: string;
+  aad?: string;
+  modalidad?: Modalidad;
+  creditos?: number;
+  /** Texto libre tal como aparece en el sílabo, ej. "NF = 0.10·PC1 + …". Solo
+   *  referencia: la app no evalúa la fórmula, calcula sobre `Evaluacion.peso`. */
+  formulaNota?: string;
   activo: Bandera;
+  creada: number;
+}
+
+/**
+ * Un componente de la nota final (ej. "Práctica Calificada 1", 10%). `peso`
+ * es el porcentaje que ese componente vale sobre el 100% del curso. `nota`
+ * es sobre 20 (escala vigesimal), y solo existe una vez rendida.
+ */
+export interface Evaluacion {
+  id?: number;
+  cursoId: number;
+  nombre: string;
+  peso: number;
+  /** Semana estimada del sílabo, si no hay fecha concreta todavía. */
+  semana?: number;
+  /** Fecha real, cuando ya se sabe. Con ella aparece en Horario. */
+  fecha?: DiaISO;
+  recuperable: boolean;
+  nota?: number;
+  hecha: Bandera;
   creada: number;
 }
 
@@ -169,6 +200,7 @@ class BaseLykari extends Dexie {
   racha!: Table<Racha, number>;
   ajustes!: Table<Ajuste, string>;
   cursos!: Table<Curso, number>;
+  evaluaciones!: Table<Evaluacion, number>;
 
   constructor() {
     super("lykari");
@@ -191,6 +223,10 @@ class BaseLykari extends Dexie {
     });
     this.version(4).stores({
       cursos: "++id, activo, desde, hasta, creada",
+    });
+    // Los campos nuevos de `Curso` (nrc, profesor, modalidad…) no se indexan.
+    this.version(5).stores({
+      evaluaciones: "++id, cursoId, fecha, hecha",
     });
   }
 }

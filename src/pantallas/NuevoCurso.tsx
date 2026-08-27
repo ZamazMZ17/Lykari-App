@@ -1,9 +1,15 @@
-import { Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import { useState } from "react";
-import type { BloqueCurso, Curso } from "../db/db";
+import type { BloqueCurso, Curso, Modalidad } from "../db/db";
 import type { NuevoCurso as Datos } from "../db/cursos";
 import { aISO, hoyISO, NOMBRES_SEMANA_CORTOS } from "../lib/fecha";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
+
+const MODALIDADES: [Modalidad, string][] = [
+  ["presencial", "Presencial"],
+  ["semipresencial", "Semipresencial"],
+  ["distancia", "A distancia"],
+];
 
 const campo: React.CSSProperties = {
   width: "100%",
@@ -35,6 +41,16 @@ export function FormularioCurso({
   const [bloques, setBloques] = useState<BloqueCurso[]>(
     inicial?.bloques && inicial.bloques.length > 0 ? inicial.bloques : [bloqueVacio()],
   );
+
+  const [masDetalles, setMasDetalles] = useState(
+    !!(inicial?.profesor || inicial?.nrc || inicial?.aad || inicial?.modalidad || inicial?.creditos || inicial?.formulaNota),
+  );
+  const [nrc, setNrc] = useState(inicial?.nrc ?? "");
+  const [profesor, setProfesor] = useState(inicial?.profesor ?? "");
+  const [aad, setAad] = useState(inicial?.aad ?? "");
+  const [modalidad, setModalidad] = useState<Modalidad | undefined>(inicial?.modalidad);
+  const [creditos, setCreditos] = useState(inicial?.creditos ?? 0);
+  const [formulaNota, setFormulaNota] = useState(inicial?.formulaNota ?? "");
 
   const cambiarBloque = (i: number, cambios: Partial<BloqueCurso>) => {
     setBloques(bloques.map((b, j) => (j === i ? { ...b, ...cambios } : b)));
@@ -140,6 +156,122 @@ export function FormularioCurso({
         <Plus size={13} /> Agregar horario
       </button>
 
+      <button
+        className="btn"
+        onClick={() => setMasDetalles(!masDetalles)}
+        style={{
+          display: "flex",
+          gap: 6,
+          alignItems: "center",
+          marginBottom: masDetalles ? 14 : 22,
+          fontSize: 13,
+          color: "var(--ink2)",
+        }}
+      >
+        {masDetalles ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        Más detalles del curso
+      </button>
+
+      {masDetalles && (
+        <div style={{ marginBottom: 22 }}>
+          <input
+            value={profesor}
+            onChange={(e) => setProfesor(e.target.value)}
+            placeholder="Profesor (opcional)"
+            style={{ ...campo, marginBottom: 10 }}
+          />
+          <input
+            value={aad}
+            onChange={(e) => setAad(e.target.value)}
+            placeholder="AAD / ayudante (opcional)"
+            style={{ ...campo, marginBottom: 10 }}
+          />
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <input
+              value={nrc}
+              onChange={(e) => setNrc(e.target.value)}
+              placeholder="NRC (opcional)"
+              style={{ ...campo, flex: 1, fontFamily: "'JetBrains Mono Variable', monospace" }}
+            />
+            <div
+              className="card"
+              style={{
+                flex: 1,
+                padding: "0 6px",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <button
+                className="btn"
+                onClick={() => setCreditos(Math.max(0, creditos - 1))}
+                aria-label="Menos un crédito"
+                style={{ width: 26, height: 26, borderRadius: 7, border: "1px solid var(--line)" }}
+              >
+                −
+              </button>
+              <div className="mono" style={{ flex: 1, textAlign: "center", fontSize: 13 }}>
+                {creditos > 0 ? `${creditos} créd.` : "sin créditos"}
+              </div>
+              <button
+                className="btn"
+                onClick={() => setCreditos(creditos + 1)}
+                aria-label="Más un crédito"
+                style={{ width: 26, height: 26, borderRadius: 7, border: "1px solid var(--line)" }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="eyebrow" style={{ marginBottom: 8 }}>
+            Modalidad
+          </div>
+          <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+            {MODALIDADES.map(([k, l]) => (
+              <button
+                key={k}
+                className="btn"
+                onClick={() => setModalidad(modalidad === k ? undefined : k)}
+                aria-pressed={modalidad === k}
+                style={{
+                  flex: 1,
+                  padding: "9px 4px",
+                  borderRadius: 10,
+                  fontSize: 12,
+                  border: `1px solid ${modalidad === k ? "var(--ink)" : "var(--line)"}`,
+                  background: modalidad === k ? "var(--ink)" : "transparent",
+                  color: modalidad === k ? "var(--paper)" : "var(--ink2)",
+                }}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+
+          <div className="eyebrow" style={{ marginBottom: 8 }}>
+            Fórmula de la nota final (opcional)
+          </div>
+          <textarea
+            value={formulaNota}
+            onChange={(e) => setFormulaNota(e.target.value)}
+            placeholder="NF = 0.10·PC1 + 0.10·TB1 + 0.20·EA1 + …"
+            rows={2}
+            style={{
+              ...campo,
+              fontFamily: "'JetBrains Mono Variable', monospace",
+              fontSize: 12.5,
+              resize: "vertical",
+            }}
+          />
+          <p style={{ fontSize: 11.5, color: "var(--ink2)", margin: "6px 0 0", lineHeight: 1.5 }}>
+            Solo como referencia tal cual la trae el sílabo. Las evaluaciones y sus pesos se
+            registran una por una en el detalle del curso, una vez creado.
+          </p>
+        </div>
+      )}
+
       <BotonPrincipal
         disabled={!listo}
         onClick={() =>
@@ -149,6 +281,12 @@ export function FormularioCurso({
             desde,
             hasta,
             bloques,
+            nrc: nrc.trim() || undefined,
+            profesor: profesor.trim() || undefined,
+            aad: aad.trim() || undefined,
+            modalidad,
+            creditos: creditos > 0 ? creditos : undefined,
+            formulaNota: formulaNota.trim() || undefined,
           })
         }
       >
