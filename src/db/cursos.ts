@@ -1,4 +1,4 @@
-import { db, type BloqueCurso, type Curso } from "./db";
+import { db, type BloqueCurso, type Curso, type Modalidad } from "./db";
 import { desdeISO, indiceSemana, type DiaISO } from "../lib/fecha";
 
 export interface NuevoCurso {
@@ -7,13 +7,25 @@ export interface NuevoCurso {
   desde: DiaISO;
   hasta: DiaISO;
   bloques: BloqueCurso[];
+  nrc?: string;
+  profesor?: string;
+  aad?: string;
+  modalidad?: Modalidad;
+  creditos?: number;
+  formulaNota?: string;
 }
+
+const limpiar = (s?: string) => s?.trim() || undefined;
 
 export async function crearCurso(datos: NuevoCurso): Promise<number> {
   return db.cursos.add({
     ...datos,
     nombre: datos.nombre.trim(),
-    codigo: datos.codigo?.trim() || undefined,
+    codigo: limpiar(datos.codigo),
+    nrc: limpiar(datos.nrc),
+    profesor: limpiar(datos.profesor),
+    aad: limpiar(datos.aad),
+    formulaNota: limpiar(datos.formulaNota),
     activo: 1,
     creada: Date.now(),
   });
@@ -23,7 +35,11 @@ export async function actualizarCurso(id: number, datos: NuevoCurso): Promise<vo
   await db.cursos.update(id, {
     ...datos,
     nombre: datos.nombre.trim(),
-    codigo: datos.codigo?.trim() || undefined,
+    codigo: limpiar(datos.codigo),
+    nrc: limpiar(datos.nrc),
+    profesor: limpiar(datos.profesor),
+    aad: limpiar(datos.aad),
+    formulaNota: limpiar(datos.formulaNota),
   });
 }
 

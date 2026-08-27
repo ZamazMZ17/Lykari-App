@@ -1,13 +1,29 @@
-import { AlertTriangle, MapPin, Pencil, Timer, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, MapPin, Pencil, Timer, Trash2 } from "lucide-react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import type { Actividad, Curso } from "../db/db";
+import type { Actividad, Curso, Evaluacion } from "../db/db";
 import type { NuevaActividad as DatosActividad } from "../db/acciones";
 import type { NuevoCurso as DatosCurso } from "../db/cursos";
+import {
+  agregarEvaluacion,
+  actualizarEvaluacion,
+  eliminarEvaluacion,
+  evaluacionesDeCurso,
+  ponerNota,
+  type NuevaEvaluacion,
+} from "../db/evaluaciones";
 import { desdeISO, NOMBRES_SEMANA } from "../lib/fecha";
 import { duracionLarga } from "../lib/tiempo";
 import { FormularioActividad } from "./NuevaActividad";
 import { FormularioCurso } from "./NuevoCurso";
+import { FormularioEvaluacion, ListaEvaluaciones } from "./Evaluaciones";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
+
+const MODALIDAD_LARGA = {
+  presencial: "Presencial",
+  semipresencial: "Semipresencial",
+  distancia: "A distancia",
+} as const;
 
 const ETIQUETA_ALCANCE = {
   hoy: "solo hoy",
@@ -101,6 +117,13 @@ export function DetalleActividad({
   );
 }
 
+type VistaCurso = { t: "ver" } | { t: "editarCurso" } | { t: "evaluacion"; ev?: Evaluacion };
+
+/**
+ * Igual que `DetalleActividad`: ver, editar el curso y agregar/editar una
+ * evaluación viven todos en la misma hoja montada una sola vez, alternando
+ * por estado interno — nunca una hoja nueva encima de esta.
+ */
 export function DetalleCurso({
   curso,
   onGuardar,
@@ -112,9 +135,10 @@ export function DetalleCurso({
   onEliminar: () => void;
   onClose: () => void;
 }) {
-  const [editando, setEditando] = useState(false);
+  const [vista, setVista] = useState<VistaCurso>({ t: "ver" });
+  const evaluaciones = useLiveQuery(() => evaluacionesDeCurso(curso.id!), [curso.id], []);
 
-  if (editando) {
+  if (vista.t === "editarCurso") {
     return (
       <Hoja onClose={onClose} eyebrow="Horario" titulo="Editar curso">
         <FormularioCurso inicial={curso} onGuardar={onGuardar} />
@@ -122,10 +146,67 @@ export function DetalleCurso({
     );
   }
 
+  if (vista.t === "evaluacion") {
+    const volver = () => setVista({ t: "ver" });
+    return (
+      <Hoja
+        onClose={onClose}
+        eyebrow={curso.nombre}
+        titulo={vista.ev ? "Editar evaluación" : "Nueva evaluación"}
+      >
+        <button
+          className="btn"
+          onClick={volver}
+          style={{
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+            marginBottom: 14,
+            fontSize: 12.5,
+            color: "var(--ink2)",
+          }}
+        >
+          <ArrowLeft size={14} /> Volver al curso
+        </button>
+        <FormularioEvaluacion
+          inicial={vista.ev}
+          onGuardar={async (datos: NuevaEvaluacion) => {
+            if (vista.ev) await actualizarEvaluacion(vista.ev.id!, datos);
+            else await agregarEvaluacion(curso.id!, datos);
+            volver();
+          }}
+          onEliminar={
+            vista.ev
+              ? async () => {
+                  await eliminarEvaluacion(vista.ev!.id!);
+                  volver();
+                }
+              : undefined
+          }
+        />
+      </Hoja>
+    );
+  }
+
   return (
     <Hoja onClose={onClose} eyebrow="Curso" titulo={curso.nombre}>
       <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
-        {curso.codigo && <Dato k="Código" v={curso.codigo} />}
+        {(curso.codigo || curso.nrc) && (
+          <Dato k="Código" v={[curso.codigo, curso.nrc].filter(Boolean).join(" · ")} />
+        )}
+        {curso.profesor && <Dato k="Profesor" v={curso.profesor} />}
+        {curso.aad && <Dato k="AAD" v={curso.aad} />}
+        {(curso.modalidad || curso.creditos) && (
+          <Dato
+            k="Modalidad"
+            v={[
+              curso.modalidad && MODALIDAD_LARGA[curso.modalidad],
+              curso.creditos && `${curso.creditos} créditos`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          />
+        )}
         <Dato k="Ciclo" v={`Del ${fechaCorta(curso.desde)} al ${fechaCorta(curso.hasta)}`} />
         <div>
           <div className="eyebrow" style={{ fontSize: 9.5, marginBottom: 6 }}>
@@ -161,11 +242,42 @@ export function DetalleCurso({
             ))}
           </div>
         </div>
+        {curso.formulaNota && (
+          <div>
+            <div className="eyebrow" style={{ fontSize: 9.5, marginBottom: 6 }}>
+              Fórmula de la nota final
+            </div>
+            <div
+              className="mono card"
+              style={{
+                padding: "9px 12px",
+                fontSize: 11.5,
+                color: "var(--ink2)",
+                lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {curso.formulaNota}
+            </div>
+          </div>
+        )}
       </div>
 
-      <BotonPrincipal onClick={() => setEditando(true)}>
+      <div className="eyebrow" style={{ marginBottom: 8 }}>
+        Evaluaciones
+      </div>
+      <div style={{ marginBottom: 20 }}>
+        <ListaEvaluaciones
+          evaluaciones={evaluaciones}
+          onNota={(id, nota) => void ponerNota(id, nota)}
+          onEditar={(ev) => setVista({ t: "evaluacion", ev })}
+          onNueva={() => setVista({ t: "evaluacion" })}
+        />
+      </div>
+
+      <BotonPrincipal onClick={() => setVista({ t: "editarCurso" })}>
         <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-          <Pencil size={15} /> Editar
+          <Pencil size={15} /> Editar curso
         </span>
       </BotonPrincipal>
       <button

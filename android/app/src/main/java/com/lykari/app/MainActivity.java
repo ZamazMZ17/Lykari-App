@@ -2,9 +2,12 @@ package com.lykari.app;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.PermissionRequest;
+import android.webkit.WebView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -13,6 +16,7 @@ import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,6 +37,36 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         responderPermisosDeLaWebView();
         pedirPermisosQueFalten();
+        excluirGestoDeAtrasEnLosBordes();
+    }
+
+    /**
+     * Desde Android 10, deslizar desde los primeros ~24dp del borde izquierdo
+     * o derecho dispara el gesto de "atrás" del sistema, aunque debajo haya
+     * contenido que se desplaza horizontalmente (el riel de Camino, el
+     * selector de íconos al crear una actividad). El sistema decide esto
+     * antes de que el toque llegue a la WebView, así que ningún CSS lo evita.
+     *
+     * La app ya resuelve su propio atrás con el botón físico/gesto —
+     * useAtras en el JS escucha popstate y cierra la hoja de arriba—, así que
+     * no hace falta que el gesto de borde también compita por ese toque:
+     * se excluye toda la WebView.
+     */
+    private void excluirGestoDeAtrasEnLosBordes() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return;
+        WebView webView = getBridge().getWebView();
+        Runnable actualizar =
+                () -> {
+                    int ancho = webView.getWidth();
+                    int alto = webView.getHeight();
+                    if (ancho == 0 || alto == 0) return;
+                    webView.setSystemGestureExclusionRects(
+                            Collections.singletonList(new Rect(0, 0, ancho, alto)));
+                };
+        webView.addOnLayoutChangeListener(
+                (View v, int l, int t, int r, int b, int ol, int ot, int or_, int ob) ->
+                        actualizar.run());
+        webView.post(actualizar);
     }
 
     private void pedirPermisosQueFalten() {
