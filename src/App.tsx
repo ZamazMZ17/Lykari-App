@@ -262,8 +262,6 @@ export default function App() {
     pantalla = (
       <Capturar
         cuentas={cuentas ?? { musica: 0, video: 0, negocio: 0, diario: 0, pendiente: 0 }}
-        sinProcesar={pendientesIA.length}
-        tieneKey={tieneKey}
         onAbrir={setSeccion}
         onAjustes={() => setHoja({ t: "ajustes" })}
       />
@@ -458,6 +456,7 @@ export default function App() {
                   width: 330,
                   flexShrink: 0,
                   overflowY: "auto",
+                  overflowX: "hidden",
                   borderRight: "1px solid var(--line)",
                 }}
               >
@@ -465,8 +464,6 @@ export default function App() {
                   cuentas={
                     cuentas ?? { musica: 0, video: 0, negocio: 0, diario: 0, pendiente: 0 }
                   }
-                  sinProcesar={pendientesIA.length}
-                  tieneKey={tieneKey}
                   seleccion={seccion?.k ?? null}
                   comoLista
                   onAbrir={setSeccion}
@@ -486,7 +483,7 @@ export default function App() {
                 flexDirection: "column",
               }}
             >
-              <div className="noscroll" style={{ flex: 1, overflowY: "auto" }}>
+              <div className="noscroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
                 {pantalla}
               </div>
 

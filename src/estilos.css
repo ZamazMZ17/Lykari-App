@@ -100,6 +100,12 @@ body {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 14px;
+  /* Dentro de una fila flex o grid, un hijo no se achica más allá del ancho
+     de su contenido salvo que se lo digas explícitamente. Un nombre largo
+     (de curso, de actividad) sin esto empuja la tarjeta, la fila y — al no
+     haber dónde más crecer — la pantalla entera, volviéndola deslizable
+     hacia los costados. */
+  min-width: 0;
 }
 
 .btn {
@@ -110,6 +116,7 @@ body {
   color: inherit;
   touch-action: manipulation;
   padding: 0;
+  min-width: 0;
 }
 
 /* `.btn` limpia el fondo, así que un botón que además es tarjeta necesita

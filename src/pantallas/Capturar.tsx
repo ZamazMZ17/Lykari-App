@@ -1,9 +1,7 @@
 import {
-  Bell,
   Briefcase,
   ChevronRight,
   FileText,
-  KeyRound,
   ListTodo,
   Music,
   Settings,
@@ -11,7 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { TipoCaptura } from "../db/db";
-import { Header, Nota } from "../ui/piezas";
+import { Header } from "../ui/piezas";
 
 export interface Seccion {
   k: TipoCaptura;
@@ -68,16 +66,12 @@ export const SECCIONES: Seccion[] = [
 
 export function Capturar({
   cuentas,
-  sinProcesar,
-  tieneKey,
   seleccion,
   comoLista,
   onAbrir,
   onAjustes,
 }: {
   cuentas: Record<TipoCaptura, number>;
-  sinProcesar: number;
-  tieneKey: boolean;
   /** En tablet, la sección abierta se marca en vez de navegar fuera. */
   seleccion?: TipoCaptura | null;
   /** Modo lista lateral: se quitan las explicaciones largas, no caben. */
@@ -142,38 +136,6 @@ export function Capturar({
           </button>
         ))}
       </div>
-
-      {!tieneKey && (
-        <button
-          className="btn card"
-          onClick={onAjustes}
-          style={{
-            margin: "16px 20px 0",
-            padding: 14,
-            display: "flex",
-            gap: 11,
-            alignItems: "center",
-            textAlign: "left",
-            width: "calc(100% - 40px)",
-          }}
-        >
-          <KeyRound size={16} color="var(--ambar)" style={{ flexShrink: 0 }} />
-          <span style={{ flex: 1, fontSize: 12.5, color: "var(--ink2)", lineHeight: 1.5 }}>
-            Falta la API key. Puedes grabar igual: el audio se guarda y se procesa cuando la
-            pongas.
-            {sinProcesar > 0 && ` Hay ${sinProcesar} esperando.`}
-          </span>
-          <ChevronRight size={16} color="var(--ink2)" />
-        </button>
-      )}
-
-      {!comoLista && (
-        <Nota icono={<Bell size={16} color="var(--diario)" style={{ marginTop: 1 }} />}>
-          El diario es lo único que pide constancia: la idea es una nota por noche. Música, video
-          y negocio no avisan, son para cuando aparecen. El recordatorio de las 8:00 pm llega en
-          la fase 3, junto con las alarmas de los pendientes.
-        </Nota>
-      )}
     </div>
   );
 }
