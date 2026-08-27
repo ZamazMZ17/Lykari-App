@@ -441,6 +441,11 @@ export default function App() {
           style={{
             flex: 1,
             minWidth: 0,
+            // Sin esto, el contenedor no se achica por debajo de la altura de
+            // su contenido: con una lista larga en Hoy (11+ actividades) esto
+            // empujaba la nav de abajo fuera del área visible, que el
+            // overflow:hidden del panel padre recortaba sin avisar.
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             paddingTop: amplia ? "var(--safe-t)" : 0,
