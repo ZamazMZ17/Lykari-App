@@ -7,8 +7,8 @@ android {
         applicationId "com.lykari.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "0.2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +16,29 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Antes de esto, cada build (sobre todo en GitHub Actions, que arranca de
+    // una máquina nueva cada vez) firmaba con una debug key generada al azar.
+    // Android no deja instalar una actualización si la firma no coincide con
+    // la ya instalada («INSTALL_FAILED_UPDATE_INCOMPATIBLE»), así que cada
+    // release obligaba a desinstalar antes. Con una key fija y versionada en
+    // el repo, todos los builds firman igual y las actualizaciones instalan
+    // directamente encima.
+    signingConfigs {
+        debug {
+            storeFile file('lykari.keystore')
+            storePassword 'lykariAPK2026'
+            keyAlias 'lykari'
+            keyPassword 'lykariAPK2026'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
 }
