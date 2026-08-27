@@ -249,7 +249,13 @@ export function DetalleCurso({
             </div>
             <div
               className="mono card"
-              style={{ padding: "9px 12px", fontSize: 11.5, color: "var(--ink2)", lineHeight: 1.5 }}
+              style={{
+                padding: "9px 12px",
+                fontSize: 11.5,
+                color: "var(--ink2)",
+                lineHeight: 1.5,
+                whiteSpace: "pre-wrap",
+              }}
             >
               {curso.formulaNota}
             </div>

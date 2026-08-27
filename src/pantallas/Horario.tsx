@@ -1,8 +1,17 @@
-import { CalendarDays, CalendarClock, ChevronLeft, ChevronRight, MapPin, Plus } from "lucide-react";
+import {
+  CalendarDays,
+  CalendarClock,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  MapPin,
+  Plus,
+} from "lucide-react";
 import { useState } from "react";
 import type { Curso, Evaluacion } from "../db/db";
 import { bloquesDelDia, type BloqueDelDia } from "../db/cursos";
 import { evaluacionesDelDia } from "../db/evaluaciones";
+import { sembrarCiclo6 } from "../db/semillaCiclo6";
 import {
   aISO,
   desdeISO,
@@ -133,10 +142,7 @@ export function Horario({
       </div>
 
       {cursos.length === 0 ? (
-        <Nota icono={<CalendarDays size={16} color="var(--ink2)" style={{ marginTop: 2 }} />}>
-          Todavía no agregaste ningún curso. Con «+» pones el nombre, el rango del ciclo y a qué
-          horas se dicta cada semana.
-        </Nota>
+        <EmptyHorario />
       ) : vista === "dia" ? (
         <VistaDia
           sel={sel}
@@ -166,6 +172,37 @@ export function Horario({
           onIrADia={irADia}
         />
       )}
+    </div>
+  );
+}
+
+function EmptyHorario() {
+  const [cargando, setCargando] = useState(false);
+
+  return (
+    <div>
+      <Nota icono={<CalendarDays size={16} color="var(--ink2)" style={{ marginTop: 2 }} />}>
+        Todavía no agregaste ningún curso. Con «+» pones el nombre, el rango del ciclo y a qué
+        horas se dicta cada semana.
+      </Nota>
+      <div style={{ margin: "10px 20px 0" }}>
+        <button
+          className="btn chip"
+          disabled={cargando}
+          onClick={async () => {
+            setCargando(true);
+            try {
+              await sembrarCiclo6();
+            } finally {
+              setCargando(false);
+            }
+          }}
+          style={{ display: "flex", gap: 6, alignItems: "center", padding: "7px 12px" }}
+        >
+          {cargando ? <Loader2 size={12} className="girando" /> : <CalendarClock size={12} />}
+          {cargando ? "Cargando…" : "Cargar mis 5 cursos del ciclo 6"}
+        </button>
+      </div>
     </div>
   );
 }
