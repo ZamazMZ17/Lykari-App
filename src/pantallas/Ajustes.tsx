@@ -1,5 +1,6 @@
 import {
   Bell,
+  CalendarDays,
   Check,
   Download,
   Eye,
@@ -13,6 +14,7 @@ import {
 import { Browser } from "@capacitor/browser";
 import { useEffect, useState } from "react";
 import { esNativo } from "../lib/plataforma";
+import { sembrarCiclo6 } from "../db/semillaCiclo6";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
 import {
   estadoNotificaciones,
@@ -56,7 +58,17 @@ export function Ajustes({
   const [estado, setEstado] = useState<"quieto" | "guardando" | "listo">("quieto");
   const [avisos, setAvisos] = useState({ disponible: false, concedido: false, programadas: 0 });
   const [actualizacion, setActualizacion] = useState<EstadoActualizacion>({ estado: "revisando" });
+  const [cargandoCursos, setCargandoCursos] = useState(false);
   const { tema } = useTema();
+
+  const cargarCursos = async () => {
+    setCargandoCursos(true);
+    try {
+      await sembrarCiclo6();
+    } finally {
+      setCargandoCursos(false);
+    }
+  };
 
   const revisarActualizacion = () => {
     setActualizacion({ estado: "revisando" });
@@ -293,6 +305,28 @@ export function Ajustes({
           "Guardar"
         )}
       </BotonPrincipal>
+
+      <div className="eyebrow" style={{ margin: "20px 0 8px" }}>
+        Ciclo 6
+      </div>
+      <div className="card" style={{ padding: "12px 14px", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <CalendarDays size={16} color="var(--ink2)" />
+          <div style={{ flex: 1, fontSize: 13 }}>Cursos y horarios del ciclo</div>
+          <button
+            className="btn chip"
+            disabled={cargandoCursos}
+            onClick={() => void cargarCursos()}
+            style={{ padding: "5px 10px" }}
+          >
+            {cargandoCursos ? "Cargando…" : "Cargar"}
+          </button>
+        </div>
+        <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
+          Vuelve a cargar los 5 cursos del ciclo. Salta los que ya existan por nombre, así que
+          también sirve para recuperar uno solo si lo borraste sin querer.
+        </p>
+      </div>
 
       <div style={{ height: 1, background: "var(--line)", margin: "24px 0" }} />
 
