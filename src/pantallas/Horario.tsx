@@ -571,7 +571,7 @@ function VistaMes({
                   placeItems: "center",
                   gap: 2,
                   border: `1px solid ${esHoy ? "var(--pino)" : "var(--line)"}`,
-                  background: esHoy ? "rgba(31,77,63,.08)" : "transparent",
+                  background: esHoy ? "var(--tinte-pino)" : "transparent",
                 }}
               >
                 <span className="mono" style={{ fontSize: 12, fontWeight: esHoy ? 700 : 400 }}>

@@ -14,6 +14,18 @@
   --pend: #2f6b4f;
 
   --sombra: 0 6px 20px rgba(21, 26, 18, 0.22);
+  /* Escala de elevación: antes había un solo valor de sombra en toda la
+     app (usado solo en BotonGrabar). Estos tres cubren tarjeta/flotante/hoja
+     por separado — --sombra queda como alias hasta que BotonGrabar migre. */
+  --sombra-tarjeta: 0 1px 3px rgba(21, 26, 18, 0.1), 0 1px 2px rgba(21, 26, 18, 0.06);
+  --sombra-flotante: 0 6px 20px rgba(21, 26, 18, 0.22);
+  --sombra-hoja: 0 -8px 30px rgba(21, 26, 18, 0.18);
+  /* Superficies translúcidas. Referencian --paper/--pino del tema actual, así
+     que no hace falta duplicarlas en el bloque [data-theme="dark"]: siguen el
+     tema solas. */
+  --material-nav: color-mix(in srgb, var(--paper) 78%, transparent);
+  --material-hoja: color-mix(in srgb, var(--paper) 85%, transparent);
+  --tinte-pino: color-mix(in srgb, var(--pino) 8%, transparent);
   /* En el APK la WebView ocupa toda la pantalla, incluida la franja del reloj
      y la de los botones del sistema. Sin estos márgenes el título queda
      debajo de la hora. En la web valen 0 y no cambian nada. */
@@ -21,6 +33,13 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
 
   color-scheme: light;
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root {
+    --material-nav: var(--paper);
+    --material-hoja: var(--paper);
+  }
 }
 
 /*
@@ -45,6 +64,9 @@
   --pend: #57a37d;
 
   --sombra: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --sombra-tarjeta: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --sombra-flotante: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --sombra-hoja: 0 -8px 30px rgba(0, 0, 0, 0.5);
 
   color-scheme: dark;
 }
@@ -86,7 +108,22 @@ body {
 .disp {
   font-family: "Fraunces Variable", "Fraunces", Georgia, serif;
   font-weight: 600;
-  letter-spacing: -0.02em;
+}
+
+/* Tracking sensible al tamaño (skill de diseño Apple, §15): un solo valor
+   fijo para todos los tamaños aprieta de más el texto chico (el diario se
+   lee peor) y se queda corto en los títulos grandes. Combinar con .disp. */
+.disp-27 {
+  letter-spacing: -0.022em;
+}
+.disp-21 {
+  letter-spacing: -0.015em;
+}
+.disp-19 {
+  letter-spacing: -0.01em;
+}
+.disp-15 {
+  letter-spacing: -0.002em;
 }
 
 .mono {
@@ -123,6 +160,13 @@ body {
   touch-action: manipulation;
   padding: 0;
   min-width: 0;
+  transition: transform 100ms ease-out;
+}
+
+/* Responder al presionar, no al soltar (skill de diseño Apple, §1): sin esto
+   ningún botón de la app daba señal hasta completar el click. */
+.btn:active {
+  transform: scale(0.97);
 }
 
 /* `.btn` limpia el fondo, así que un botón que además es tarjeta necesita

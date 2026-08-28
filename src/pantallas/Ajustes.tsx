@@ -98,7 +98,7 @@ export function Ajustes({
               justifyContent: "center",
               alignItems: "center",
               border: `1px solid ${tema === k ? "var(--pino)" : "var(--line)"}`,
-              background: tema === k ? "rgba(31,77,63,.10)" : "transparent",
+              background: tema === k ? "var(--tinte-pino)" : "transparent",
               color: tema === k ? "var(--pino)" : "var(--ink2)",
             }}
           >

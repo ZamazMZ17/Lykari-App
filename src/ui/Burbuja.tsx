@@ -52,6 +52,10 @@ export function Burbuja({
   const [temporal, setTemporal] = useState<{ x: number; y: number } | null>(null);
   const nodo = useRef<HTMLDivElement>(null);
   const inicio = useRef({ x: 0, y: 0, movido: false });
+  // Punto donde se agarró la burbuja, relativo a su esquina — sin esto,
+  // agarrarla de cualquier punto la recentraba bajo el dedo (skill de diseño
+  // Apple, §2: la manipulación directa respeta el offset de agarre).
+  const desplaz = useRef({ x: TAMANO / 2, y: TAMANO / 2 });
 
   useEffect(() => {
     if (guardadaPos !== undefined) setPos(leerPos(guardadaPos));
@@ -78,7 +82,10 @@ export function Burbuja({
       setArrastrando(true);
     }
     if (inicio.current.movido) {
-      setTemporal({ x: e.clientX - caja.left - TAMANO / 2, y: e.clientY - caja.top - TAMANO / 2 });
+      setTemporal({
+        x: e.clientX - caja.left - desplaz.current.x,
+        y: e.clientY - caja.top - desplaz.current.y,
+      });
     }
   };
 
@@ -115,6 +122,10 @@ export function Burbuja({
   const alPresionar = (e: React.PointerEvent) => {
     e.preventDefault();
     inicio.current = { x: e.clientX, y: e.clientY, movido: false };
+    const rect = nodo.current?.getBoundingClientRect();
+    desplaz.current = rect
+      ? { x: e.clientX - rect.left, y: e.clientY - rect.top }
+      : { x: TAMANO / 2, y: TAMANO / 2 };
     window.addEventListener("pointermove", alMover);
     window.addEventListener("pointerup", alSoltar);
     window.addEventListener("pointercancel", alSoltar);

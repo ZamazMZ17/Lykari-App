@@ -189,7 +189,7 @@ export function Camino({ tieneKey, amplia }: { tieneKey: boolean; amplia?: boole
           {/* Sobre el inicio del periodo, no sobre el día que se tocó: una
               semana empieza el lunes aunque hayas tocado el domingo. */}
           <div className="eyebrow">{etiquetaLarga(zoom, rango.desde)}</div>
-          <h3 className="disp" style={{ fontSize: 19, margin: "6px 0 14px", lineHeight: 1.2 }}>
+          <h3 className="disp disp-19" style={{ fontSize: 19, margin: "6px 0 14px", lineHeight: 1.2 }}>
             {msPeriodo > 0
               ? cierre?.resumen || `Registraste ${duracionLarga(msPeriodo)}.`
               : "No hay registro en este periodo."}

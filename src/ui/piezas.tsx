@@ -22,7 +22,7 @@ export function Header({
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="eyebrow">{eyebrow}</div>
-        <h1 className="disp" style={{ fontSize: 27, margin: "3px 0 0", lineHeight: 1.05 }}>
+        <h1 className="disp disp-27" style={{ fontSize: 27, margin: "3px 0 0", lineHeight: 1.05 }}>
           {title}
         </h1>
       </div>
@@ -168,7 +168,7 @@ export function Hoja({
         <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-            <h2 className="disp" style={{ fontSize: 21, margin: "3px 0 0" }}>
+            <h2 className="disp disp-21" style={{ fontSize: 21, margin: "3px 0 0" }}>
               {titulo}
             </h2>
           </div>

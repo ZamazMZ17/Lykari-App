@@ -167,7 +167,7 @@ function Entrada({ captura, tieneKey }: { captura: Captura; tieneKey: boolean })
 
       {captura.descripcion ? (
         <p
-          className="disp"
+          className="disp disp-15"
           style={{
             fontSize: 14.5,
             lineHeight: 1.68,
