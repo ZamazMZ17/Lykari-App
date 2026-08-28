@@ -1,7 +1,19 @@
 import { ArrowLeft, X } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
+import {
+  animate,
+  motion,
+  useDragControls,
+  useMotionValue,
+  useReducedMotion,
+  type PanInfo,
+} from "motion/react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { useAtras } from "../lib/ganchos";
+
+/** Cuánto hay que arrastrar (px) o soltar rápido (px/s) para que el
+ *  arrastre cuente como "cerrar" en vez de volver a su lugar. */
+const CIERRE_PX = 120;
+const CIERRE_VEL = 500;
 
 export function Header({
   eyebrow,
@@ -134,10 +146,61 @@ export function Hoja({
   titulo: string;
   eyebrow?: string;
 }) {
-  useAtras(true, onClose);
   // Con "reducir movimiento", un cross-fade corto en vez del spring de
-  // subida (skill de diseño Apple, §14) — nunca cero feedback.
+  // subida/arrastre (skill de diseño Apple, §14) — nunca cero feedback.
   const sinMovimiento = useReducedMotion();
+  const nodo = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
+  // Un solo valor para entrada, arrastre y salida — todo el movimiento pasa
+  // por acá, nunca se salta de un valor "lógico" a otro (skill, §3).
+  const y = useMotionValue(sinMovimiento ? 0 : 24);
+  // Protegido con useRef (no state): tiene que poder ejecutarse una sola vez
+  // por Hoja, sin importar si lo dispara el botón X, el scrim, el arrastre
+  // confirmado o el atrás de Android — cualquier otra vía desincroniza la
+  // pila de useAtras (ver src/lib/ganchos.ts).
+  const cerrando = useRef(false);
+  const velocidadSuelta = useRef(0);
+
+  const iniciarCierre = useCallback(() => {
+    if (cerrando.current) return;
+    cerrando.current = true;
+    const altura = nodo.current?.offsetHeight ?? 600;
+    animate(
+      y,
+      altura,
+      sinMovimiento
+        ? { duration: 0.2, onComplete: onClose }
+        : {
+            type: "spring",
+            bounce: 0.15,
+            velocity: velocidadSuelta.current,
+            duration: 0.35,
+            onComplete: onClose,
+          },
+    );
+  }, [onClose, sinMovimiento, y]);
+
+  // El atrás/gesto de Android pasa por la misma puerta que el resto: nunca
+  // llama a onClose directamente.
+  useAtras(true, iniciarCierre);
+
+  useEffect(() => {
+    animate(y, 0, sinMovimiento ? { duration: 0.2 } : { type: "spring", bounce: 0, duration: 0.4 });
+    // Solo al montar: es la animación de entrada, una sola vez.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const alSoltarDrag = (_: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
+    if (info.offset.y > CIERRE_PX || info.velocity.y > CIERRE_VEL) {
+      velocidadSuelta.current = info.velocity.y;
+      iniciarCierre();
+    } else {
+      // No llegó al umbral: vuelve a su lugar. No toca onClose ni el
+      // historial — como si el arrastre nunca hubiera pasado.
+      animate(y, 0, { type: "spring", bounce: 0, duration: 0.3 });
+    }
+  };
+
   return (
     <div
       className="fade"
@@ -150,15 +213,20 @@ export function Hoja({
         justifyContent: "center",
         zIndex: 40,
       }}
-      onClick={onClose}
+      onClick={iniciarCierre}
     >
       <motion.div
+        ref={nodo}
         className="noscroll"
         onClick={(e) => e.stopPropagation()}
-        initial={sinMovimiento ? { opacity: 0 } : { y: 24, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={sinMovimiento ? { duration: 0.2 } : { type: "spring", bounce: 0, duration: 0.4 }}
+        drag={sinMovimiento ? false : "y"}
+        dragControls={dragControls}
+        dragListener={false}
+        dragConstraints={{ top: 0 }}
+        dragElastic={{ top: 0.15 }}
+        onDragEnd={alSoltarDrag}
         style={{
+          y,
           width: "100%",
           // En tablet la hoja no se estira de borde a borde: un formulario de
           // un metro de ancho no se lee.
@@ -175,6 +243,20 @@ export function Hoja({
           boxShadow: "var(--sombra-hoja)",
         }}
       >
+        {!sinMovimiento && (
+          <div
+            onPointerDown={(e) => dragControls.start(e)}
+            aria-hidden
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              background: "var(--line)",
+              margin: "-6px auto 10px",
+              touchAction: "none",
+            }}
+          />
+        )}
         <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {eyebrow && <div className="eyebrow">{eyebrow}</div>}
@@ -182,7 +264,7 @@ export function Hoja({
               {titulo}
             </h2>
           </div>
-          <button className="btn" onClick={onClose} aria-label="Cerrar">
+          <button className="btn" onClick={iniciarCierre} aria-label="Cerrar">
             <X size={20} />
           </button>
         </div>
