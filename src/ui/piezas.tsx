@@ -1,5 +1,5 @@
 import { ArrowLeft, X } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { useAtras } from "../lib/ganchos";
 
@@ -135,6 +135,9 @@ export function Hoja({
   eyebrow?: string;
 }) {
   useAtras(true, onClose);
+  // Con "reducir movimiento", un cross-fade corto en vez del spring de
+  // subida (skill de diseño Apple, §14) — nunca cero feedback.
+  const sinMovimiento = useReducedMotion();
   return (
     <div
       className="fade"
@@ -149,9 +152,12 @@ export function Hoja({
       }}
       onClick={onClose}
     >
-      <div
-        className="sheet noscroll"
+      <motion.div
+        className="noscroll"
         onClick={(e) => e.stopPropagation()}
+        initial={sinMovimiento ? { opacity: 0 } : { y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={sinMovimiento ? { duration: 0.2 } : { type: "spring", bounce: 0, duration: 0.4 }}
         style={{
           width: "100%",
           // En tablet la hoja no se estira de borde a borde: un formulario de
@@ -181,7 +187,7 @@ export function Hoja({
           </button>
         </div>
         {children}
-      </div>
+      </motion.div>
     </div>
   );
 }
