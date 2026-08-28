@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { motion } from "motion/react";
 import { Activity, CalendarDays, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
 
 import { db, type Actividad, type Curso, type Sesion } from "./db/db";
@@ -408,7 +409,9 @@ export default function App() {
               width: 92,
               flexShrink: 0,
               borderRight: "1px solid var(--line)",
-              background: "var(--paper)",
+              background: "var(--material-nav)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
               display: "flex",
               flexDirection: "column",
               gap: 4,
@@ -416,10 +419,12 @@ export default function App() {
             }}
           >
             {TABS.map(([k, l, I]) => (
-              <button
+              <motion.button
                 key={k}
                 className="btn"
                 onClick={() => irA(k)}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.15 }}
                 style={{
                   padding: "13px 0",
                   borderRadius: 14,
@@ -432,7 +437,7 @@ export default function App() {
               >
                 <I size={21} strokeWidth={activo(k) ? 2.1 : 1.6} />
                 <span style={{ fontSize: 11, fontWeight: activo(k) ? 600 : 400 }}>{l}</span>
-              </button>
+              </motion.button>
             ))}
           </nav>
         ) : null}
@@ -510,16 +515,20 @@ export default function App() {
               style={{
                 display: "flex",
                 borderTop: "1px solid var(--line)",
-                background: "var(--paper)",
+                background: "var(--material-nav)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
                 paddingBottom: "var(--safe-b)",
                 flexShrink: 0,
               }}
             >
               {TABS.map(([k, l, I]) => (
-                <button
+                <motion.button
                   key={k}
                   className="btn"
                   onClick={() => irA(k)}
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: "spring", bounce: 0, duration: 0.15 }}
                   style={{
                     flex: 1,
                     padding: "11px 0 14px",
@@ -531,7 +540,7 @@ export default function App() {
                 >
                   <I size={20} strokeWidth={activo(k) ? 2.1 : 1.6} />
                   <span style={{ fontSize: 10.5, fontWeight: activo(k) ? 600 : 400 }}>{l}</span>
-                </button>
+                </motion.button>
               ))}
             </nav>
           )}
