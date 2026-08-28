@@ -114,9 +114,9 @@ export function Burbuja({
 
     const elemento = elementoZona();
     const caja = elemento?.getBoundingClientRect();
-    setArrastrando(false);
 
     if (!inicio.current.movido) {
+      setArrastrando(false);
       historial.current = [];
       // Aplazado un tick: si la hoja se monta ahora mismo, el clic que sigue
       // al pointerup cae sobre el botón que acaba de aparecer bajo el dedo.
@@ -124,6 +124,7 @@ export function Burbuja({
       return;
     }
     if (!caja || !elemento) {
+      setArrastrando(false);
       historial.current = [];
       return;
     }
@@ -153,8 +154,6 @@ export function Burbuja({
     const yProyectada = sinMovimiento ? yPuntero : yPuntero + proyectar(vy);
     const lado: Posicion["lado"] = xProyectada < caja.width / 2 ? "izq" : "der";
     const fraccion = Math.min(1, Math.max(0, yProyectada / Math.max(1, caja.height)));
-    setPos({ lado, fraccion });
-    await guardarAjuste(CLAVE_MASCOTA_POS, `${lado}:${fraccion.toFixed(3)}`);
 
     // Punto de reposo en píxeles, calculado igual que el calc() del estilo
     // estático, para animar hacia el mismo lugar exacto donde va a quedar.
@@ -165,6 +164,13 @@ export function Burbuja({
     const xFinal = lado === "izq" ? 12 : caja.width - 12 - TAMANO;
     const yFinal = zonaAlta + altoDisponible * fraccion;
 
+    // Los tres estados cambian juntos, sin ningún await de por medio: si
+    // `pos` ya apuntara al destino nuevo mientras `asentando` sigue en
+    // false (o viceversa), la burbuja pega un salto al estilo estático
+    // antes de que el spring exista, y otro de vuelta al soltarlo — el
+    // glitch que se veía al soltar.
+    setPos({ lado, fraccion });
+    setArrastrando(false);
     setAsentando(true);
     const transicion = sinMovimiento
       ? { duration: 0.2 }
@@ -175,6 +181,9 @@ export function Burbuja({
       velocity: sinMovimiento ? 0 : vy,
       onComplete: () => setAsentando(false),
     });
+
+    // La persistencia no tiene que bloquear la animación.
+    await guardarAjuste(CLAVE_MASCOTA_POS, `${lado}:${fraccion.toFixed(3)}`);
   };
 
   const alPresionar = (e: React.PointerEvent) => {
