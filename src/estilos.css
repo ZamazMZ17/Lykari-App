@@ -13,10 +13,9 @@
   --diario: #9c3f5c;
   --pend: #2f6b4f;
 
-  --sombra: 0 6px 20px rgba(21, 26, 18, 0.22);
   /* Escala de elevación: antes había un solo valor de sombra en toda la
-     app (usado solo en BotonGrabar). Estos tres cubren tarjeta/flotante/hoja
-     por separado — --sombra queda como alias hasta que BotonGrabar migre. */
+     app (usado solo en BotonGrabar). Ahora tarjeta/flotante/hoja van
+     separadas. */
   --sombra-tarjeta: 0 1px 3px rgba(21, 26, 18, 0.1), 0 1px 2px rgba(21, 26, 18, 0.06);
   --sombra-flotante: 0 6px 20px rgba(21, 26, 18, 0.22);
   --sombra-hoja: 0 -8px 30px rgba(21, 26, 18, 0.18);
@@ -26,6 +25,9 @@
   --material-nav: color-mix(in srgb, var(--paper) 78%, transparent);
   --material-hoja: color-mix(in srgb, var(--paper) 85%, transparent);
   --tinte-pino: color-mix(in srgb, var(--pino) 8%, transparent);
+  /* Fijo a propósito, no derivado de --ink: un scrim tiene que oscurecer el
+     fondo en los dos temas, y --ink es claro en modo oscuro. */
+  --scrim: rgba(21, 26, 18, 0.4);
   /* En el APK la WebView ocupa toda la pantalla, incluida la franja del reloj
      y la de los botones del sistema. Sin estos márgenes el título queda
      debajo de la hora. En la web valen 0 y no cambian nada. */
@@ -63,7 +65,6 @@
   --diario: #c9758f;
   --pend: #57a37d;
 
-  --sombra: 0 6px 20px rgba(0, 0, 0, 0.4);
   --sombra-tarjeta: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
   --sombra-flotante: 0 6px 20px rgba(0, 0, 0, 0.4);
   --sombra-hoja: 0 -8px 30px rgba(0, 0, 0, 0.5);
@@ -143,6 +144,7 @@ body {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 14px;
+  box-shadow: var(--sombra-tarjeta);
   /* Dentro de una fila flex o grid, un hijo no se achica más allá del ancho
      de su contenido salvo que se lo digas explícitamente. Un nombre largo
      (de curso, de actividad) sin esto empuja la tarjeta, la fila y — al no

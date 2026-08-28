@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2, Mic, Square, X } from "lucide-react";
+import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { TipoCaptura } from "../db/db";
 import { guardarAudio } from "../db/capturas";
@@ -127,7 +128,7 @@ export function BotonGrabar({
             fontSize: 12.5,
             color: "var(--ink2)",
             maxWidth: "100%",
-            boxShadow: "var(--sombra)",
+            boxShadow: "var(--sombra-flotante)",
           }}
         >
           <AlertTriangle size={14} style={{ flexShrink: 0 }} />
@@ -146,18 +147,20 @@ export function BotonGrabar({
             color: "var(--paper)",
             padding: "10px 14px",
             borderRadius: 999,
-            boxShadow: "var(--sombra)",
+            boxShadow: "var(--sombra-flotante)",
             maxWidth: "100%",
           }}
         >
-          <button
+          <motion.button
             className="btn"
             onClick={() => cancelar()}
             aria-label="Descartar la grabación"
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.15 }}
             style={{ color: "var(--paper)", opacity: 0.75, display: "flex" }}
           >
             <X size={18} />
-          </button>
+          </motion.button>
 
           <div style={{ display: "flex", alignItems: "center", gap: 2.5, height: 26 }}>
             {onda.map((v, i) => (
@@ -178,10 +181,12 @@ export function BotonGrabar({
             {duracionAudio(ms)}
           </span>
 
-          <button
+          <motion.button
             className="btn"
             onClick={() => void terminar()}
             aria-label="Terminar la grabación"
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.15 }}
             style={{
               width: 34,
               height: 34,
@@ -194,14 +199,16 @@ export function BotonGrabar({
             }}
           >
             <Square size={14} fill="currentColor" />
-          </button>
+          </motion.button>
         </div>
       ) : (
-        <button
+        <motion.button
           className="btn"
           disabled={guardando}
           onPointerDown={alPresionar}
           onContextMenu={(e) => e.preventDefault()}
+          whileTap={guardando ? undefined : { scale: 0.95 }}
+          transition={{ type: "spring", bounce: 0, duration: 0.15 }}
           style={{
             display: "flex",
             alignItems: "center",
@@ -210,7 +217,7 @@ export function BotonGrabar({
             color: "var(--paper)",
             padding: "11px 18px 11px 14px",
             borderRadius: 999,
-            boxShadow: "var(--sombra)",
+            boxShadow: "var(--sombra-flotante)",
             touchAction: "none",
             userSelect: "none",
             opacity: guardando ? 0.8 : 1,
@@ -224,7 +231,7 @@ export function BotonGrabar({
           <span style={{ fontSize: 13.5, fontWeight: 500 }}>
             {guardando ? "Guardando…" : label}
           </span>
-        </button>
+        </motion.button>
       )}
     </div>
   );

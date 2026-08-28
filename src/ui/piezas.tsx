@@ -1,4 +1,5 @@
 import { ArrowLeft, X } from "lucide-react";
+import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { useAtras } from "../lib/ganchos";
 
@@ -140,7 +141,7 @@ export function Hoja({
       style={{
         position: "absolute",
         inset: 0,
-        background: "rgba(21,26,18,.4)",
+        background: "var(--scrim)",
         display: "flex",
         alignItems: "flex-end",
         justifyContent: "center",
@@ -156,13 +157,16 @@ export function Hoja({
           // En tablet la hoja no se estira de borde a borde: un formulario de
           // un metro de ancho no se lee.
           maxWidth: 560,
-          background: "var(--paper)",
+          background: "var(--material-hoja)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
           borderRadius: "20px 20px 0 0",
           padding: "18px 20px calc(24px + var(--safe-b))",
           maxHeight: "88%",
           overflowY: "auto",
           overflowX: "hidden",
           borderTop: "1px solid var(--line)",
+          boxShadow: "var(--sombra-hoja)",
         }}
       >
         <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 14 }}>
@@ -192,10 +196,12 @@ export function BotonPrincipal({
   disabled?: boolean;
 }) {
   return (
-    <button
+    <motion.button
       className="btn"
       disabled={disabled}
       onClick={onClick}
+      whileTap={disabled ? undefined : { scale: 0.96 }}
+      transition={{ type: "spring", bounce: 0, duration: 0.15 }}
       style={{
         width: "100%",
         padding: "15px 0",
@@ -207,7 +213,7 @@ export function BotonPrincipal({
       }}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 
