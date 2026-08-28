@@ -169,7 +169,7 @@ export function FormularioActividad({
               padding: "11px 13px",
               borderRadius: 12,
               border: `1px solid ${tipo === k ? "var(--pino)" : "var(--line)"}`,
-              background: tipo === k ? "rgba(31,77,63,.07)" : "transparent",
+              background: tipo === k ? "var(--tinte-pino)" : "transparent",
             }}
           >
             <div

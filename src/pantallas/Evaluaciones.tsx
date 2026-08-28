@@ -117,7 +117,7 @@ export function FilaEvaluacion({
           padding: "8px 0",
           borderRadius: 9,
           border: `1px solid ${ev.hecha ? "var(--pino)" : "var(--line)"}`,
-          background: ev.hecha ? "rgba(31,77,63,.07)" : "var(--ground)",
+          background: ev.hecha ? "var(--tinte-pino)" : "var(--ground)",
           fontSize: 14,
           fontWeight: 700,
         }}
