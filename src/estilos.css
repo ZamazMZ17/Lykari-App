@@ -19,6 +19,11 @@
   --sombra-tarjeta: 0 1px 3px rgba(21, 26, 18, 0.1), 0 1px 2px rgba(21, 26, 18, 0.06);
   --sombra-flotante: 0 6px 20px rgba(21, 26, 18, 0.22);
   --sombra-hoja: 0 -8px 30px rgba(21, 26, 18, 0.18);
+  /* Color/opacidad sueltos de la sombra, para el feDropShadow del husky —
+     un filtro SVG no puede leer los box-shadow de arriba, pero flood-color
+     y flood-opacity sí son propiedades CSS reales y aceptan var(). */
+  --sombra-color: #151a12;
+  --sombra-alfa: 0.28;
   /* Superficies translúcidas. Referencian --paper/--pino del tema actual, así
      que no hace falta duplicarlas en el bloque [data-theme="dark"]: siguen el
      tema solas. */
@@ -68,6 +73,8 @@
   --sombra-tarjeta: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
   --sombra-flotante: 0 6px 20px rgba(0, 0, 0, 0.4);
   --sombra-hoja: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  --sombra-color: #000000;
+  --sombra-alfa: 0.4;
 
   color-scheme: dark;
 }
