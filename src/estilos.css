@@ -208,20 +208,6 @@ textarea:focus-visible {
   outline-offset: 1px;
 }
 
-.sheet {
-  animation: up 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-@keyframes up {
-  from {
-    transform: translateY(14px);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-
 .fade {
   animation: fade 0.18s ease-out;
 }
@@ -357,7 +343,6 @@ textarea:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sheet,
   .pulse,
   .fade,
   .girando,
