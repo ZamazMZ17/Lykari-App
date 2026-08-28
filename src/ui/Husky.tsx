@@ -147,7 +147,16 @@ export function CabezaHusky({
           <path d={CRANEO} />
         </clipPath>
         <filter id={`s${id}`} x="-25%" y="-25%" width="150%" height="150%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#141A1C" floodOpacity=".28" />
+          {/* flood-color/flood-opacity son propiedades CSS reales (no solo
+              atributos SVG): siguen el mismo --sombra-color/-alfa que el
+              resto de la elevación, en vez de un color fijo que ignoraba el
+              tema oscuro. */}
+          <feDropShadow
+            dx="0"
+            dy="4"
+            stdDeviation="5"
+            style={{ floodColor: "var(--sombra-color)", floodOpacity: "var(--sombra-alfa)" }}
+          />
         </filter>
       </defs>
       <g filter={`url(#s${id})`}>
