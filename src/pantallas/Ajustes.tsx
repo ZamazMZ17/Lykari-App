@@ -10,7 +10,9 @@ import {
   Sun,
   SunMoon,
 } from "lucide-react";
+import { Browser } from "@capacitor/browser";
 import { useEffect, useState } from "react";
+import { esNativo } from "../lib/plataforma";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
 import {
   estadoNotificaciones,
@@ -28,6 +30,17 @@ import { procesarPendientes } from "../ia/procesar";
 import { APP_VERSION, buscarActualizacion, type EstadoActualizacion } from "../lib/version";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
 import { Respaldo } from "./Respaldo";
+
+/**
+ * En el APK, `window.open` no abre el navegador del sistema: la WebView de
+ * Capacitor lo bloquea o lo abre como un popup vacío en silencio — por eso
+ * el botón de descargar no llevaba a ningún lado. `@capacitor/browser` sí
+ * lanza el navegador real. En la web (PWA) `window.open` funciona normal.
+ */
+function abrirEnNavegador(url: string): void {
+  if (esNativo) void Browser.open({ url });
+  else window.open(url, "_blank");
+}
 
 export function Ajustes({
   sinProcesar,
@@ -236,7 +249,7 @@ export function Ajustes({
           {actualizacion.estado === "disponible" ? (
             <button
               className="btn chip"
-              onClick={() => window.open(actualizacion.url, "_blank")}
+              onClick={() => abrirEnNavegador(actualizacion.url)}
               style={{ padding: "5px 10px" }}
             >
               Descargar
