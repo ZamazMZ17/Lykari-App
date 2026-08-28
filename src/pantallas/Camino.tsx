@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { KeyRound, LayoutGrid, Loader2, RotateCcw } from "lucide-react";
+import { KeyRound, Loader2, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { db } from "../db/db";
@@ -23,7 +23,7 @@ import {
   type DiaISO,
 } from "../lib/fecha";
 import { HORA, MINUTO, duracionLarga } from "../lib/tiempo";
-import { Anillo, Header, Nota } from "../ui/piezas";
+import { Anillo, Header } from "../ui/piezas";
 
 type Zoom = "dia" | "semana" | "mes";
 
@@ -256,11 +256,6 @@ export function Camino({ tieneKey, amplia }: { tieneKey: boolean; amplia?: boole
           )}
         </div>
       </div>
-
-      <Nota icono={<LayoutGrid size={16} color="var(--ink2)" style={{ marginTop: 2 }} />}>
-        El análisis se arma con lo que registraste. Los días vacíos se muestran vacíos: no se
-        inventa una conclusión sobre lo que no hay.
-      </Nota>
     </div>
   );
 }
