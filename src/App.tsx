@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { motion } from "motion/react";
+import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
 import { Activity, CalendarDays, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
 
 import { db, type Actividad, type Curso, type Sesion } from "./db/db";
@@ -77,6 +77,42 @@ const TABS: [Tab, string, typeof LayoutGrid][] = [
   ["horario", "Horario", CalendarDays],
   ["camino", "Camino", Activity],
 ];
+
+/** Mismo orden que TABS, para saber qué pestaña sigue al deslizar. */
+const ORDEN_TABS: Tab[] = TABS.map(([k]) => k);
+
+/** Menos que esto es un toque, no un intento de deslizar. */
+const TOQUE_PX_SWIPE = 10;
+/** Distancia u velocidad de suelta para comprometerse a cambiar de pestaña. */
+const SWIPE_PX = 90;
+const SWIPE_VEL = 550;
+
+/**
+ * Cuánto "asoma" la pantalla mientras se arrastra, con resistencia
+ * progresiva (skill de diseño Apple, §9) — nunca revela nada real detrás
+ * (solo hay una pantalla montada a la vez), así que el asomo se mantiene
+ * chico a propósito, para dar feedback sin prometer un vecino que no está.
+ */
+function rubberband(overshoot: number, dimension = 60, constante = 0.55): number {
+  return (overshoot * dimension * constante) / (dimension + constante * Math.abs(overshoot));
+}
+
+/**
+ * El riel de Camino (scroll horizontal nativo) tiene que ganar el gesto si
+ * el toque empieza ahí — si no, deslizar el riel cambiaría de pestaña en
+ * vez de recorrer los días.
+ */
+function empiezaEnScrollHorizontal(objetivo: EventTarget | null, limite: HTMLElement | null): boolean {
+  let n = objetivo as HTMLElement | null;
+  while (n && n !== limite) {
+    if (n.scrollWidth > n.clientWidth + 1) {
+      const ejeX = getComputedStyle(n).overflowX;
+      if (ejeX === "auto" || ejeX === "scroll") return true;
+    }
+    n = n.parentElement;
+  }
+  return false;
+}
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("hoy");
@@ -312,6 +348,93 @@ export default function App() {
     setSeccion(null);
   };
 
+  /* ── deslizar para cambiar de pestaña ──────────────────────────────
+   * Solo hay una pantalla montada a la vez, así que esto no es un carrusel
+   * de verdad: el gesto asoma un poco la pantalla actual (con resistencia,
+   * nunca revela nada real) y recién al soltar, si se cruzó el umbral,
+   * anima la salida y — cuando termina — cambia de pestaña y hace entrar
+   * la nueva desde el borde opuesto. Tocar la nav de abajo no pasa por acá
+   * y sigue siendo instantáneo, como siempre. */
+  const xSwipe = useMotionValue(0);
+  const zonaSwipe = useRef<HTMLDivElement>(null);
+  const inicioSwipe = useRef({ x: 0, y: 0, movido: false, permitido: false });
+  const historialSwipe = useRef<{ x: number; t: number }[]>([]);
+  const sinMovimientoSwipe = useReducedMotion();
+  const puedeSwipe = !enSesion && !hoja && !amplia;
+
+  const alMoverSwipe = (e: PointerEvent) => {
+    if (!inicioSwipe.current.permitido) return;
+    const dx = e.clientX - inicioSwipe.current.x;
+    const dy = e.clientY - inicioSwipe.current.y;
+    if (!inicioSwipe.current.movido) {
+      if (Math.abs(dx) < TOQUE_PX_SWIPE && Math.abs(dy) < TOQUE_PX_SWIPE) return;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        // Gesto sobre todo vertical: se lo dejamos al scroll de la pantalla.
+        inicioSwipe.current.permitido = false;
+        return;
+      }
+      inicioSwipe.current.movido = true;
+    }
+    historialSwipe.current.push({ x: e.clientX, t: e.timeStamp });
+    if (historialSwipe.current.length > 5) historialSwipe.current.shift();
+    xSwipe.set(sinMovimientoSwipe ? 0 : rubberband(dx));
+  };
+
+  const alSoltarSwipe = (e: PointerEvent) => {
+    window.removeEventListener("pointermove", alMoverSwipe);
+    window.removeEventListener("pointerup", alSoltarSwipe);
+    window.removeEventListener("pointercancel", alSoltarSwipe);
+
+    if (!inicioSwipe.current.movido) return;
+
+    const h = historialSwipe.current;
+    let v = 0;
+    if (h.length >= 2) {
+      const a = h[0];
+      const b = h[h.length - 1];
+      const dt = Math.max(1, b.t - a.t);
+      v = ((b.x - a.x) / dt) * 1000;
+    }
+    historialSwipe.current = [];
+
+    const dxFinal = e.clientX - inicioSwipe.current.x;
+    const comprometido = !sinMovimientoSwipe && (Math.abs(dxFinal) > SWIPE_PX || Math.abs(v) > SWIPE_VEL);
+    const i = ORDEN_TABS.indexOf(tab);
+    // Arrastre hacia la izquierda (dx negativo) avanza a la siguiente pestaña.
+    const delta = dxFinal < 0 ? 1 : -1;
+    const siguiente = ORDEN_TABS[i + delta];
+
+    if (comprometido && siguiente) {
+      void animate(xSwipe, delta * -220, {
+        type: "spring",
+        bounce: 0,
+        velocity: v,
+        duration: 0.28,
+      }).then(() => {
+        irA(siguiente);
+        xSwipe.set(delta * 220);
+        void animate(xSwipe, 0, { type: "spring", bounce: 0.1, duration: 0.32 });
+      });
+    } else {
+      void animate(xSwipe, 0, { type: "spring", bounce: 0.15, duration: 0.3 });
+    }
+  };
+
+  const alBajarSwipe = (e: React.PointerEvent) => {
+    if (!puedeSwipe) return;
+    const enScrollHorizontal = empiezaEnScrollHorizontal(e.target, zonaSwipe.current);
+    inicioSwipe.current = {
+      x: e.clientX,
+      y: e.clientY,
+      movido: false,
+      permitido: !enScrollHorizontal,
+    };
+    if (enScrollHorizontal) return;
+    window.addEventListener("pointermove", alMoverSwipe);
+    window.addEventListener("pointerup", alSoltarSwipe);
+    window.addEventListener("pointercancel", alSoltarSwipe);
+  };
+
   const barraSesion = abierta && actividadAbierta && !enSesion && (
     <button
       className="btn"
@@ -493,9 +616,20 @@ export default function App() {
                 flexDirection: "column",
               }}
             >
-              <div className="noscroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+              <motion.div
+                ref={zonaSwipe}
+                onPointerDown={alBajarSwipe}
+                className="noscroll"
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  touchAction: puedeSwipe ? "pan-y" : undefined,
+                  x: xSwipe,
+                }}
+              >
                 {pantalla}
-              </div>
+              </motion.div>
 
               {/* Dentro de la app y en las tres pantallas, nunca encima del
                   sistema operativo ni de la pantalla de sesión. */}
