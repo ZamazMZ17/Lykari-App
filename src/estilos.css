@@ -312,6 +312,12 @@ textarea:focus-visible {
 }
 .f-blink {
   animation: parpadear 6.2s linear infinite;
+  /* Sin fill-box, "center top" se calcula contra todo el lienzo del SVG, no
+     contra el párpado — el origen quedaba en el borde superior del dibujo
+     entero (muy por encima de los ojos), así que escalar desde ahí hacía
+     que el párpado pareciera salir disparado desde arriba en cada
+     parpadeo en vez de abrirse y cerrarse en el lugar del ojo. */
+  transform-box: fill-box;
   transform-origin: center top;
 }
 .f-ear {
