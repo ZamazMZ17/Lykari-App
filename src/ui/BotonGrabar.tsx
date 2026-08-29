@@ -1,11 +1,15 @@
-import { AlertTriangle, Loader2, Mic, Square, X } from "lucide-react";
+import { AlertTriangle, Loader2, Mic, PenLine, Square, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { TipoCaptura } from "../db/db";
-import { guardarAudio } from "../db/capturas";
+import { guardarAudio, guardarTexto } from "../db/capturas";
 import { procesarCaptura } from "../ia/procesar";
 import { hayKey } from "../ia/ajustes";
 import { duracionAudio, useGrabadora } from "../lib/grabacion";
+import { BotonPrincipal, Hoja } from "./piezas";
+
+/** Escribir no necesita mucho para ser útil: alcanza con una frase corta. */
+const MINIMO_UTIL_TEXTO = 3;
 
 /** Por debajo de esto, el gesto fue un toque y no un «mantener». */
 const TOQUE_MS = 450;
@@ -17,6 +21,10 @@ const MINIMO_UTIL_MS = 700;
  * aguantas y se guarda al soltar; si tocas, se queda grabando y el siguiente
  * toque la cierra. Aguantar tres minutos para el diario no es razonable, y
  * obligar a dos toques para una idea de seis segundos tampoco.
+ *
+ * Al lado, el botón de escribir: grabar no siempre es posible (lugares con
+ * ruido, un momento en que no se puede hablar en voz alta), y el texto sigue
+ * exactamente el mismo camino que el audio transcripto.
  */
 export function BotonGrabar({
   tipo,
@@ -32,6 +40,8 @@ export function BotonGrabar({
   const { estado, ms, onda, error, iniciar, detener, cancelar } = useGrabadora();
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [escribiendo, setEscribiendo] = useState(false);
+  const [texto, setTexto] = useState("");
   const presion = useRef(0);
   const esperandoSoltar = useRef(false);
 
@@ -50,6 +60,34 @@ export function BotonGrabar({
       const id = await guardarAudio(tipo, grabacion.blob, grabacion.duracionMs);
       onGuardada?.();
       // El audio ya está a salvo. Que la IA falle no puede perderlo.
+      if (await hayKey()) {
+        try {
+          await procesarCaptura(id);
+        } catch (e) {
+          setAviso(e instanceof Error ? e.message : "No se pudo procesar.");
+          setTimeout(() => setAviso(null), 5000);
+        }
+      }
+      onGuardada?.();
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  /**
+   * El mismo destino que un audio: se guarda primero, y recién después se
+   * intenta procesar. Para cuando grabar no es una opción — lugares con
+   * ruido, un momento en que no se puede hablar en voz alta.
+   */
+  const guardarEscrito = async () => {
+    const limpio = texto.trim();
+    if (limpio.length < MINIMO_UTIL_TEXTO) return;
+    setEscribiendo(false);
+    setGuardando(true);
+    try {
+      const id = await guardarTexto(tipo, limpio);
+      setTexto("");
+      onGuardada?.();
       if (await hayKey()) {
         try {
           await procesarCaptura(id);
@@ -202,36 +240,95 @@ export function BotonGrabar({
           </motion.button>
         </div>
       ) : (
-        <motion.button
-          className="btn"
-          disabled={guardando}
-          onPointerDown={alPresionar}
-          onContextMenu={(e) => e.preventDefault()}
-          whileTap={guardando ? undefined : { scale: 0.95 }}
-          transition={{ type: "spring", bounce: 0, duration: 0.15 }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: color,
-            color: "var(--paper)",
-            padding: "11px 18px 11px 14px",
-            borderRadius: 999,
-            boxShadow: "var(--sombra-flotante)",
-            touchAction: "none",
-            userSelect: "none",
-            opacity: guardando ? 0.8 : 1,
-          }}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <motion.button
+            className="btn"
+            disabled={guardando}
+            onClick={() => setEscribiendo(true)}
+            aria-label="Escribir en vez de grabar"
+            whileTap={guardando ? undefined : { scale: 0.92 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.15 }}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 999,
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              background: "var(--paper)",
+              color,
+              border: "1px solid var(--line)",
+              boxShadow: "var(--sombra-flotante)",
+              opacity: guardando ? 0.6 : 1,
+            }}
+          >
+            <PenLine size={18} strokeWidth={1.8} />
+          </motion.button>
+
+          <motion.button
+            className="btn"
+            disabled={guardando}
+            onPointerDown={alPresionar}
+            onContextMenu={(e) => e.preventDefault()}
+            whileTap={guardando ? undefined : { scale: 0.95 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.15 }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: color,
+              color: "var(--paper)",
+              padding: "11px 18px 11px 14px",
+              borderRadius: 999,
+              boxShadow: "var(--sombra-flotante)",
+              touchAction: "none",
+              userSelect: "none",
+              opacity: guardando ? 0.8 : 1,
+            }}
+          >
+            {guardando ? (
+              <Loader2 size={19} className="girando" strokeWidth={1.8} />
+            ) : (
+              <Mic size={19} strokeWidth={1.8} />
+            )}
+            <span style={{ fontSize: 13.5, fontWeight: 500 }}>
+              {guardando ? "Guardando…" : label}
+            </span>
+          </motion.button>
+        </div>
+      )}
+
+      {escribiendo && (
+        <Hoja
+          onClose={() => setEscribiendo(false)}
+          titulo="Escribir en vez de grabar"
+          eyebrow="Cuando no se puede hablar en voz alta"
         >
-          {guardando ? (
-            <Loader2 size={19} className="girando" strokeWidth={1.8} />
-          ) : (
-            <Mic size={19} strokeWidth={1.8} />
-          )}
-          <span style={{ fontSize: 13.5, fontWeight: 500 }}>
-            {guardando ? "Guardando…" : label}
-          </span>
-        </motion.button>
+          <textarea
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            autoFocus
+            placeholder="Lo mismo que dirías en voz alta, escrito…"
+            style={{
+              width: "100%",
+              minHeight: 140,
+              padding: 13,
+              borderRadius: 12,
+              border: "1px solid var(--line)",
+              background: "var(--ground)",
+              fontSize: 14,
+              resize: "none",
+            }}
+          />
+          <div style={{ marginTop: 14 }}>
+            <BotonPrincipal
+              disabled={texto.trim().length < MINIMO_UTIL_TEXTO}
+              onClick={() => void guardarEscrito()}
+            >
+              Guardar
+            </BotonPrincipal>
+          </div>
+        </Hoja>
       )}
     </div>
   );
