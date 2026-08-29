@@ -99,7 +99,8 @@ export function Hoy({
                   display: "flex",
                   gap: 12,
                   alignItems: "center",
-                  borderColor: esActiva ? "var(--ambar)" : "var(--line)",
+                  borderColor: esActiva ? "var(--ambar)" : min > 0 ? "var(--pino)" : "var(--line)",
+                  background: !esActiva && min > 0 ? "var(--tinte-pino)" : "var(--paper)",
                 }}
               >
                 <div className="mono" style={{ fontSize: 11, color: "var(--ink2)", width: 16 }}>
