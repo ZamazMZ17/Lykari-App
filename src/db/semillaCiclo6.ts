@@ -1,4 +1,4 @@
-import { cursosActivos, crearCurso, type NuevoCurso } from "./cursos";
+import { actualizarCurso, cursosActivos, crearCurso, type NuevoCurso } from "./cursos";
 import { agregarEvaluacion, type NuevaEvaluacion } from "./evaluaciones";
 import { crearTarea, tareas } from "./capturas";
 
@@ -61,8 +61,7 @@ const CURSOS: CursoSemilla[] = [
       bloques: [
         { dia: 0, horaInicio: "07:00", horaFin: "08:59", salon: "San Miguel · SB709" },
         { dia: 1, horaInicio: "07:00", horaFin: "08:59", salon: "San Miguel · SB310" },
-        // El bloque de jueves (SD404) era una sesión de recuperación puntual,
-        // no parte del horario semanal fijo del curso.
+        { dia: 3, horaInicio: "08:00", horaFin: "09:59", salon: "San Miguel · SD404" },
       ],
     },
     evaluaciones: evaluaciones7("dd-tb"),
@@ -141,7 +140,7 @@ const CURSOS: CursoSemilla[] = [
         "NF = 0.10·PC1 + 0.10·TB1 + 0.20·EA1 + 0.10·PC2 + 0.15·TB2 + 0.15·DD1 + 0.20·EB1",
       bloques: [
         { dia: 3, horaInicio: "19:00", horaFin: "21:59", salon: "San Miguel · SB606" },
-        { dia: 4, horaInicio: "21:00", horaFin: "22:59", salon: "San Miguel · SB201" },
+        { dia: 4, horaInicio: "21:00", horaFin: "22:59", salon: "San Miguel · SC309" },
       ],
     },
     evaluaciones: evaluaciones7("tb-dd"),
@@ -151,15 +150,22 @@ const CURSOS: CursoSemilla[] = [
 const TEXTO_TAREA = "Entregar Actividad 2 — Prototipo (Diseño de Experimentos en SI)";
 
 /**
- * Crea los 5 cursos si todavía no existen (por nombre, para poder tocar el
- * botón más de una vez sin duplicar) y la única entrega con fecha que ya se
- * conoce. El resto de actividades/exámenes entra como evaluación o pendiente
- * a mano en cuanto el aula virtual las publique.
+ * Crea los 5 cursos si todavía no existen (por nombre) y sincroniza los datos
+ * del horario/sílabo de los que ya existen con lo de acá — así una corrección
+ * a esta semilla (un salón mal tipeado, un bloque que faltaba) le llega al
+ * curso ya cargado con solo volver a tocar el botón, en vez de quedar
+ * pisada para siempre por el chequeo de "ya existe". Las evaluaciones no se
+ * tocan en la sincronización: son otra tabla, y ahí es donde vive la nota
+ * que el dueño ya haya cargado a mano.
  */
 export async function sembrarCiclo6(): Promise<void> {
-  const existentes = new Set((await cursosActivos()).map((c) => c.nombre));
+  const porNombre = new Map((await cursosActivos()).map((c) => [c.nombre, c]));
   for (const { datos, evaluaciones } of CURSOS) {
-    if (existentes.has(datos.nombre)) continue;
+    const existente = porNombre.get(datos.nombre);
+    if (existente) {
+      await actualizarCurso(existente.id!, datos);
+      continue;
+    }
     const id = await crearCurso(datos);
     for (const ev of evaluaciones) await agregarEvaluacion(id, ev);
   }
