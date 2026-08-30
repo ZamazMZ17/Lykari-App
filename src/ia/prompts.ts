@@ -174,6 +174,32 @@ Devuelve:
     Si no dijo ninguna hora, déjalo en null. No inventes horas.`,
 };
 
+/* ── cierre de una sesión ────────────────────────────────────────── */
+
+/**
+ * Solo transcripción, sin título ni descripción: esto no es una idea que
+ * navegar después, es la nota que el cierre del día va a leer directo
+ * (CLAUDE.md §8, `conto` en `ia/cierre.ts`).
+ */
+export const PROMPT_SESION = `${REGLAS}
+
+Este audio es lo que alguien contó justo al terminar una sesión de una
+actividad: qué hizo y cómo le fue.
+
+Devuelve solo:
+- transcripcion: lo que dijo, limpio de muletillas repetidas y pasado a
+  primera persona si hace falta. No lo resumas ni le agregues nada.`;
+
+export const ESQUEMA_SESION: Esquema = {
+  type: "object",
+  properties: { transcripcion: { type: "string" } },
+  required: ["transcripcion"],
+};
+
+export interface RespuestaSesion {
+  transcripcion: string;
+}
+
 /* ── cierre del día ──────────────────────────────────────────────── */
 
 /**

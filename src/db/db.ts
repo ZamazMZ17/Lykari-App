@@ -45,6 +45,8 @@ export interface Sesion {
   transcripcion?: string;
   cerradaAuto: boolean;
   audioPendiente: boolean;
+  /** Último error al transcribir el audio, para poder reintentar en silencio. */
+  error?: string;
 }
 
 export type TipoCaptura = "musica" | "video" | "negocio" | "diario" | "pendiente";

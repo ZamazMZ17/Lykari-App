@@ -24,6 +24,7 @@ import {
 } from "./db/capturas";
 import { hayKey } from "./ia/ajustes";
 import { procesarPendientes } from "./ia/procesar";
+import { procesarSesion, procesarSesionesPendientes } from "./ia/procesarSesion";
 import { cerrarDiasPendientes, limpiarTareasCaducadas } from "./ia/cierre";
 import { reprogramarRecordatorios } from "./notificaciones";
 import { hoyISO, msHastaMedianoche } from "./lib/fecha";
@@ -125,6 +126,7 @@ export default function App() {
     // foco podría quemar la cuota si el proveedor está devolviendo errores.
     void (async () => {
       await procesarPendientes();
+      await procesarSesionesPendientes();
       // No hay cron: el cierre del día ocurre al abrir la app después de
       // medianoche (CLAUDE.md §3).
       await cerrarDiasPendientes();
@@ -179,10 +181,22 @@ export default function App() {
     setEnSesion(true);
   };
 
-  const guardarCierre = async (o: { transcripcion?: string; audioPendiente: boolean }) => {
-    if (abierta) await finalizarSesion(abierta.id!, o);
+  const guardarCierre = async (o: {
+    transcripcion?: string;
+    audioBlob?: Blob;
+    audioPendiente: boolean;
+  }) => {
+    if (!abierta) return;
+    const id = abierta.id!;
+    await finalizarSesion(id, o);
     setHoja(null);
     setEnSesion(false);
+    // El audio ya quedó a salvo en la sesión. Que la transcripción falle no
+    // puede perderlo: procesarSesion deja el error escrito y se reintenta al
+    // volver a abrir la app (procesarSesionesPendientes).
+    if (o.audioBlob && (await hayKey())) {
+      procesarSesion(id).catch(() => {});
+    }
   };
 
   const nueva = async (datos: DatosActividad) => {
