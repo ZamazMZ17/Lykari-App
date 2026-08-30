@@ -49,16 +49,21 @@ export async function actualizarActividad(id: number, datos: NuevaActividad): Pr
   });
 }
 
+const ORDEN_ALCANCE: Record<Alcance, number> = { hoy: 0, semana: 1, mes: 2 };
+
 /**
  * Lo que se ve en el tablón: actividades vivas cuyo alcance cubre el día.
  * Con alcance semana o mes aparecen todos los días del periodo, hayan tenido
  * registro o no. Nunca se marca ninguna como incumplida.
+ * Se agrupan por alcance (hoy, luego semana, luego mes) para que las de
+ * alcance más amplio no se mezclen entre las del día; dentro de cada grupo
+ * se mantiene el orden de creación.
  */
 export async function actividadesDelTablon(dia: DiaISO = hoyISO()): Promise<Actividad[]> {
   const vivas = await db.actividades.where("activa").equals(1).toArray();
   return vivas
     .filter((a) => a.desde <= dia && dia <= a.hasta)
-    .sort((a, b) => a.creada - b.creada);
+    .sort((a, b) => ORDEN_ALCANCE[a.alcance] - ORDEN_ALCANCE[b.alcance] || a.creada - b.creada);
 }
 
 /* ── sesiones ────────────────────────────────────────────────────── */
