@@ -255,9 +255,8 @@ export function ListaEvaluaciones({
     <div>
       <ResumenEvaluaciones evaluaciones={evaluaciones} />
       {evaluaciones.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 12px", lineHeight: 1.5 }}>
-          Todavía no agregaste ninguna evaluación. Cópialas del sílabo: nombre, peso, y la semana o
-          fecha si ya la sabes.
+        <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 12px" }}>
+          Todavía no agregaste ninguna evaluación.
         </p>
       ) : (
         <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>

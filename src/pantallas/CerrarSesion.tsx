@@ -108,12 +108,7 @@ export function CerrarSesion({
       titulo="Antes de cerrar"
       eyebrow={`${act.nombre} · ${duracionLarga(msSesion)}`}
     >
-      <p style={{ fontSize: 13.5, color: "var(--ink2)", lineHeight: 1.55, margin: "0 0 18px" }}>
-        Cuenta qué hiciste y cómo te fue. Sin esto la sesión queda como tiempo vacío y el análisis
-        de la noche no puede decirte nada útil.
-      </p>
-
-      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+      <div style={{ display: "flex", gap: 6, margin: "4px 0 18px" }}>
         {([
           ["audio", "Grabar", Mic],
           ["texto", "Escribir", PenLine],
@@ -265,9 +260,8 @@ export function CerrarSesion({
               >
                 <Mic size={30} strokeWidth={1.6} />
               </button>
-              <div style={{ fontSize: 12.5, color: "var(--ink2)", marginTop: 14, lineHeight: 1.5 }}>
-                Mantenlo presionado mientras hablas, o tócalo una vez y vuelve a tocarlo para
-                terminar.
+              <div style={{ fontSize: 12.5, color: "var(--ink2)", marginTop: 14 }}>
+                Mantén para grabar
               </div>
             </div>
           )}

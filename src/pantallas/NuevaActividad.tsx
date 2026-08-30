@@ -150,11 +150,7 @@ export function FormularioActividad({
           +
         </button>
       </div>
-      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 20px", lineHeight: 1.5 }}>
-        Solo se muestra como marca. No corta la sesión ni cuenta como fallo.
-      </p>
-
-      <div className="eyebrow" style={{ marginBottom: 8 }}>
+      <div className="eyebrow" style={{ margin: "20px 0 8px" }}>
         Si te olvidas de cerrarla
       </div>
       <div style={{ display: "grid", gap: 6, marginBottom: 22 }}>

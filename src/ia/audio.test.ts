@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { codificarWav } from "./audio";
+import { codificarWav, normalizar, recortarSilencio } from "./audio";
+
+/** Un tono, para tener algo que suene de verdad en vez de ruido al azar. */
+const tono = (n: number, amplitud: number) =>
+  Float32Array.from({ length: n }, (_, i) => Math.sin((i / 8) * Math.PI) * amplitud);
+
+const pico = (m: Float32Array) => Math.max(...Array.from(m, Math.abs));
 
 const leerTexto = (v: DataView, pos: number, largo: number) =>
   Array.from({ length: largo }, (_, i) => String.fromCharCode(v.getUint8(pos + i))).join("");
@@ -47,5 +53,70 @@ describe("codificarWav", () => {
 
   it("acepta audio vacío sin romperse", () => {
     expect(codificarWav(new Float32Array(0), 16_000).byteLength).toBe(44);
+  });
+});
+
+describe("normalizar", () => {
+  it("sube una grabación baja hasta el pico de destino", () => {
+    expect(pico(normalizar(tono(400, 0.2)))).toBeCloseTo(0.95, 2);
+  });
+
+  it("baja una grabación pasada de volumen en vez de dejarla recortando", () => {
+    const salida = normalizar(tono(400, 1));
+    expect(pico(salida)).toBeCloseTo(0.95, 2);
+    expect(pico(salida)).toBeLessThan(1);
+  });
+
+  it("no amplifica sin límite: una grabación casi muda no se vuelve siseo", () => {
+    // Sin el tope, un pico de 0.001 se multiplicaría por 950.
+    expect(pico(normalizar(tono(400, 0.001)))).toBeCloseTo(0.008, 3);
+  });
+
+  it("deja el silencio absoluto como está", () => {
+    const mudo = new Float32Array(200);
+    expect(normalizar(mudo)).toBe(mudo);
+  });
+
+  it("no toca lo que ya está en su sitio", () => {
+    const ok = tono(400, 0.95);
+    expect(normalizar(ok)).toBe(ok);
+  });
+});
+
+describe("recortarSilencio", () => {
+  it("quita el aire muerto del principio y del final", () => {
+    // 1 s de silencio · 1 s de voz · 1 s de silencio, a 16 kHz.
+    const m = new Float32Array(48_000);
+    m.set(tono(16_000, 0.5), 16_000);
+
+    const salida = recortarSilencio(m, 16_000);
+    expect(salida.length).toBeLessThan(m.length);
+    // Queda la voz más el margen de 150 ms a cada lado.
+    expect(salida.length).toBeGreaterThanOrEqual(16_000);
+    expect(salida.length).toBeLessThan(16_000 + 2 * 0.15 * 16_000 + 640);
+  });
+
+  it("deja margen antes de la voz, para no comerse la primera palabra", () => {
+    const m = new Float32Array(32_000);
+    m.set(tono(16_000, 0.5), 16_000);
+    // El primer bloque del resultado tiene que seguir siendo silencio.
+    expect(pico(recortarSilencio(m, 16_000).slice(0, 1000))).toBe(0);
+  });
+
+  it("no recorta cuando se habla de punta a punta", () => {
+    const m = tono(16_000, 0.5);
+    expect(recortarSilencio(m, 16_000)).toBe(m);
+  });
+
+  it("con todo en silencio devuelve el audio tal cual, sin dejarlo en nada", () => {
+    const mudo = new Float32Array(16_000);
+    expect(recortarSilencio(mudo, 16_000)).toBe(mudo);
+  });
+
+  it("una grabación entera en voz baja no se borra: el umbral es relativo", () => {
+    const m = new Float32Array(32_000);
+    m.set(tono(16_000, 0.02), 8_000);
+    const salida = recortarSilencio(m, 16_000);
+    expect(salida.length).toBeGreaterThanOrEqual(16_000);
   });
 });

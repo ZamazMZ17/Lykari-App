@@ -64,13 +64,10 @@ export function HojaMascota({ onCamino, onClose }: { onCamino: () => void; onClo
         ))}
       </div>
 
-      <p style={{ fontSize: 12.5, color: "var(--ink2)", lineHeight: 1.55, margin: "0 0 18px" }}>
-        {nudos > 0
-          ? "Cada siete días ganados dejan un nudo en la bufanda. Los nudos no se caen nunca: lo que ya hiciste no se borra por fallar después."
-          : "La bufanda crece con los días registrados. A los siete se le hace el primer nudo, y los nudos ya no se pierden."}
+      <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 18px" }}>
         {racha?.diaLibreUsado
-          ? ` Esta semana ya usaste el día libre (${fechaCorta(racha.diaLibreUsado)}).`
-          : " Tienes un día libre por semana que no rompe nada."}
+          ? `Día libre usado el ${fechaCorta(racha.diaLibreUsado)}.`
+          : "Día libre de esta semana sin usar."}
       </p>
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>
@@ -120,11 +117,6 @@ export function HojaMascota({ onCamino, onClose }: { onCamino: () => void; onClo
           );
         })}
       </div>
-
-      <p style={{ fontSize: 12, color: "var(--ink2)", lineHeight: 1.5, margin: "0 0 16px" }}>
-        La ropa se recalcula cada lunes con lo de esa semana. Si dejas de leer, los lentes se
-        caen: la mascota muestra el presente, no tu mejor mes.
-      </p>
 
       <button
         className="btn card"

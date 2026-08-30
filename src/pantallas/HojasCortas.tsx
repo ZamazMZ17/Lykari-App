@@ -110,8 +110,8 @@ export function DetalleActividad({
       >
         <Trash2 size={15} /> Quitar del tablón
       </button>
-      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "10px 0 0", lineHeight: 1.5 }}>
-        Quitarla no borra nada: el tiempo que ya registraste sigue contando en el camino.
+      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "10px 0 0" }}>
+        El tiempo ya registrado se conserva.
       </p>
     </Hoja>
   );
@@ -375,8 +375,7 @@ export function SesionEnCurso({
   return (
     <Hoja onClose={onClose} eyebrow="Ya hay algo corriendo" titulo={enCurso}>
       <p style={{ fontSize: 13.5, color: "var(--ink2)", lineHeight: 1.55, margin: "0 0 18px" }}>
-        Solo puede correr una sesión a la vez, si no el tiempo se contaría dos veces. Elige qué
-        hacer con «{nueva}».
+        Ya hay una sesión corriendo. Elige qué hacer con «{nueva}».
       </p>
       <BotonPrincipal onClick={onIr}>Ir a la sesión que está corriendo</BotonPrincipal>
       <button

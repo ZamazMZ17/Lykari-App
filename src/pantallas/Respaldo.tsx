@@ -65,8 +65,7 @@ export function Respaldo() {
         Copia de seguridad
       </div>
       <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 12px", lineHeight: 1.5 }}>
-        Para pasar tu registro entre el celular y la tablet. No hay sincronización automática: es
-        una copia que mueves tú. Importar reemplaza lo que haya en este dispositivo.
+        Importar reemplaza lo que haya en este dispositivo.
       </p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>

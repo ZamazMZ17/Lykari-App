@@ -75,8 +75,7 @@ export function Diario({
           <Entrada captura={sel} tieneKey={tieneKey} />
         ) : (
           <Nota icono={<PenLine size={16} color="var(--diario)" style={{ marginTop: 1 }} />}>
-            Todavía no hay ninguna noche escrita. Toca el botón, cuenta cómo te fue y la IA lo
-            deja escrito en primera persona, como si lo hubieras escrito tú.
+            Todavía no hay ninguna noche escrita.
           </Nota>
         )}
 

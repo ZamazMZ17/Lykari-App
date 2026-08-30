@@ -4,7 +4,6 @@ import {
   FileText,
   ListTodo,
   Music,
-  Settings,
   Video,
   type LucideIcon,
 } from "lucide-react";
@@ -69,7 +68,6 @@ export function Capturar({
   seleccion,
   comoLista,
   onAbrir,
-  onAjustes,
 }: {
   cuentas: Record<TipoCaptura, number>;
   /** En tablet, la sección abierta se marca en vez de navegar fuera. */
@@ -77,24 +75,10 @@ export function Capturar({
   /** Modo lista lateral: se quitan las explicaciones largas, no caben. */
   comoLista?: boolean;
   onAbrir: (s: Seccion) => void;
-  onAjustes: () => void;
 }) {
   return (
     <div style={{ paddingBottom: 20 }}>
-      <Header
-        eyebrow="Habla y déjalo ahí"
-        title="Capturar"
-        right={
-          <button
-            className="btn card"
-            onClick={onAjustes}
-            style={{ padding: 9, display: "flex" }}
-            aria-label="Ajustes"
-          >
-            <Settings size={18} />
-          </button>
-        }
-      />
+      <Header eyebrow="Habla y déjalo ahí" title="Capturar" />
 
       <div style={{ padding: "6px 20px 0", display: "grid", gap: 8 }}>
         {SECCIONES.map((s) => (

@@ -137,19 +137,7 @@ export function Ajustes({
           </button>
         ))}
       </div>
-      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 24px", lineHeight: 1.5 }}>
-        «Sistema» sigue lo que tenga puesto tu teléfono.
-      </p>
-
-      <div className="eyebrow" style={{ marginBottom: 8 }}>
-        Inteligencia
-      </div>
-      <p style={{ fontSize: 13.5, color: "var(--ink2)", lineHeight: 1.55, margin: "0 0 18px" }}>
-        La key se guarda solo en este teléfono y va directo al proveedor. Sin ella la app funciona
-        igual: graba y guarda, pero no transcribe ni ordena nada.
-      </p>
-
-      <div className="eyebrow" style={{ marginBottom: 8 }}>
+      <div className="eyebrow" style={{ margin: "24px 0 8px" }}>
         API key de Gemini
       </div>
       <div style={{ position: "relative", marginBottom: 18 }}>
@@ -208,9 +196,8 @@ export function Ajustes({
           marginBottom: 8,
         }}
       />
-      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 20px", lineHeight: 1.5 }}>
-        Por defecto {MODELO_POR_DEFECTO}. Se puede cambiar sin tocar el código, porque los nombres
-        de los modelos cambian cada pocos meses.
+      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 20px" }}>
+        Por defecto {MODELO_POR_DEFECTO}.
       </p>
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>
@@ -240,11 +227,11 @@ export function Ajustes({
             </button>
           )}
         </div>
-        <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
-          {avisos.disponible
-            ? "El diario a las 8:00 pm, y cada pendiente la mañana del día en que vence. Si ya grabaste el diario, ese día no te avisa."
-            : "En el navegador no se pueden programar avisos con la app cerrada. Instala el APK para tenerlos."}
-        </p>
+        {avisos.disponible && (
+          <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
+            Diario a las 8:00 pm y cada pendiente la mañana en que vence.
+          </p>
+        )}
       </div>
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>
@@ -286,11 +273,6 @@ export function Ajustes({
             </button>
           )}
         </div>
-        <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
-          {actualizacion.estado === "disponible"
-            ? "Descargar te lleva a la página del release en GitHub, donde está el APK."
-            : "El repo es privado, así que hace falta el token de abajo para poder revisar los releases."}
-        </p>
       </div>
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>
@@ -332,16 +314,12 @@ export function Ajustes({
         </button>
       </div>
       <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 20px", lineHeight: 1.5 }}>
-        Como el repo es privado, GitHub no deja consultar los releases sin un token. Se crea en
-        GitHub → Settings → Developer settings → Fine-grained tokens, con acceso de solo lectura
-        ("Contents") a este repositorio. Se guarda solo en este teléfono, igual que la API key de
-        arriba.
+        Fine-grained token con permiso de lectura de «Contents» en este repositorio.
       </p>
 
       {sinProcesar > 0 && (
-        <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 16px", lineHeight: 1.5 }}>
-          Hay {sinProcesar} {sinProcesar === 1 ? "grabación esperando" : "grabaciones esperando"}.
-          Al guardar la key se procesan solas.
+        <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 16px" }}>
+          {sinProcesar} {sinProcesar === 1 ? "grabación esperando" : "grabaciones esperando"}.
         </p>
       )}
 
@@ -375,10 +353,6 @@ export function Ajustes({
             {cargandoCursos ? "Cargando…" : "Cargar"}
           </button>
         </div>
-        <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
-          Vuelve a cargar los 5 cursos del ciclo. Salta los que ya existan por nombre, así que
-          también sirve para recuperar uno solo si lo borraste sin querer.
-        </p>
       </div>
 
       <div style={{ height: 1, background: "var(--line)", margin: "24px 0" }} />

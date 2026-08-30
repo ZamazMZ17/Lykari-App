@@ -38,11 +38,7 @@ export function Ideas({
       <Header eyebrow="Capturar" title={seccion.nom} onBack={onBack} />
 
       {items.length === 0 ? (
-        <Nota>
-          Todavía no hay nada aquí. Mantén el botón mientras hablas y suéltalo cuando termines, o
-          tócalo una vez y vuelve a tocarlo para cerrar. La IA le pone un título corto y ordena lo
-          que dijiste.
-        </Nota>
+        <Nota>Todavía no hay nada aquí.</Nota>
       ) : (
         <div style={{ padding: "6px 20px 0", display: "grid", gap: 8 }}>
           {items.map((c) => (
