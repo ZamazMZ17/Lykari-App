@@ -314,7 +314,6 @@ export default function App() {
       <Capturar
         cuentas={cuentas ?? { musica: 0, video: 0, negocio: 0, diario: 0, pendiente: 0 }}
         onAbrir={setSeccion}
-        onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
   } else if (tab === "capturar") {
@@ -322,7 +321,7 @@ export default function App() {
     pantalla = (
       <div style={{ display: "grid", placeItems: "center", height: "100%", padding: 40 }}>
         <p style={{ fontSize: 13.5, color: "var(--ink2)", textAlign: "center", maxWidth: 320 }}>
-          Elige una sección para verla aquí. Cada una guarda lo que digas sin pedirte nada más.
+          Elige una sección.
         </p>
       </div>
     );
@@ -352,6 +351,7 @@ export default function App() {
         onIniciar={iniciar}
         onAlternarPausa={alternarPausa}
         onDetalle={(a) => setHoja({ t: "detalle", act: a })}
+        onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
   }
@@ -614,7 +614,6 @@ export default function App() {
                   seleccion={seccion?.k ?? null}
                   comoLista
                   onAbrir={setSeccion}
-                  onAjustes={() => setHoja({ t: "ajustes" })}
                 />
               </div>
             )}

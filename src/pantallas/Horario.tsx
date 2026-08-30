@@ -182,8 +182,7 @@ function EmptyHorario() {
   return (
     <div>
       <Nota icono={<CalendarDays size={16} color="var(--ink2)" style={{ marginTop: 2 }} />}>
-        Todavía no agregaste ningún curso. Con «+» pones el nombre, el rango del ciclo y a qué
-        horas se dicta cada semana.
+        Todavía no agregaste ningún curso.
       </Nota>
       <div style={{ margin: "10px 20px 0" }}>
         <button

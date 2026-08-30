@@ -265,9 +265,8 @@ export function FormularioCurso({
               resize: "vertical",
             }}
           />
-          <p style={{ fontSize: 11.5, color: "var(--ink2)", margin: "6px 0 0", lineHeight: 1.5 }}>
-            Solo como referencia tal cual la trae el sílabo. Las evaluaciones y sus pesos se
-            registran una por una en el detalle del curso, una vez creado.
+          <p style={{ fontSize: 11.5, color: "var(--ink2)", margin: "6px 0 0" }}>
+            Tal cual la trae el sílabo.
           </p>
         </div>
       )}

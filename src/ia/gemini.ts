@@ -1,4 +1,5 @@
 import type { ConfigIA } from "./ajustes";
+import { LIMITE_INLINE_BYTES } from "./audio";
 
 /**
  * Transporte, nada más. Los prompts viven en `prompts.ts` y el orquestador en
@@ -80,6 +81,11 @@ async function intentar<T>(
 
   const partes: unknown[] = [];
   if (opciones.audio) {
+    // Sin esto, un audio muy largo salía como un error genérico del servidor
+    // y no había forma de saber que el problema era el tamaño.
+    if (opciones.audio.base64.length > LIMITE_INLINE_BYTES) {
+      throw new ErrorIA("El audio es demasiado largo para enviarlo de una vez. Queda guardado.");
+    }
     partes.push({
       inline_data: { mime_type: opciones.audio.mimeType, data: opciones.audio.base64 },
     });

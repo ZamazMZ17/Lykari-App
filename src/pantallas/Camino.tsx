@@ -278,17 +278,14 @@ function AnalisisDelDia({
 
   if (msDia === 0) {
     return (
-      <p style={{ fontSize: 13, color: "var(--ink2)", lineHeight: 1.55, margin: 0 }}>
-        No hay registro de este día. No hay nada que analizar y no se va a suponer nada.
-      </p>
+      <p style={{ fontSize: 13, color: "var(--ink2)", margin: 0 }}>No hay registro de este día.</p>
     );
   }
 
   if (dia === hoy) {
     return (
-      <p style={{ fontSize: 13, color: "var(--ink2)", lineHeight: 1.55, margin: 0 }}>
-        El día todavía no termina. El análisis se escribe solo, la próxima vez que abras la app
-        después de medianoche.
+      <p style={{ fontSize: 13, color: "var(--ink2)", margin: 0 }}>
+        El análisis llega mañana, al abrir la app.
       </p>
     );
   }
@@ -308,9 +305,7 @@ function AnalisisDelDia({
     <div>
       <p style={{ fontSize: 13, color: "var(--ink2)", lineHeight: 1.55, margin: "0 0 12px" }}>
         {cierre?.error ??
-          (tieneKey
-            ? "Este día todavía no tiene análisis."
-            : "Falta la API key. El tiempo ya está registrado; el análisis llega cuando la pongas en Ajustes.")}
+          (tieneKey ? "Este día todavía no tiene análisis." : "Falta la API key.")}
       </p>
       {tieneKey && (
         <button

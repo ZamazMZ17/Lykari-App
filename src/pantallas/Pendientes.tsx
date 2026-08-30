@@ -202,10 +202,7 @@ export function Pendientes({
       </div>
 
       {tareas.length === 0 && sinProcesar.length === 0 && (
-        <Nota>
-          Nada pendiente. Di en voz alta lo que tienes que hacer y sale como tarea, con su fecha
-          si la mencionaste. Es la única sección con fechas: el resto no te persigue.
-        </Nota>
+        <Nota>Nada pendiente.</Nota>
       )}
 
       <BotonGrabar tipo="pendiente" color={seccion.color} label={seccion.label} />

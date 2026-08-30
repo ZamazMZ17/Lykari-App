@@ -1,4 +1,4 @@
-import { Pause, Play, Plus } from "lucide-react";
+import { Pause, Play, Plus, Settings } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
@@ -22,6 +22,7 @@ export function Hoy({
   onIniciar,
   onAlternarPausa,
   onDetalle,
+  onAjustes,
 }: {
   actividades: Actividad[];
   msPorActividad: Map<number, number>;
@@ -34,6 +35,8 @@ export function Hoy({
   onIniciar: (a: Actividad) => void;
   onAlternarPausa: () => void;
   onDetalle: (a: Actividad) => void;
+  /** Ajustes cuelga de la raíz de la app, no de una pestaña intermedia. */
+  onAjustes: () => void;
 }) {
   const franja: [string, string | number][] = [
     ["min registrados", enMinutos(msTotal)],
@@ -47,14 +50,24 @@ export function Hoy({
         eyebrow={fechaLarga()}
         title="Tablón de hoy"
         right={
-          <button
-            className="btn card"
-            onClick={onNueva}
-            style={{ padding: 9, display: "flex" }}
-            aria-label="Agregar actividad"
-          >
-            <Plus size={18} />
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn card"
+              onClick={onAjustes}
+              style={{ padding: 9, display: "flex" }}
+              aria-label="Ajustes"
+            >
+              <Settings size={18} />
+            </button>
+            <button
+              className="btn card"
+              onClick={onNueva}
+              style={{ padding: 9, display: "flex" }}
+              aria-label="Agregar actividad"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         }
       />
 
@@ -72,10 +85,7 @@ export function Hoy({
       </div>
 
       {actividades.length === 0 ? (
-        <Nota>
-          El tablón está vacío. Agrega lo primero que quieras registrar hoy: no hace falta
-          planear la semana entera ni comprometerse con una duración.
-        </Nota>
+        <Nota>El tablón está vacío.</Nota>
       ) : (
         <div
           style={{
@@ -180,11 +190,6 @@ export function Hoy({
           })}
         </div>
       )}
-
-      <p style={{ padding: "16px 20px 0", fontSize: 12, color: "var(--ink2)", lineHeight: 1.5 }}>
-        El tiempo de referencia no corta nada. Si lo pasas, no pasa nada: queda registrado lo que
-        de verdad hiciste.
-      </p>
     </div>
   );
 }
