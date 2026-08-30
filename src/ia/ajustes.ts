@@ -12,6 +12,10 @@ export const CLAVE_MASCOTA_POS = "mascotaPos";
 export const CLAVE_MASCOTA_OCULTA = "mascotaOculta";
 /** Tema elegido: 'claro' | 'oscuro' | 'sistema'. Por defecto sigue al sistema. */
 export const CLAVE_TEMA = "tema";
+/** Token de acceso personal de GitHub, solo para revisar actualizaciones
+ *  (el repo es privado — ver src/lib/version.ts). También vive solo en el
+ *  dispositivo. */
+export const CLAVE_GH_TOKEN = "githubToken";
 
 /**
  * Comprobado contra la API: `gemini-2.5-flash` devuelve 404 con esta key, así
