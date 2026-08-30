@@ -45,6 +45,8 @@ export interface Sesion {
   transcripcion?: string;
   cerradaAuto: boolean;
   audioPendiente: boolean;
+  /** Último error de transcripción, para poder mostrarlo y reintentar. */
+  error?: string;
 }
 
 export type TipoCaptura = "musica" | "video" | "negocio" | "diario" | "pendiente";

@@ -113,6 +113,7 @@ export async function continuarSesion(id: number): Promise<void> {
 
 export interface CierreSesion {
   transcripcion?: string;
+  audioBlob?: Blob;
   audioPendiente?: boolean;
   cerradaAuto?: boolean;
   fin?: number;
@@ -135,6 +136,7 @@ export async function finalizarSesion(
       abierta: 0,
       pausas,
       transcripcion: opciones.transcripcion?.trim() || undefined,
+      audioBlob: opciones.audioBlob,
       audioPendiente: opciones.audioPendiente ?? false,
       cerradaAuto: opciones.cerradaAuto ?? false,
     });
