@@ -119,10 +119,16 @@ for (const [densidad, launcher, adaptativo] of DENSIDADES) {
   const dir = join(RES, `mipmap-${densidad}`);
   await mkdir(dir, { recursive: true });
 
-  await (await png(marca(), launcher)).toFile(join(dir, "ic_launcher.png"));
-
-  await (await png(marca(), launcher))
+  // Se renderiza una sola vez a buffer: llamar .composite() sobre la propia
+  // instancia que ya trae uno adentro (la que arma png(), con la marca
+  // compuesta sobre el fondo) no lo apila — sharp reemplaza la lista de
+  // composites en vez de agregarle, así que el segundo composite() pisaba el
+  // primero y el ícono redondo salía sin dibujo, solo el círculo de fondo.
+  const cuadrado = await (await png(marca(), launcher)).toBuffer();
+  await sharp(cuadrado).toFile(join(dir, "ic_launcher.png"));
+  await sharp(cuadrado)
     .composite([{ input: circulo(launcher), blend: "dest-in" }])
+    .png()
     .toFile(join(dir, "ic_launcher_round.png"));
 
   await (
