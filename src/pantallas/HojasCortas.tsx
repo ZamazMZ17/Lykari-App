@@ -12,7 +12,7 @@ import {
   ponerNota,
   type NuevaEvaluacion,
 } from "../db/evaluaciones";
-import { desdeISO, NOMBRES_SEMANA } from "../lib/fecha";
+import { desdeISO, mesCorto, NOMBRES_SEMANA } from "../lib/fecha";
 import { duracionLarga } from "../lib/tiempo";
 import { FormularioActividad } from "./NuevaActividad";
 import { FormularioCurso } from "./NuevoCurso";
@@ -26,15 +26,15 @@ const MODALIDAD_LARGA = {
 } as const;
 
 const ETIQUETA_ALCANCE = {
-  hoy: "solo hoy",
-  semana: "toda la semana",
-  mes: "todo el mes",
-  siempre: "siempre",
-  personalizado: "este ciclo",
+  hoy: "Hoy",
+  semana: "Semana",
+  mes: "Mes",
+  siempre: "Siempre",
+  personalizado: "Este ciclo",
 } as const;
 
-const fechaCorta = (iso: string) =>
-  desdeISO(iso).toLocaleDateString("es", { day: "numeric", month: "long" });
+/** «31 ago» — para un rango corto, no la fecha explicada en palabras. */
+const fechaCorta = (iso: string) => `${desdeISO(iso).getDate()} ${mesCorto(iso)}`;
 
 /**
  * Ver y editar viven en la misma hoja, alternando por estado interno en vez
@@ -65,27 +65,32 @@ export function DetalleActividad({
     );
   }
 
+  // "siempre" no tiene una fecha de fin real (es un centinela lejano, ver
+  // FIN_INDEFINIDO): mostrarla confundiría, así que solo "semana"/"mes"/
+  // "personalizado" tienen un rango que vale la pena ver.
+  const conRango = act.alcance === "semana" || act.alcance === "mes" || act.alcance === "personalizado";
+  const rango = conRango ? `${fechaCorta(act.desde)}–${fechaCorta(act.hasta)}` : null;
+
   return (
     <Hoja onClose={onClose} eyebrow="Actividad" titulo={act.nombre}>
-      <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
-        <Dato
-          k="En el tablón"
-          v={`${ETIQUETA_ALCANCE[act.alcance]} · del ${fechaCorta(act.desde)} al ${fechaCorta(act.hasta)}`}
-        />
-        <Dato k="Hoy" v={msHoy > 0 ? duracionLarga(msHoy) : "sin registro todavía"} />
-        <Dato
-          k="Referencia"
-          v={act.referenciaMin > 0 ? `${act.referenciaMin} min (solo una marca)` : "sin marca"}
-        />
-        <Dato
-          k="Si te olvidas"
-          v={
-            act.tipo === "enfoque"
-              ? "se cierra sola a las 3 h"
-              : "no se cierra sola, sigue contando"
-          }
-          icono={act.tipo === "enfoque" ? <Timer size={13} /> : <AlertTriangle size={13} />}
-        />
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <Tile eyebrow="Alcance" valor={ETIQUETA_ALCANCE[act.alcance]} sub={rango} />
+        <Tile eyebrow="Hoy" valor={msHoy > 0 ? duracionLarga(msHoy) : "—"} />
+        <Tile eyebrow="Referencia" valor={act.referenciaMin > 0 ? `${act.referenciaMin} min` : "—"} />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          alignItems: "center",
+          marginBottom: 20,
+          fontSize: 12.5,
+          color: "var(--ink2)",
+        }}
+      >
+        {act.tipo === "enfoque" ? <Timer size={13} /> : <AlertTriangle size={13} />}
+        {act.tipo === "enfoque" ? "Cierra sola a las 3 h" : "No se cierra sola"}
       </div>
 
       <BotonPrincipal onClick={() => setEditando(true)}>
@@ -210,7 +215,7 @@ export function DetalleCurso({
               .join(" · ")}
           />
         )}
-        <Dato k="Ciclo" v={`Del ${fechaCorta(curso.desde)} al ${fechaCorta(curso.hasta)}`} />
+        <Dato k="Ciclo" v={`${fechaCorta(curso.desde)}–${fechaCorta(curso.hasta)}`} />
         <div>
           <div className="eyebrow" style={{ fontSize: 9.5, marginBottom: 6 }}>
             Horarios
@@ -341,6 +346,25 @@ export function DetalleCurso({
         </button>
       )}
     </Hoja>
+  );
+}
+
+/** Mismo lenguaje visual que la franja de Hoy: dato corto, no una frase. */
+function Tile({ eyebrow, valor, sub }: { eyebrow: string; valor: string; sub?: string | null }) {
+  return (
+    <div className="card" style={{ flex: 1, padding: "9px 10px", minWidth: 0 }}>
+      <div className="mono" style={{ fontSize: 15, fontWeight: 700 }}>
+        {valor}
+      </div>
+      <div className="eyebrow" style={{ fontSize: 9 }}>
+        {eyebrow}
+      </div>
+      {sub && (
+        <div className="mono" style={{ fontSize: 10, color: "var(--ink2)", marginTop: 2 }}>
+          {sub}
+        </div>
+      )}
+    </div>
   );
 }
 
