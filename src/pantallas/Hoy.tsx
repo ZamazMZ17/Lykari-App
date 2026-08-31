@@ -1,14 +1,16 @@
-import { Pause, Play, Plus, Settings } from "lucide-react";
+import { Pause, Play, Plus } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
 import { enMinutos, estaPausada } from "../lib/tiempo";
-import { Barra, Header, Nota } from "../ui/piezas";
+import { Barra, BotonAjustes, Header, Nota } from "../ui/piezas";
 
 const ETIQUETA_ALCANCE = {
   hoy: "Solo hoy",
   semana: "Esta semana",
   mes: "Este mes",
+  siempre: "Siempre",
+  personalizado: "Este ciclo",
 } as const;
 
 export function Hoy({
@@ -51,14 +53,7 @@ export function Hoy({
         title="Tablón de hoy"
         right={
           <div style={{ display: "flex", gap: 8 }}>
-            <button
-              className="btn card"
-              onClick={onAjustes}
-              style={{ padding: 9, display: "flex" }}
-              aria-label="Ajustes"
-            >
-              <Settings size={18} />
-            </button>
+            <BotonAjustes onClick={onAjustes} />
             <button
               className="btn card"
               onClick={onNueva}

@@ -29,6 +29,8 @@ const ETIQUETA_ALCANCE = {
   hoy: "Hoy",
   semana: "Semana",
   mes: "Mes",
+  siempre: "Siempre",
+  personalizado: "Este ciclo",
 } as const;
 
 /** «31 ago» — para un rango corto, no la fecha explicada en palabras. */
@@ -63,7 +65,11 @@ export function DetalleActividad({
     );
   }
 
-  const rango = act.alcance !== "hoy" ? `${fechaCorta(act.desde)}–${fechaCorta(act.hasta)}` : null;
+  // "siempre" no tiene una fecha de fin real (es un centinela lejano, ver
+  // FIN_INDEFINIDO): mostrarla confundiría, así que solo "semana"/"mes"/
+  // "personalizado" tienen un rango que vale la pena ver.
+  const conRango = act.alcance === "semana" || act.alcance === "mes" || act.alcance === "personalizado";
+  const rango = conRango ? `${fechaCorta(act.desde)}–${fechaCorta(act.hasta)}` : null;
 
   return (
     <Hoja onClose={onClose} eyebrow="Actividad" titulo={act.nombre}>

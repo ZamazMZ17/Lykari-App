@@ -23,7 +23,7 @@ import {
   type DiaISO,
 } from "../lib/fecha";
 import { HORA, MINUTO, duracionLarga } from "../lib/tiempo";
-import { Anillo, Header } from "../ui/piezas";
+import { Anillo, BotonAjustes, Header } from "../ui/piezas";
 
 type Zoom = "dia" | "semana" | "mes";
 
@@ -38,7 +38,15 @@ const COLORES_REPARTO = [
   "var(--pend)",
 ];
 
-export function Camino({ tieneKey, amplia }: { tieneKey: boolean; amplia?: boolean }) {
+export function Camino({
+  tieneKey,
+  amplia,
+  onAjustes,
+}: {
+  tieneKey: boolean;
+  amplia?: boolean;
+  onAjustes: () => void;
+}) {
   const [zoom, setZoom] = useState<Zoom>("dia");
   const [sel, setSel] = useState<DiaISO>(hoyISO);
   const riel = useRef<HTMLDivElement>(null);
@@ -77,7 +85,11 @@ export function Camino({ tieneKey, amplia }: { tieneKey: boolean; amplia?: boole
 
   return (
     <div style={{ paddingBottom: 20 }}>
-      <Header eyebrow="Tu registro en el tiempo" title="El camino" />
+      <Header
+        eyebrow="Tu registro en el tiempo"
+        title="El camino"
+        right={<BotonAjustes onClick={onAjustes} />}
+      />
 
       <div style={{ display: "flex", gap: 6, padding: "4px 20px 14px" }}>
         {(

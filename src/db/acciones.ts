@@ -15,6 +15,8 @@ export interface NuevaActividad {
   alcance: Alcance;
   referenciaMin: number;
   tipo: TipoActividad;
+  /** Solo con alcance "personalizado" (ej. ligada a la duración de un curso). */
+  hastaPersonalizado?: DiaISO;
 }
 
 export async function crearActividad(datos: NuevaActividad): Promise<number> {
@@ -23,7 +25,7 @@ export async function crearActividad(datos: NuevaActividad): Promise<number> {
     ...datos,
     nombre: datos.nombre.trim(),
     desde: aISO(ahora),
-    hasta: finDeAlcance(datos.alcance, ahora),
+    hasta: finDeAlcance(datos.alcance, ahora, datos.hastaPersonalizado),
     activa: 1,
     creada: ahora.getTime(),
   });
@@ -42,14 +44,27 @@ export async function retirarActividad(id: number): Promise<void> {
 export async function actualizarActividad(id: number, datos: NuevaActividad): Promise<void> {
   const act = await db.actividades.get(id);
   if (!act) return;
+  // "personalizado" no tiene fórmula: si no llega un hasta nuevo explícito,
+  // el rango existente se conserva tal cual (nunca se acorta a "hoy" por
+  // accidente al guardar un formulario que no toca el alcance).
+  const hasta =
+    datos.alcance === "personalizado" && !datos.hastaPersonalizado
+      ? act.hasta
+      : finDeAlcance(datos.alcance, desdeISO(act.desde), datos.hastaPersonalizado);
   await db.actividades.update(id, {
     ...datos,
     nombre: datos.nombre.trim(),
-    hasta: finDeAlcance(datos.alcance, desdeISO(act.desde)),
+    hasta,
   });
 }
 
-const ORDEN_ALCANCE: Record<Alcance, number> = { hoy: 0, semana: 1, mes: 2 };
+const ORDEN_ALCANCE: Record<Alcance, number> = {
+  hoy: 0,
+  semana: 1,
+  mes: 2,
+  personalizado: 3,
+  siempre: 4,
+};
 
 /**
  * Lo que se ve en el tablón: actividades vivas cuyo alcance cubre el día.

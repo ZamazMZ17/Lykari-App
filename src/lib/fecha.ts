@@ -36,18 +36,28 @@ export function sumarDias(d: Date, n: number): Date {
   return r;
 }
 
+/** Sin fecha de fin real: "siempre" usa esto como centinela lejano. */
+export const FIN_INDEFINIDO: DiaISO = "2099-12-31";
+
 /**
  * Último día en que una actividad sigue apareciendo en el tablón,
  * según el alcance elegido al crearla. El alcance nunca es retroactivo:
  * empieza el día en que se creó.
+ *
+ * `personalizado` no tiene fórmula propia: el rango lo trae quien crea la
+ * actividad (ej. una actividad de estudio ligada a la duración de un curso),
+ * así que `hastaPersonalizado` es obligatorio en ese caso.
  */
 export function finDeAlcance(
-  alcance: "hoy" | "semana" | "mes",
+  alcance: "hoy" | "semana" | "mes" | "siempre" | "personalizado",
   base = new Date(),
+  hastaPersonalizado?: DiaISO,
 ): DiaISO {
   if (alcance === "hoy") return aISO(base);
   if (alcance === "semana") return aISO(sumarDias(base, 6 - indiceSemana(base)));
-  return aISO(new Date(base.getFullYear(), base.getMonth() + 1, 0));
+  if (alcance === "mes") return aISO(new Date(base.getFullYear(), base.getMonth() + 1, 0));
+  if (alcance === "siempre") return FIN_INDEFINIDO;
+  return hastaPersonalizado ?? aISO(base);
 }
 
 const DIAS = [

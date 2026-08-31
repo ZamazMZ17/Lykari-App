@@ -12,7 +12,7 @@ import {
   SunMoon,
 } from "lucide-react";
 import { Browser } from "@capacitor/browser";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { esNativo } from "../lib/plataforma";
 import { sembrarCiclo6 } from "../db/semillaCiclo6";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
@@ -45,12 +45,18 @@ function abrirEnNavegador(url: string): void {
   else window.open(url, "_blank");
 }
 
+/** Mantener presionado 600ms el rótulo de Actualizaciones abre el acceso
+ *  privado — a propósito no hay nada visible que lo señale. */
+const MS_PULSACION_LARGA = 600;
+
 export function Ajustes({
   sinProcesar,
   onClose,
+  onZamly,
 }: {
   sinProcesar: number;
   onClose: () => void;
+  onZamly: () => void;
 }) {
   const [key, setKey] = useState("");
   const [modelo, setModelo] = useState(MODELO_POR_DEFECTO);
@@ -63,6 +69,15 @@ export function Ajustes({
   const [actualizacion, setActualizacion] = useState<EstadoActualizacion>({ estado: "revisando" });
   const [cargandoCursos, setCargandoCursos] = useState(false);
   const { tema } = useTema();
+  const pulsacionLarga = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const empezarPulsacion = () => {
+    pulsacionLarga.current = setTimeout(onZamly, MS_PULSACION_LARGA);
+  };
+  const cancelarPulsacion = () => {
+    if (pulsacionLarga.current) clearTimeout(pulsacionLarga.current);
+    pulsacionLarga.current = null;
+  };
 
   const cargarCursos = async () => {
     setCargandoCursos(true);
@@ -234,7 +249,14 @@ export function Ajustes({
         )}
       </div>
 
-      <div className="eyebrow" style={{ marginBottom: 8 }}>
+      <div
+        className="eyebrow"
+        style={{ marginBottom: 8, userSelect: "none" }}
+        onPointerDown={empezarPulsacion}
+        onPointerUp={cancelarPulsacion}
+        onPointerLeave={cancelarPulsacion}
+        onPointerCancel={cancelarPulsacion}
+      >
         Actualizaciones
       </div>
       <div className="card" style={{ padding: "12px 14px", marginBottom: 8 }}>

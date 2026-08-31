@@ -26,7 +26,7 @@ import {
   sumarDias,
   type DiaISO,
 } from "../lib/fecha";
-import { Header, Nota } from "../ui/piezas";
+import { BotonAjustes, Header, Nota } from "../ui/piezas";
 
 type Vista = "dia" | "semana" | "mes";
 
@@ -41,6 +41,7 @@ export function Horario({
   amplia,
   onNuevo,
   onDetalle,
+  onAjustes,
 }: {
   cursos: Curso[];
   evaluaciones: Evaluacion[];
@@ -49,6 +50,7 @@ export function Horario({
   amplia?: boolean;
   onNuevo: () => void;
   onDetalle: (curso: Curso) => void;
+  onAjustes: () => void;
 }) {
   const [vista, setVista] = useState<Vista>("dia");
   const [sel, setSel] = useState<DiaISO>(hoyISO);
@@ -65,14 +67,17 @@ export function Horario({
         eyebrow="Tu semana"
         title="Horario"
         right={
-          <button
-            className="btn card"
-            onClick={onNuevo}
-            style={{ padding: 9, display: "flex" }}
-            aria-label="Agregar curso"
-          >
-            <Plus size={18} />
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <BotonAjustes onClick={onAjustes} />
+            <button
+              className="btn card"
+              onClick={onNuevo}
+              style={{ padding: 9, display: "flex" }}
+              aria-label="Agregar curso"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         }
       />
 

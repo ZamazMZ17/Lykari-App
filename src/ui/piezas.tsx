@@ -1,4 +1,4 @@
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, Settings, X } from "lucide-react";
 import {
   animate,
   motion,
@@ -41,6 +41,21 @@ export function Header({
       </div>
       {right}
     </div>
+  );
+}
+
+/** La tuerca de Ajustes cuelga de la raíz de la app: se repite igual en
+ *  las cuatro pestañas para que esté a mano desde cualquier pantalla. */
+export function BotonAjustes({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      className="btn card"
+      onClick={onClick}
+      style={{ padding: 9, display: "flex" }}
+      aria-label="Ajustes"
+    >
+      <Settings size={18} />
+    </button>
   );
 }
 
