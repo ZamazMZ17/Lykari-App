@@ -10,7 +10,9 @@ export const APP_VERSION: string = pkg.version;
 export type EstadoActualizacion =
   | { estado: "revisando" }
   | { estado: "al-dia" }
-  | { estado: "disponible"; version: string; url: string }
+  /** `assetUrl`: endpoint de la API para bajar el APK autenticado, sin pasar
+   *  por el navegador. Puede faltar si el release no tiene un .apk adjunto. */
+  | { estado: "disponible"; version: string; url: string; assetUrl?: string }
   | { estado: "sin-releases" }
   | { estado: "sin-token" }
   | { estado: "token-invalido" }
@@ -51,9 +53,12 @@ export async function buscarActualizacion(): Promise<EstadoActualizacion> {
     const version = String(data.tag_name ?? "").replace(/^v/, "");
     const url = typeof data.html_url === "string" ? data.html_url : "";
     if (!version || !url) return { estado: "error" };
-    return compararVersiones(version, APP_VERSION) > 0
-      ? { estado: "disponible", version, url }
-      : { estado: "al-dia" };
+    if (compararVersiones(version, APP_VERSION) <= 0) return { estado: "al-dia" };
+    const apk = Array.isArray(data.assets)
+      ? data.assets.find((a: { name?: string }) => a.name?.endsWith(".apk"))
+      : undefined;
+    const assetUrl = typeof apk?.url === "string" ? apk.url : undefined;
+    return { estado: "disponible", version, url, assetUrl };
   } catch {
     return { estado: "error" };
   }

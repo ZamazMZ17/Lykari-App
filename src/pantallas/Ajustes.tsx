@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   Bell,
   CalendarDays,
   Check,
@@ -14,6 +15,7 @@ import {
 import { Browser } from "@capacitor/browser";
 import { useEffect, useRef, useState } from "react";
 import { esNativo } from "../lib/plataforma";
+import { descargarEInstalarApk } from "../lib/instalador";
 import { sembrarCiclo6 } from "../db/semillaCiclo6";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
 import {
@@ -68,6 +70,8 @@ export function Ajustes({
   const [avisos, setAvisos] = useState({ disponible: false, concedido: false, programadas: 0 });
   const [actualizacion, setActualizacion] = useState<EstadoActualizacion>({ estado: "revisando" });
   const [cargandoCursos, setCargandoCursos] = useState(false);
+  const [instalando, setInstalando] = useState(false);
+  const [errorInstalar, setErrorInstalar] = useState<string | null>(null);
   const { tema } = useTema();
   const pulsacionLarga = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -91,6 +95,29 @@ export function Ajustes({
   const revisarActualizacion = () => {
     setActualizacion({ estado: "revisando" });
     void buscarActualizacion().then(setActualizacion);
+  };
+
+  /**
+   * En el APK, con un asset de release detectado, baja e instala directo
+   * (sin pasar por el navegador, que en un repo privado exige tener sesión
+   * de GitHub iniciada ahí — ver lib/instalador.ts). Si no, o en la web, cae
+   * al camino de siempre: abrir la página del release.
+   */
+  const descargar = async () => {
+    if (actualizacion.estado !== "disponible") return;
+    if (!esNativo || !actualizacion.assetUrl) {
+      abrirEnNavegador(actualizacion.url);
+      return;
+    }
+    setInstalando(true);
+    setErrorInstalar(null);
+    try {
+      await descargarEInstalarApk(actualizacion.assetUrl);
+    } catch (e) {
+      setErrorInstalar(e instanceof Error ? e.message : "No se pudo descargar.");
+    } finally {
+      setInstalando(false);
+    }
   };
 
   useEffect(() => {
@@ -278,10 +305,12 @@ export function Ajustes({
           {actualizacion.estado === "disponible" ? (
             <button
               className="btn chip"
-              onClick={() => abrirEnNavegador(actualizacion.url)}
-              style={{ padding: "5px 10px" }}
+              onClick={() => void descargar()}
+              disabled={instalando}
+              style={{ padding: "5px 10px", display: "flex", gap: 5, alignItems: "center" }}
             >
-              Descargar
+              {instalando && <Loader2 size={12} className="girando" />}
+              {instalando ? "Descargando…" : "Descargar"}
             </button>
           ) : (
             <button
@@ -295,6 +324,21 @@ export function Ajustes({
             </button>
           )}
         </div>
+        {errorInstalar && (
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              alignItems: "center",
+              marginTop: 10,
+              fontSize: 12,
+              color: "var(--ink2)",
+            }}
+          >
+            <AlertTriangle size={13} style={{ flexShrink: 0 }} />
+            {errorInstalar}
+          </div>
+        )}
       </div>
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>

@@ -39,6 +39,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(InstaladorPlugin.class);
         super.onCreate(savedInstanceState);
         inyectarInsetsEnCSS();
         responderPermisosDeLaWebView();
