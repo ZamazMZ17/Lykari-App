@@ -9,6 +9,7 @@ const ALCANCES: [Alcance, string][] = [
   ["hoy", "Solo hoy"],
   ["semana", "Toda la semana"],
   ["mes", "Todo el mes"],
+  ["siempre", "Siempre"],
 ];
 
 const TIPOS: [TipoActividad, string, string][] = [

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
 import { Activity, CalendarDays, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
 
-import { db, type Actividad, type Curso, type Sesion } from "./db/db";
+import { db, type Actividad, type Curso, type Plan, type Sesion } from "./db/db";
 import {
   actividadesDelTablon,
   actualizarActividad,
@@ -26,6 +27,9 @@ import {
   type NuevoCurso as DatosCurso,
 } from "./db/cursos";
 import { proximaEvaluacion, todasConFecha } from "./db/evaluaciones";
+import { sembrarRutinasPermanentes } from "./db/planes";
+import { sembrarEstudioDeCursos } from "./db/estudioCursos";
+import { sembrarActividadesPersonales } from "./db/actividadesPersonales";
 import {
   capturasDe,
   capturasSinProcesar,
@@ -47,6 +51,7 @@ import { Sesion as PantallaSesion } from "./pantallas/Sesion";
 import { NuevaActividad } from "./pantallas/NuevaActividad";
 import { CerrarSesion } from "./pantallas/CerrarSesion";
 import { DetalleActividad, DetalleCurso, SesionEnCurso } from "./pantallas/HojasCortas";
+import { DetallePlan } from "./pantallas/Plan";
 import { Camino } from "./pantallas/Camino";
 import { Horario } from "./pantallas/Horario";
 import { NuevoCurso } from "./pantallas/NuevoCurso";
@@ -56,6 +61,7 @@ import { Diario } from "./pantallas/Diario";
 import { Pendientes } from "./pantallas/Pendientes";
 import { Ajustes } from "./pantallas/Ajustes";
 import { HojaMascota } from "./pantallas/HojaMascota";
+import { Zamly } from "./pantallas/Zamly";
 import { Burbuja } from "./ui/Burbuja";
 
 type Tab = "hoy" | "capturar" | "camino" | "horario";
@@ -64,12 +70,14 @@ type HojaAbierta =
   | { t: "nueva" }
   | { t: "cerrar" }
   | { t: "detalle"; act: Actividad }
+  | { t: "plan"; act: Actividad; plan: Plan }
   | { t: "conflicto"; act: Actividad }
   | { t: "autocierre"; nombres: string[] }
   | { t: "ajustes" }
   | { t: "mascota" }
   | { t: "nuevoCurso" }
   | { t: "detalleCurso"; curso: Curso }
+  | { t: "zamly" }
   | null;
 
 const TABS: [Tab, string, typeof LayoutGrid][] = [
@@ -149,6 +157,11 @@ export default function App() {
   const cursos = useLiveQuery(cursosActivos, [], []);
   const evaluaciones = useLiveQuery(todasConFecha, [], []);
   const proxima = useLiveQuery(() => proximaEvaluacion(dia), [dia]);
+  const planes = useLiveQuery(() => db.planes.toArray(), [], []);
+  const planPorActividadId = useMemo(
+    () => new Map(planes.map((p) => [p.actividadId, p])),
+    [planes],
+  );
 
   const corriendo = !!abierta && !estaPausada(abierta);
   const ahora = useTic(corriendo);
@@ -184,6 +197,10 @@ export default function App() {
       // No hay cron: el cierre del día ocurre al abrir la app después de
       // medianoche (CLAUDE.md §3).
       await cerrarDiasPendientes();
+      // Idempotentes: no crean nada si ya existe.
+      await sembrarRutinasPermanentes();
+      await sembrarEstudioDeCursos();
+      await sembrarActividadesPersonales();
     })();
   }, [revisar]);
   useAlVolver(() => void revisar());
@@ -219,6 +236,17 @@ export default function App() {
       return;
     }
     await iniciarSesion(a.id!);
+    setEnSesion(true);
+  };
+
+  /** Igual que `iniciar`, pero además cierra la hoja del plan que la disparó. */
+  const iniciarDesdePlan = async (a: Actividad) => {
+    if (abierta) {
+      setHoja({ t: "conflicto", act: a });
+      return;
+    }
+    await iniciarSesion(a.id!);
+    setHoja(null);
     setEnSesion(true);
   };
 
@@ -314,6 +342,7 @@ export default function App() {
       <Capturar
         cuentas={cuentas ?? { musica: 0, video: 0, negocio: 0, diario: 0, pendiente: 0 }}
         onAbrir={setSeccion}
+        onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
   } else if (tab === "capturar") {
@@ -326,7 +355,13 @@ export default function App() {
       </div>
     );
   } else if (tab === "camino") {
-    pantalla = <Camino tieneKey={tieneKey} amplia={amplia} />;
+    pantalla = (
+      <Camino
+        tieneKey={tieneKey}
+        amplia={amplia}
+        onAjustes={() => setHoja({ t: "ajustes" })}
+      />
+    );
   } else if (tab === "horario") {
     pantalla = (
       <Horario
@@ -336,6 +371,7 @@ export default function App() {
         amplia={amplia}
         onNuevo={() => setHoja({ t: "nuevoCurso" })}
         onDetalle={(curso) => setHoja({ t: "detalleCurso", curso })}
+        onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
   } else {
@@ -350,7 +386,10 @@ export default function App() {
         onNueva={() => setHoja({ t: "nueva" })}
         onIniciar={iniciar}
         onAlternarPausa={alternarPausa}
-        onDetalle={(a) => setHoja({ t: "detalle", act: a })}
+        onDetalle={(a) => {
+          const plan = planPorActividadId.get(a.id!);
+          setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
+        }}
         onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
@@ -419,16 +458,15 @@ export default function App() {
     const siguiente = ORDEN_TABS[i + delta];
 
     if (comprometido && siguiente) {
-      void animate(xSwipe, delta * -220, {
-        type: "spring",
-        bounce: 0,
-        velocity: v,
-        duration: 0.28,
-      }).then(() => {
-        irA(siguiente);
-        xSwipe.set(delta * 220);
-        void animate(xSwipe, 0, { type: "spring", bounce: 0.1, duration: 0.32 });
-      });
+      // Como solo hay una pantalla montada, el cambio de pestaña y el salto
+      // al borde de entrada tienen que ocurrir en el mismo tick — con
+      // flushSync, React pinta la pantalla nueva ya en su posición fuera de
+      // cuadro antes del siguiente frame. Si se espera a que la salida
+      // termine primero (como antes), queda un hueco en blanco entre medio.
+      const ancho = zonaSwipe.current?.clientWidth || 360;
+      flushSync(() => irA(siguiente));
+      xSwipe.set(delta * ancho);
+      void animate(xSwipe, 0, { type: "spring", bounce: 0.15, velocity: v, duration: 0.32 });
     } else {
       void animate(xSwipe, 0, { type: "spring", bounce: 0.15, duration: 0.3 });
     }
@@ -714,8 +752,14 @@ export default function App() {
         )}
 
         {hoja?.t === "ajustes" && (
-          <Ajustes sinProcesar={pendientesIA.length} onClose={() => setHoja(null)} />
+          <Ajustes
+            sinProcesar={pendientesIA.length}
+            onClose={() => setHoja(null)}
+            onZamly={() => setHoja({ t: "zamly" })}
+          />
         )}
+
+        {hoja?.t === "zamly" && <Zamly onClose={() => setHoja(null)} />}
 
         {hoja?.t === "mascota" && (
           <HojaMascota
@@ -749,6 +793,16 @@ export default function App() {
               await retirarActividad(hoja.act.id!);
               setHoja(null);
             }}
+            onClose={() => setHoja(null)}
+          />
+        )}
+
+        {hoja?.t === "plan" && (
+          <DetallePlan
+            act={hoja.act}
+            plan={hoja.plan}
+            enSesion={!!abierta}
+            onIniciar={() => void iniciarDesdePlan(hoja.act)}
             onClose={() => setHoja(null)}
           />
         )}

@@ -8,6 +8,8 @@ import {
   Keyboard,
   Languages,
   Moon,
+  Pencil,
+  Smile,
   Tv,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +26,8 @@ export const ICONOS: Record<string, LucideIcon> = {
   code: Code2,
   guitar: Guitar,
   brush: Brush,
+  smile: Smile,
+  pencil: Pencil,
 };
 
 export const ICONO_POR_DEFECTO = "book";

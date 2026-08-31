@@ -29,6 +29,8 @@ const ETIQUETA_ALCANCE = {
   hoy: "solo hoy",
   semana: "toda la semana",
   mes: "todo el mes",
+  siempre: "siempre",
+  personalizado: "este ciclo",
 } as const;
 
 const fechaCorta = (iso: string) =>

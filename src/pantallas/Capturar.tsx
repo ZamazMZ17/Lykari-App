@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { TipoCaptura } from "../db/db";
-import { Header } from "../ui/piezas";
+import { BotonAjustes, Header } from "../ui/piezas";
 
 export interface Seccion {
   k: TipoCaptura;
@@ -68,6 +68,7 @@ export function Capturar({
   seleccion,
   comoLista,
   onAbrir,
+  onAjustes,
 }: {
   cuentas: Record<TipoCaptura, number>;
   /** En tablet, la sección abierta se marca en vez de navegar fuera. */
@@ -75,10 +76,16 @@ export function Capturar({
   /** Modo lista lateral: se quitan las explicaciones largas, no caben. */
   comoLista?: boolean;
   onAbrir: (s: Seccion) => void;
+  /** Solo en la pantalla completa: la lista lateral de tablet no la necesita. */
+  onAjustes?: () => void;
 }) {
   return (
     <div style={{ paddingBottom: 20 }}>
-      <Header eyebrow="Habla y déjalo ahí" title="Capturar" />
+      <Header
+        eyebrow="Habla y déjalo ahí"
+        title="Capturar"
+        right={onAjustes && <BotonAjustes onClick={onAjustes} />}
+      />
 
       <div style={{ padding: "6px 20px 0", display: "grid", gap: 8 }}>
         {SECCIONES.map((s) => (

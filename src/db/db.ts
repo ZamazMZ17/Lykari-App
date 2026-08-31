@@ -1,7 +1,13 @@
 import Dexie, { type Table } from "dexie";
 import type { DiaISO } from "../lib/fecha";
 
-export type Alcance = "hoy" | "semana" | "mes";
+/**
+ * `siempre` — indefinida, sin fecha de fin (Ejercicio, GymFace: CLAUDE.md
+ * fase actual las trata como permanentes). `personalizado` — rango explícito
+ * fijado por código, no por el usuario en el formulario (ej. una actividad
+ * de estudio ligada a la duración de un curso).
+ */
+export type Alcance = "hoy" | "semana" | "mes" | "siempre" | "personalizado";
 export type TipoActividad = "enfoque" | "recreativa";
 
 /**
@@ -193,6 +199,72 @@ export interface Evaluacion {
   creada: number;
 }
 
+/* ── planes de Ejercicio y GymFace ──────────────────────────────────
+ * Única parte de la app con seguimiento de cumplimiento real (excepción
+ * explícita y acotada a estas dos secciones — CLAUDE.md §2 sigue rigiendo
+ * para el resto: nunca hay estado "fallaste" fuera de acá). El nivel sube
+ * solo con la práctica real acumulada; nunca baja solo, nunca bloquea. */
+export type CategoriaPlan = "ejercicio" | "gymface";
+
+export interface EjercicioDeRutina {
+  nombre: string;
+  detalle: string;
+  /** Descanso sugerido entre series, en segundos. Sin marca si no aplica (ej. un hold único). */
+  descansoSeg?: number;
+}
+
+export interface DiaDeRutina {
+  titulo: string;
+  ejercicios: EjercicioDeRutina[];
+}
+
+export interface NivelDePlan {
+  numero: number;
+  nombre: string;
+  /** Cuántos días completos de este nivel hacen falta para subir al siguiente. */
+  sesionesParaSubir: number;
+  /** Rotación de días de rutina dentro del nivel (ej. Empuje / Tirón). */
+  dias: DiaDeRutina[];
+}
+
+export interface Plan {
+  id?: number;
+  categoria: CategoriaPlan;
+  actividadId: number;
+  nivelActual: number;
+  creada: number;
+}
+
+export interface RegistroPlan {
+  id?: number;
+  planId: number;
+  /** Un registro por día: la segunda vez que se guarda el mismo día, se actualiza. */
+  dia: DiaISO;
+  nivelNumero: number;
+  diaRutinaIndice: number;
+  ejerciciosHechos: string[];
+  completo: Bandera;
+  creada: number;
+}
+
+/* ── Zamly: racha privada, detrás de contraseña ───────────────────────
+ * A diferencia de la racha principal (nunca vuelve a cero, CLAUDE.md §6),
+ * acá el mecanismo es justo el opuesto y es el punto de la sección: una
+ * recaída sí reinicia la racha actual. El mejor récord queda aparte y no se
+ * borra nunca. */
+export interface ZamlyRacha {
+  id: number;
+  inicio: number;
+  ultimaRecaida: number | null;
+  mejorRachaMs: number;
+}
+
+export interface ZamlyEvento {
+  id?: number;
+  fecha: number;
+  nota?: string;
+}
+
 class BaseLykari extends Dexie {
   actividades!: Table<Actividad, number>;
   sesiones!: Table<Sesion, number>;
@@ -203,6 +275,10 @@ class BaseLykari extends Dexie {
   ajustes!: Table<Ajuste, string>;
   cursos!: Table<Curso, number>;
   evaluaciones!: Table<Evaluacion, number>;
+  planes!: Table<Plan, number>;
+  registrosPlan!: Table<RegistroPlan, number>;
+  zamlyRacha!: Table<ZamlyRacha, number>;
+  zamlyEventos!: Table<ZamlyEvento, number>;
 
   constructor() {
     super("lykari");
@@ -229,6 +305,12 @@ class BaseLykari extends Dexie {
     // Los campos nuevos de `Curso` (nrc, profesor, modalidad…) no se indexan.
     this.version(5).stores({
       evaluaciones: "++id, cursoId, fecha, hecha",
+    });
+    this.version(6).stores({
+      planes: "++id, categoria, actividadId",
+      registrosPlan: "++id, planId, dia",
+      zamlyRacha: "id",
+      zamlyEventos: "++id, fecha",
     });
   }
 }
