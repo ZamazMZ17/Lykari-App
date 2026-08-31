@@ -40,6 +40,12 @@
     <!-- Llamar a la API de la IA. Nada más sale del teléfono. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Instalar la actualización descargada desde Ajustes, sin pasar por
+         el navegador. Android igual pide confirmación en su propia
+         pantalla — este permiso solo habilita que Lykari pueda ser el
+         origen de esa instalación. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Grabar las capturas de voz y el audio de cierre de sesión. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Imprescindible aunque no lo parezca: al abrir el micrófono, el motor
