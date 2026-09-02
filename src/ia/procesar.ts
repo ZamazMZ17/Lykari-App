@@ -48,17 +48,20 @@ export async function procesarCaptura(id: number): Promise<void> {
   }
 
   try {
-    const audio = captura.audioBlob
+    // Si ya hay transcripción (dictado nativo o texto escrito), se manda esa
+    // — más barato y no depende de que Gemini entienda audio — y el audio
+    // guardado queda solo como respaldo para escuchar, no se reenvía.
+    const usarAudio = !!captura.audioBlob && !captura.transcripcion;
+    const audio = usarAudio
       ? {
-          base64: await aBase64(await aWavMono16k(captura.audioBlob)),
+          base64: await aBase64(await aWavMono16k(captura.audioBlob!)),
           mimeType: "audio/wav",
         }
       : undefined;
 
-    // Sin audio (captura escrita), el texto va dentro del prompt.
-    const prompt = audio
+    const prompt = usarAudio
       ? promptDe(captura.tipo)
-      : `${promptDe(captura.tipo)}\n\nEn vez de audio, esto es lo que escribió:\n"""\n${captura.transcripcion ?? ""}\n"""`;
+      : `${promptDe(captura.tipo)}\n\nEn vez de audio, esto es la transcripción de lo que dijo:\n"""\n${captura.transcripcion ?? ""}\n"""`;
 
     const datos = await pedirJSON<unknown>(config, {
       prompt,

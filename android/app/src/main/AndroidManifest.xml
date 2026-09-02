@@ -63,4 +63,14 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Reprogramar los avisos después de reiniciar el teléfono. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Desde Android 11, sin esto la app no puede ver si hay un servicio de
+         reconocimiento de voz instalado (SpeechRecognizer.isRecognitionAvailable
+         devuelve falso siempre) por las restricciones de visibilidad de
+         paquetes. Dictado nativo, sin esto no arranca. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 </manifest>

@@ -5,7 +5,9 @@ import type { TipoCaptura } from "../db/db";
 import { guardarAudio, guardarTexto } from "../db/capturas";
 import { procesarCaptura } from "../ia/procesar";
 import { hayKey } from "../ia/ajustes";
+import { dictadoDisponible, useDictado } from "../lib/dictado";
 import { duracionAudio, useGrabadora } from "../lib/grabacion";
+import { esNativo } from "../lib/plataforma";
 import { BotonPrincipal, Hoja } from "./piezas";
 
 /** Escribir no necesita mucho para ser útil: alcanza con una frase corta. */
@@ -38,6 +40,8 @@ export function BotonGrabar({
   onGuardada?: () => void;
 }) {
   const { estado, ms, onda, error, iniciar, detener, cancelar } = useGrabadora();
+  const dictado = useDictado();
+  const [dictadoOk, setDictadoOk] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [escribiendo, setEscribiendo] = useState(false);
@@ -45,10 +49,17 @@ export function BotonGrabar({
   const presion = useRef(0);
   const esperandoSoltar = useRef(false);
 
+  useEffect(() => {
+    if (esNativo) void dictadoDisponible().then(setDictadoOk);
+  }, []);
+
   const grabando = estado === "grabando" || estado === "pidiendo";
 
   const terminar = async () => {
-    const grabacion = await detener();
+    const [grabacion, textoDictado] = await Promise.all([
+      detener(),
+      dictadoOk ? dictado.detener() : Promise.resolve(""),
+    ]);
     if (!grabacion) return;
     if (grabacion.duracionMs < MINIMO_UTIL_MS) {
       setAviso("Muy corto. Mantén el botón mientras hablas.");
@@ -57,7 +68,10 @@ export function BotonGrabar({
     }
     setGuardando(true);
     try {
-      const id = await guardarAudio(tipo, grabacion.blob, grabacion.duracionMs);
+      // Con transcripción del dictado nativo, procesarCaptura() ya no le
+      // manda el audio a Gemini — mucho más barato, y no depende de que
+      // haya cuota para transcribir.
+      const id = await guardarAudio(tipo, grabacion.blob, grabacion.duracionMs, textoDictado);
       onGuardada?.();
       // El audio ya está a salvo. Que la IA falle no puede perderlo.
       if (await hayKey()) {
@@ -113,6 +127,7 @@ export function BotonGrabar({
     presion.current = Date.now();
     esperandoSoltar.current = true;
     void iniciar();
+    if (dictadoOk) dictado.iniciar();
   };
 
   /**
@@ -174,6 +189,25 @@ export function BotonGrabar({
         </div>
       )}
 
+      {grabando && dictadoOk && dictado.textoEnVivo && (
+        <div
+          className="card fade"
+          style={{
+            marginBottom: 8,
+            padding: "9px 13px",
+            fontSize: 12.5,
+            color: "var(--ink2)",
+            maxWidth: "100%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            boxShadow: "var(--sombra-flotante)",
+          }}
+        >
+          {dictado.textoEnVivo}
+        </div>
+      )}
+
       {grabando ? (
         <div
           className="fade"
@@ -191,7 +225,10 @@ export function BotonGrabar({
         >
           <motion.button
             className="btn"
-            onClick={() => cancelar()}
+            onClick={() => {
+              cancelar();
+              if (dictadoOk) dictado.cancelar();
+            }}
             aria-label="Descartar la grabación"
             whileTap={{ scale: 0.92 }}
             transition={{ type: "spring", bounce: 0, duration: 0.15 }}

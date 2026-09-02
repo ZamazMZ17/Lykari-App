@@ -18,6 +18,10 @@ export async function guardarAudio(
   tipo: TipoCaptura,
   audioBlob: Blob,
   duracionMs: number,
+  /** Del dictado nativo, si corrió en paralelo a la grabación. Con esto ya
+   *  puesto, procesarCaptura() no le manda el audio a Gemini para transcribir
+   *  — el audio queda solo como respaldo para escuchar. */
+  transcripcion?: string,
 ): Promise<number> {
   const creada = Date.now();
   return db.capturas.add({
@@ -26,6 +30,7 @@ export async function guardarAudio(
     creada,
     audioBlob,
     duracionMs,
+    transcripcion: transcripcion?.trim() || undefined,
     estado: "nueva",
   });
 }
