@@ -240,11 +240,7 @@ export function CerrarSesion({
                 </button>
               </div>
               <div style={{ fontSize: 12, color: "var(--ink2)", marginTop: 12 }}>
-                {estado === "pidiendo"
-                  ? "Pidiendo el micrófono…"
-                  : dictadoOk && dictado.textoEnVivo
-                    ? dictado.textoEnVivo
-                    : "Grabando…"}
+                {estado === "pidiendo" ? "Pidiendo el micrófono…" : "Grabando…"}
               </div>
             </div>
           ) : grabacion ? (

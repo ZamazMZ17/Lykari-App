@@ -189,25 +189,6 @@ export function BotonGrabar({
         </div>
       )}
 
-      {grabando && dictadoOk && dictado.textoEnVivo && (
-        <div
-          className="card fade"
-          style={{
-            marginBottom: 8,
-            padding: "9px 13px",
-            fontSize: 12.5,
-            color: "var(--ink2)",
-            maxWidth: "100%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            boxShadow: "var(--sombra-flotante)",
-          }}
-        >
-          {dictado.textoEnVivo}
-        </div>
-      )}
-
       {grabando ? (
         <div
           className="fade"
