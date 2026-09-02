@@ -1,7 +1,9 @@
 import { AlertTriangle, Mic, PenLine, RotateCcw, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Actividad, Sesion } from "../db/db";
+import { dictadoDisponible, useDictado } from "../lib/dictado";
 import { duracionAudio, useGrabadora, type Grabacion } from "../lib/grabacion";
+import { esNativo } from "../lib/plataforma";
 import { duracionLarga, msRegistrados } from "../lib/tiempo";
 import { Reproductor } from "../ui/Audio";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
@@ -37,10 +39,17 @@ export function CerrarSesion({
   const [modo, setModo] = useState<"audio" | "texto">("audio");
   const [texto, setTexto] = useState("");
   const [grabacion, setGrabacion] = useState<Grabacion | null>(null);
+  const [textoDictado, setTextoDictado] = useState("");
   const [aviso, setAviso] = useState<string | null>(null);
   const { estado, ms, onda, error, iniciar, detener, cancelar } = useGrabadora();
+  const dictado = useDictado();
+  const [dictadoOk, setDictadoOk] = useState(false);
   const presion = useRef(0);
   const esperandoSoltar = useRef(false);
+
+  useEffect(() => {
+    if (esNativo) void dictadoDisponible().then(setDictadoOk);
+  }, []);
 
   const grabando = estado === "grabando" || estado === "pidiendo";
   const msSesion = msRegistrados(sesion, ahora);
@@ -49,7 +58,10 @@ export function CerrarSesion({
   const listo = modo === "audio" ? grabacion !== null : okTexto;
 
   const terminarGrabacion = async () => {
-    const g = await detener();
+    const [g, textoOido] = await Promise.all([
+      detener(),
+      dictadoOk ? dictado.detener() : Promise.resolve(""),
+    ]);
     if (!g) return;
     if (g.duracionMs < MINIMO_UTIL_MS) {
       setAviso("Muy corto. Mantén el botón mientras hablas.");
@@ -57,6 +69,7 @@ export function CerrarSesion({
       return;
     }
     setGrabacion(g);
+    setTextoDictado(textoOido);
   };
 
   // El oyente de la ventana se registra una sola vez: necesita una referencia
@@ -70,7 +83,9 @@ export function CerrarSesion({
     presion.current = Date.now();
     esperandoSoltar.current = true;
     setGrabacion(null);
+    setTextoDictado("");
     void iniciar();
+    if (dictadoOk) dictado.iniciar();
   };
 
   useEffect(() => {
@@ -91,12 +106,17 @@ export function CerrarSesion({
 
   const guardar = () => {
     if (modo === "audio" && grabacion) {
-      // `audioPendiente: true` aunque el audio ya esté a salvo: significa
-      // "pendiente de transcribir", no "no contó nada". Si hay key, App.tsx
-      // lo transcribe enseguida y lo baja a `false`; si no, el cierre de la
+      // Con transcripción del dictado nativo ya no queda "pendiente": ya
+      // está. Sin ella, `audioPendiente: true` significa "pendiente de
+      // transcribir", no "no contó nada" — si hay key, App.tsx la transcribe
+      // enseguida con Gemini y la baja a `false`; si no, el cierre de la
       // noche sabe que hay algo grabado en vez de asumir que no dijo nada
       // (ia/cierre.ts), y procesarSesionesPendientes lo recoge después.
-      onGuardar({ audioBlob: grabacion.blob, audioPendiente: true });
+      onGuardar({
+        audioBlob: grabacion.blob,
+        transcripcion: textoDictado || undefined,
+        audioPendiente: !textoDictado,
+      });
     } else {
       onGuardar({ transcripcion: texto, audioPendiente: false });
     }
@@ -175,7 +195,10 @@ export function CerrarSesion({
               >
                 <button
                   className="btn"
-                  onClick={() => cancelar()}
+                  onClick={() => {
+                    cancelar();
+                    if (dictadoOk) dictado.cancelar();
+                  }}
                   aria-label="Descartar la grabación"
                   style={{ color: "var(--paper)", opacity: 0.75, display: "flex" }}
                 >
@@ -225,7 +248,10 @@ export function CerrarSesion({
               <Reproductor blob={grabacion.blob} duracionMs={grabacion.duracionMs} color="var(--pino)" />
               <button
                 className="btn"
-                onClick={() => setGrabacion(null)}
+                onClick={() => {
+                  setGrabacion(null);
+                  setTextoDictado("");
+                }}
                 style={{
                   display: "flex",
                   gap: 6,

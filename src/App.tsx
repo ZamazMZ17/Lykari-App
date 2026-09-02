@@ -275,8 +275,10 @@ export default function App() {
     setEnSesion(false);
     // El audio ya quedó a salvo en la sesión. Que la transcripción falle no
     // puede perderlo: procesarSesion deja el error escrito y se reintenta al
-    // volver a abrir la app (procesarSesionesPendientes).
-    if (o.audioBlob && (await hayKey())) {
+    // volver a abrir la app (procesarSesionesPendientes). Si ya vino con
+    // transcripción (dictado nativo mientras se grababa), no hace falta
+    // gastar Gemini transcribiendo el audio: ya está.
+    if (o.audioBlob && !o.transcripcion && (await hayKey())) {
       procesarSesion(id).catch(() => {});
     }
   };
