@@ -23,7 +23,6 @@ import {
 } from "../notificaciones";
 import {
   CLAVE_API,
-  CLAVE_GH_TOKEN,
   CLAVE_MODELO,
   MODELO_POR_DEFECTO,
   guardarAjuste,
@@ -62,8 +61,6 @@ export function Ajustes({
   const [key, setKey] = useState("");
   const [modelo, setModelo] = useState(MODELO_POR_DEFECTO);
   const [verKey, setVerKey] = useState(false);
-  const [ghToken, setGhToken] = useState("");
-  const [verGhToken, setVerGhToken] = useState(false);
   const [cargado, setCargado] = useState(false);
   const [estado, setEstado] = useState<"quieto" | "guardando" | "listo">("quieto");
   const [avisos, setAvisos] = useState({ disponible: false, concedido: false, programadas: 0 });
@@ -98,7 +95,6 @@ export function Ajustes({
     void (async () => {
       setKey((await leerAjuste(CLAVE_API)) ?? "");
       setModelo((await leerAjuste(CLAVE_MODELO)) ?? MODELO_POR_DEFECTO);
-      setGhToken((await leerAjuste(CLAVE_GH_TOKEN)) ?? "");
       setAvisos(await estadoNotificaciones());
       setCargado(true);
     })();
@@ -109,7 +105,6 @@ export function Ajustes({
     setEstado("guardando");
     await guardarAjuste(CLAVE_API, key);
     await guardarAjuste(CLAVE_MODELO, modelo === MODELO_POR_DEFECTO ? "" : modelo);
-    await guardarAjuste(CLAVE_GH_TOKEN, ghToken);
     // Con la key puesta, lo que estaba esperando se procesa solo.
     if (key.trim()) await procesarPendientes();
     revisarActualizacion();
@@ -271,8 +266,6 @@ export function Ajustes({
             {actualizacion.estado === "al-dia" && `Tienes la última versión (v${APP_VERSION})`}
             {actualizacion.estado === "sin-releases" &&
               `Estás en v${APP_VERSION}. Todavía no hay releases publicadas en GitHub.`}
-            {actualizacion.estado === "sin-token" && "Falta el token de GitHub (abajo) para poder revisar."}
-            {actualizacion.estado === "token-invalido" && "El token de GitHub no sirve o venció."}
             {actualizacion.estado === "error" && "No se pudo revisar ahora."}
             {actualizacion.estado === "disponible" && `Hay una versión nueva: v${actualizacion.version}`}
           </div>
@@ -288,7 +281,7 @@ export function Ajustes({
             <button
               className="btn"
               onClick={revisarActualizacion}
-              disabled={actualizacion.estado === "revisando" || actualizacion.estado === "sin-token"}
+              disabled={actualizacion.estado === "revisando"}
               aria-label="Revisar de nuevo"
               style={{ color: "var(--ink2)", display: "flex" }}
             >
@@ -297,48 +290,6 @@ export function Ajustes({
           )}
         </div>
       </div>
-
-      <div className="eyebrow" style={{ marginBottom: 8 }}>
-        Token de GitHub
-      </div>
-      <div style={{ position: "relative", marginBottom: 8 }}>
-        <input
-          value={ghToken}
-          onChange={(e) => setGhToken(e.target.value)}
-          type={verGhToken ? "text" : "password"}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          placeholder={cargado ? "github_pat_…" : "Cargando…"}
-          style={{
-            width: "100%",
-            padding: "13px 44px 13px 14px",
-            borderRadius: 12,
-            border: "1px solid var(--line)",
-            background: "var(--ground)",
-            fontSize: 14,
-            fontFamily: "'JetBrains Mono Variable', monospace",
-          }}
-        />
-        <button
-          className="btn"
-          onClick={() => setVerGhToken(!verGhToken)}
-          aria-label={verGhToken ? "Ocultar el token" : "Mostrar el token"}
-          style={{
-            position: "absolute",
-            right: 12,
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: "var(--ink2)",
-            display: "flex",
-          }}
-        >
-          {verGhToken ? <EyeOff size={17} /> : <Eye size={17} />}
-        </button>
-      </div>
-      <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 20px", lineHeight: 1.5 }}>
-        Fine-grained token con permiso de lectura de «Contents» en este repositorio.
-      </p>
 
       {sinProcesar > 0 && (
         <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 16px" }}>
