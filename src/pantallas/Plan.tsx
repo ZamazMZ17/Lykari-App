@@ -44,10 +44,9 @@ export function DetallePlan({
   const diaRutina = nivel.dias[diaIndice];
   const totalDiasCompletos = registros.filter((r) => r.completo).length;
 
-  const [hechos, setHechos] = useState<string[]>(
-    () => registroHoy?.ejerciciosHechos ?? [],
-  );
+  const [hechos, setHechos] = useState<string[]>([]);
   const [guardando, setGuardando] = useState(false);
+  const [mensajeGuardado, setMensajeGuardado] = useState<string | null>(null);
   const [verNiveles, setVerNiveles] = useState(false);
   const [descanso, setDescanso] = useState<{ nombre: string; restante: number } | null>(null);
   const intervaloDescanso = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -59,7 +58,16 @@ export function DetallePlan({
     [],
   );
 
+  // useLiveQuery llega después del primer render. Sin este efecto, al cerrar
+  // y volver a abrir la rutina las marcas guardadas existían en IndexedDB pero
+  // la interfaz comenzaba vacía, dando la impresión de que no se había guardado.
+  useEffect(() => {
+    if (!registroHoy) return;
+    setHechos(registroHoy.ejerciciosHechos);
+  }, [registroHoy?.id, JSON.stringify(registroHoy?.ejerciciosHechos ?? [])]);
+
   const alternar = (nombre: string) => {
+    setMensajeGuardado(null);
     setHechos((h) => (h.includes(nombre) ? h.filter((n) => n !== nombre) : [...h, nombre]));
   };
 
@@ -88,9 +96,20 @@ export function DetallePlan({
   const todoHecho = diaRutina.ejercicios.every((e) => hechos.includes(e.nombre));
 
   const guardar = async () => {
+    if (plan.id == null) {
+      setMensajeGuardado("No se pudo encontrar esta rutina. Ciérrala y vuelve a abrir Ejercicio.");
+      return;
+    }
     setGuardando(true);
     try {
-      await guardarAvanceHoy(plan.id!, diaIndice, hechos, todoHecho);
+      await guardarAvanceHoy(plan.id, diaIndice, hechos, todoHecho);
+      setMensajeGuardado(
+        todoHecho
+          ? "Rutina registrada hoy."
+          : `Guardaste ${hechos.length} de ${diaRutina.ejercicios.length} ejercicios hoy.`,
+      );
+    } catch (error) {
+      setMensajeGuardado(error instanceof Error ? error.message : "No se pudo guardar. Inténtalo de nuevo.");
     } finally {
       setGuardando(false);
     }
@@ -201,11 +220,23 @@ export function DetallePlan({
         </p>
       )}
 
+      {registroHoy && registroHoy.completo !== 1 && !mensajeGuardado && (
+        <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 12px" }}>
+          Hoy ya registraste {registroHoy.ejerciciosHechos.length} de {diaRutina.ejercicios.length} ejercicios.
+          Puedes cambiarlo y volver a guardar.
+        </p>
+      )}
+
       <div style={{ display: "flex", gap: 8, marginTop: 4, marginBottom: 20 }}>
         <BotonPrincipal disabled={guardando || hechos.length === 0} onClick={guardar}>
-          {todoHecho ? "Guardar rutina registrada" : "Guardar lo que hice"}
+          {guardando ? "Guardando…" : todoHecho ? "Guardar rutina registrada" : "Guardar lo que hice"}
         </BotonPrincipal>
       </div>
+      {mensajeGuardado && (
+        <p style={{ fontSize: 12, lineHeight: 1.45, margin: "-12px 0 18px", color: mensajeGuardado.startsWith("No se pudo") ? "var(--ambar)" : "var(--pino)" }}>
+          {mensajeGuardado}
+        </p>
+      )}
 
       <button
         className="btn"

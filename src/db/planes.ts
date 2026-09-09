@@ -247,7 +247,10 @@ export async function guardarAvanceHoy(
 ): Promise<void> {
   await db.transaction("rw", db.planes, db.registrosPlan, async () => {
     const plan = await db.planes.get(planId);
-    if (!plan) return;
+    // Antes esto salía en silencio si la actividad se había retirado mientras
+    // la hoja seguía abierta. La pantalla necesita poder explicarlo en vez de
+    // parecer que el botón no funcionó.
+    if (!plan) throw new Error("Esta rutina ya no está disponible. Ciérrala y vuelve a abrir Ejercicio.");
     const dia = hoyISO();
     const existente = await registroDeHoy(planId, dia);
 
