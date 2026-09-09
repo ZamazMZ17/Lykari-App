@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info:
+  title: Lykari Bridge API
+  version: 1.0.0
+  description: API personal y autenticada para sincronizar un registro Lykari con una laptop.
+servers:
+  - url: https://TU-DOMINIO
+security:
+  - bearerAuth: []
+paths:
+  /v1/health:
+    get:
+      summary: Comprueba que el puente está disponible
+      security: []
+      responses:
+        '200': { description: Disponible }
+  /v1/summary:
+    get:
+      summary: Resume el registro de hoy sin exponer transcripciones o audios
+      responses:
+        '200': { description: Resumen actual }
+  /v1/snapshot:
+    get:
+      summary: Descarga la copia completa
+      responses:
+        '200': { description: Copia Lykari, headers: { X-Lykari-Revision: { schema: { type: string } } } }
+    put:
+      summary: Sube una copia solo si coincide la revisión actual
+      parameters:
+        - in: header
+          name: If-Match
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200': { description: Copia guardada }
+        '412': { description: Hay cambios remotos; traer antes de enviar }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

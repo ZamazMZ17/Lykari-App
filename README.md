@@ -20,11 +20,22 @@ con negro dentro, sin rojo, con el ámbar de un solo significado y las cinco
 secciones equilibradas entre sí— y vive en `src/lib/tema.ts`. En el APK ajusta
 además la barra de estado del sistema para que el reloj se lea en ambos temas.
 
-**Copia entre dispositivos.** No hay sincronización automática —cada teléfono o
-tablet tiene su propia base local, por diseño (§3, sin servidor propio)— pero en
-Ajustes → Copia de seguridad se exporta todo el registro (con los audios) a un
-archivo `.json`, se pasa al otro aparato y se importa ahí. Importar reemplaza,
-no mezcla, y se confirma antes. Vive en `src/exportar/respaldo.ts`.
+**Copia entre dispositivos.** Ajustes → Copia de seguridad exporta todo el
+registro (incluye audios, cursos y rutinas; nunca las claves) a un archivo
+`.json`. Importar reemplaza y se confirma antes.
+
+**Sincronización opcional con laptop.** Si usas Sam/Zam, es el punto de
+sincronización: en Ajustes → Sincronización con laptop usa
+`https://TU-EQUIPO:8585/api/lykari` y la misma clave configurada en
+`ZAM_API_TOKEN`. Desde ahí se puede enviar o traer una copia completa y Sam
+puede responder «resumen de Lykari» o registrar una sesión terminada. No hay
+sobrescritura silenciosa: si otro equipo cambió el registro, hay que traerlo
+antes de enviar. En el APK esta conexión sale por la red nativa de Android, no
+por la WebView, y por seguridad acepta HTTPS.
+
+El [Lykari Bridge](bridge/README.md) se conserva como alternativa mínima si no
+quieres tener Sam encendido. También ofrece MCP para un cliente de chat
+compatible.
 
 Lo que la copia **no** lleva: los ajustes del dispositivo (la API key, el tema,
 la posición de la mascota). Meter la key en un archivo que se comparte la
@@ -77,6 +88,14 @@ Luego, en el menú del navegador → **Añadir a pantalla de inicio**.
 ```bash
 npm test
 ```
+
+```bash
+npm run sync:bridge
+```
+
+El segundo comando inicia el puente de sincronización; requiere definir
+`LYKARI_SYNC_TOKEN` y, para usarlo fuera de la laptop, una URL HTTPS privada.
+La guía completa está en [`bridge/README.md`](bridge/README.md).
 
 - `npm run iconos` — regenera todos los íconos: los del manifiesto de la PWA y
   los del APK en cada densidad.

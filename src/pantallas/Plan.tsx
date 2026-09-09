@@ -104,8 +104,8 @@ export function DetallePlan({
         <Ico size={17} color="var(--pino)" strokeWidth={1.7} />
         <div style={{ flex: 1, fontSize: 13, color: "var(--ink2)" }}>
           {siguienteNivel
-            ? `${completosEnNivel}/${nivel.sesionesParaSubir} días para subir de nivel`
-            : "Nivel máximo"}
+            ? `${completosEnNivel}/${nivel.sesionesParaSubir} rutinas registradas para cambiar de nivel`
+            : "Nivel de mantenimiento"}
         </div>
       </div>
       <Barra v={completosEnNivel} meta={nivel.sesionesParaSubir} />
@@ -203,7 +203,7 @@ export function DetallePlan({
 
       <div style={{ display: "flex", gap: 8, marginTop: 4, marginBottom: 20 }}>
         <BotonPrincipal disabled={guardando || hechos.length === 0} onClick={guardar}>
-          {todoHecho ? "Guardar rutina completa" : "Guardar avance de hoy"}
+          {todoHecho ? "Guardar rutina registrada" : "Guardar lo que hice"}
         </BotonPrincipal>
       </div>
 
@@ -242,7 +242,7 @@ export function DetallePlan({
         }}
       >
         <ChevronDown size={14} style={{ transform: verNiveles ? "rotate(180deg)" : undefined }} />
-        {totalDiasCompletos} {totalDiasCompletos === 1 ? "día completo" : "días completos"} en
+          {totalDiasCompletos} {totalDiasCompletos === 1 ? "rutina registrada" : "rutinas registradas"} en
         total · ver niveles
       </button>
 

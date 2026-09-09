@@ -16,8 +16,27 @@ import { esNativo } from "../lib/plataforma";
  */
 
 const FORMATO = "lykari-respaldo";
-const VERSION = 1;
-const TABLAS = ["actividades", "sesiones", "capturas", "tareas", "cierres", "racha"] as const;
+const VERSION = 2;
+/**
+ * Una copia tiene que viajar con todo lo que explica el registro. La primera
+ * versión omitía cursos y rutinas: al restaurar en otro equipo la actividad
+ * quedaba, pero perdía su contexto y avance. Los ajustes siguen fuera porque
+ * son propios de cada dispositivo y pueden contener secretos.
+ */
+const TABLAS = [
+  "actividades",
+  "sesiones",
+  "capturas",
+  "tareas",
+  "cierres",
+  "racha",
+  "cursos",
+  "evaluaciones",
+  "planes",
+  "registrosPlan",
+  "zamlyRacha",
+  "zamlyEventos",
+] as const;
 type Tabla = (typeof TABLAS)[number];
 
 /** Marca con la que se reconoce un Blob (audio) dentro del JSON. */
@@ -90,7 +109,8 @@ function decodificar(registro: Record<string, unknown>): Record<string, unknown>
 
 /* ── exportar ────────────────────────────────────────────────────── */
 
-async function construirRespaldo(): Promise<Respaldo> {
+/** Objeto portable usado tanto por el archivo de copia como por la sincronización. */
+export async function construirRespaldo(): Promise<Respaldo> {
   const tablas = {} as Record<Tabla, unknown[]>;
   for (const t of TABLAS) {
     const filas = (await db.table(t).toArray()) as Record<string, unknown>[];
@@ -122,6 +142,11 @@ export async function exportarRespaldo(): Promise<string> {
   });
   await Share.share({ title: "Copia de Lykari", url: uri, dialogTitle: "Guardar o enviar la copia" });
   return nombre;
+}
+
+/** Serializa sin descargar. Así ningún camino de sincronización duplica la lógica de blobs. */
+export function serializarRespaldo(respaldo: Respaldo): string {
+  return JSON.stringify(respaldo);
 }
 
 /* ── importar ────────────────────────────────────────────────────── */

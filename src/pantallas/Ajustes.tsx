@@ -33,6 +33,7 @@ import { procesarPendientes } from "../ia/procesar";
 import { APP_VERSION, buscarActualizacion, type EstadoActualizacion } from "../lib/version";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
 import { Respaldo } from "./Respaldo";
+import { Sincronizar } from "./Sincronizar";
 
 /**
  * En el APK, `window.open` no abre el navegador del sistema: la WebView de
@@ -376,6 +377,10 @@ export function Ajustes({
           </button>
         </div>
       </div>
+
+      <div style={{ height: 1, background: "var(--line)", margin: "24px 0" }} />
+
+      <Sincronizar />
 
       <div style={{ height: 1, background: "var(--line)", margin: "24px 0" }} />
 

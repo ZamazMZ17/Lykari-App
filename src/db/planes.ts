@@ -3,11 +3,9 @@ import { crearActividad, type NuevaActividad } from "./acciones";
 import { hoyISO, type DiaISO } from "../lib/fecha";
 
 /**
- * Ejercicio y GymFace son la única parte de la app con un plan real y
- * seguimiento de cumplimiento — excepción explícita y acotada a estas dos
- * secciones (ver nota en db/db.ts). El nivel sube solo con práctica real
- * acumulada (sesionesParaSubir días completos), nunca baja solo y nunca
- * bloquea: si no se completa hoy, mañana se puede seguir en el mismo nivel.
+ * Ejercicio y GymFace muestran una guía práctica, no una prueba que aprobar.
+ * El nivel cambia solo con práctica que la persona registró; no baja solo ni
+ * bloquea. Guardar una parte de la rutina también es un registro válido.
  */
 
 const RUTINA_EJERCICIO: NivelDePlan[] = [
@@ -17,21 +15,21 @@ const RUTINA_EJERCICIO: NivelDePlan[] = [
     sesionesParaSubir: 8,
     dias: [
       {
-        titulo: "Empuje + core",
+        titulo: "Cuerpo completo A",
         ejercicios: [
-          { nombre: "Flexiones", detalle: "3 series x 8", descansoSeg: 60 },
+          { nombre: "Sentadillas", detalle: "3 series x 10", descansoSeg: 60 },
+          { nombre: "Flexiones inclinadas o de pared", detalle: "3 series x 6–10", descansoSeg: 60 },
           { nombre: "Plancha", detalle: "3 series x 20 s", descansoSeg: 45 },
-          { nombre: "Fondos en silla", detalle: "3 series x 8", descansoSeg: 60 },
-          { nombre: "Zancadas", detalle: "3 series x 10 por pierna", descansoSeg: 45 },
+          { nombre: "Puente de glúteo", detalle: "3 series x 12", descansoSeg: 45 },
         ],
       },
       {
-        titulo: "Tirón + piernas",
+        titulo: "Cuerpo completo B",
         ejercicios: [
-          { nombre: "Remo invertido", detalle: "3 series x 8", descansoSeg: 60 },
-          { nombre: "Sentadillas", detalle: "3 series x 15", descansoSeg: 60 },
-          { nombre: "Puente de glúteo", detalle: "3 series x 15", descansoSeg: 45 },
-          { nombre: "Superman", detalle: "3 series x 12", descansoSeg: 30 },
+          { nombre: "Zancadas hacia atrás", detalle: "3 series x 8 por pierna", descansoSeg: 60 },
+          { nombre: "Buenos días sin peso", detalle: "3 series x 12", descansoSeg: 45 },
+          { nombre: "Abdominales cortos", detalle: "3 series x 10", descansoSeg: 45 },
+          { nombre: "Plancha lateral", detalle: "2 series x 15 s por lado", descansoSeg: 30 },
         ],
       },
     ],
@@ -42,21 +40,21 @@ const RUTINA_EJERCICIO: NivelDePlan[] = [
     sesionesParaSubir: 10,
     dias: [
       {
-        titulo: "Empuje + core",
+        titulo: "Cuerpo completo A",
         ejercicios: [
-          { nombre: "Flexiones", detalle: "4 series x 12", descansoSeg: 60 },
-          { nombre: "Plancha", detalle: "3 series x 40 s", descansoSeg: 45 },
-          { nombre: "Fondos en silla", detalle: "4 series x 12", descansoSeg: 60 },
-          { nombre: "Zancadas caminando", detalle: "3 series x 12 por pierna", descansoSeg: 45 },
+          { nombre: "Sentadillas con pausa", detalle: "4 series x 12", descansoSeg: 60 },
+          { nombre: "Flexiones inclinadas", detalle: "4 series x 8–12", descansoSeg: 60 },
+          { nombre: "Plancha", detalle: "3 series x 35 s", descansoSeg: 45 },
+          { nombre: "Puente de glúteo", detalle: "4 series x 15", descansoSeg: 45 },
         ],
       },
       {
-        titulo: "Tirón + piernas",
+        titulo: "Cuerpo completo B",
         ejercicios: [
-          { nombre: "Remo invertido", detalle: "4 series x 12", descansoSeg: 60 },
-          { nombre: "Sentadilla búlgara", detalle: "3 series x 10 por pierna", descansoSeg: 60 },
-          { nombre: "Puente de glúteo a una pierna", detalle: "3 series x 10 por pierna", descansoSeg: 45 },
-          { nombre: "Superman con hold", detalle: "3 series x 15 s", descansoSeg: 30 },
+          { nombre: "Zancadas hacia atrás", detalle: "4 series x 10 por pierna", descansoSeg: 60 },
+          { nombre: "Sentadilla isométrica en pared", detalle: "3 series x 30 s", descansoSeg: 45 },
+          { nombre: "Dead bug", detalle: "3 series x 10 por lado", descansoSeg: 45 },
+          { nombre: "Superman", detalle: "3 series x 12", descansoSeg: 30 },
         ],
       },
     ],
@@ -67,21 +65,21 @@ const RUTINA_EJERCICIO: NivelDePlan[] = [
     sesionesParaSubir: 12,
     dias: [
       {
-        titulo: "Empuje + core",
+        titulo: "Cuerpo completo A",
         ejercicios: [
-          { nombre: "Flexiones diamante", detalle: "4 series x 10", descansoSeg: 75 },
-          { nombre: "Plancha con toques de hombro", detalle: "3 series x 40 s", descansoSeg: 45 },
-          { nombre: "Fondos elevados", detalle: "4 series x 10", descansoSeg: 75 },
-          { nombre: "Sentadilla con salto", detalle: "3 series x 10", descansoSeg: 60 },
+          { nombre: "Flexiones", detalle: "4 series x 8–12", descansoSeg: 75 },
+          { nombre: "Sentadilla lenta", detalle: "4 series x 15", descansoSeg: 60 },
+          { nombre: "Plancha con toques de hombro", detalle: "3 series x 30 s", descansoSeg: 45 },
+          { nombre: "Puente de glúteo a una pierna", detalle: "3 series x 8 por pierna", descansoSeg: 60 },
         ],
       },
       {
-        titulo: "Tirón + piernas",
+        titulo: "Cuerpo completo B",
         ejercicios: [
-          { nombre: "Dominadas o remo con mochila", detalle: "4 series x 8", descansoSeg: 90 },
-          { nombre: "Sentadilla búlgara con peso", detalle: "3 series x 12 por pierna", descansoSeg: 75 },
-          { nombre: "Hip thrust a una pierna", detalle: "3 series x 12 por pierna", descansoSeg: 60 },
-          { nombre: "Plancha lateral", detalle: "3 series x 30 s por lado", descansoSeg: 30 },
+          { nombre: "Zancadas", detalle: "4 series x 12 por pierna", descansoSeg: 75 },
+          { nombre: "Sentadilla con salto opcional", detalle: "3 series x 8", descansoSeg: 75 },
+          { nombre: "Abdominales bicicleta", detalle: "3 series x 12 por lado", descansoSeg: 45 },
+          { nombre: "Plancha lateral", detalle: "3 series x 25 s por lado", descansoSeg: 30 },
         ],
       },
     ],
@@ -94,25 +92,21 @@ const RUTINA_EJERCICIO: NivelDePlan[] = [
     sesionesParaSubir: 999,
     dias: [
       {
-        titulo: "Empuje + core",
+        titulo: "Cuerpo completo A",
         ejercicios: [
-          { nombre: "Flexiones arqueras", detalle: "4 series x 8 por lado", descansoSeg: 90 },
-          { nombre: "Plancha con elevación de pierna", detalle: "3 series x 45 s", descansoSeg: 45 },
-          { nombre: "Fondos a una mano asistidos", detalle: "3 series x 6", descansoSeg: 90 },
-          { nombre: "Pistol squat asistida", detalle: "3 series x 6 por pierna", descansoSeg: 90 },
+          { nombre: "Flexiones con pausa", detalle: "4 series x 10", descansoSeg: 90 },
+          { nombre: "Sentadilla a una pierna asistida", detalle: "3 series x 6 por pierna", descansoSeg: 90 },
+          { nombre: "Plancha con elevación de pierna", detalle: "3 series x 40 s", descansoSeg: 45 },
+          { nombre: "Puente de glúteo a una pierna", detalle: "3 series x 12 por pierna", descansoSeg: 60 },
         ],
       },
       {
-        titulo: "Tirón + piernas",
+        titulo: "Cuerpo completo B",
         ejercicios: [
-          { nombre: "Dominadas lastradas o negativas", detalle: "4 series x 6", descansoSeg: 120 },
-          { nombre: "Zancada búlgara con salto", detalle: "3 series x 8 por pierna", descansoSeg: 75 },
-          {
-            nombre: "Puente de glúteo a una pierna elevado",
-            detalle: "3 series x 12 por pierna",
-            descansoSeg: 45,
-          },
-          { nombre: "Plancha frontal larga", detalle: "3 series x 60 s", descansoSeg: 45 },
+          { nombre: "Zancada atrás con pausa", detalle: "4 series x 10 por pierna", descansoSeg: 75 },
+          { nombre: "Sentadilla con salto opcional", detalle: "4 series x 10", descansoSeg: 75 },
+          { nombre: "Hollow hold", detalle: "3 series x 25 s", descansoSeg: 45 },
+          { nombre: "Plancha frontal larga", detalle: "3 series x 55 s", descansoSeg: 45 },
         ],
       },
     ],

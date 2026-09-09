@@ -42,6 +42,7 @@ export function Horario({
   onNuevo,
   onDetalle,
   onAjustes,
+  onBack,
 }: {
   cursos: Curso[];
   evaluaciones: Evaluacion[];
@@ -51,6 +52,7 @@ export function Horario({
   onNuevo: () => void;
   onDetalle: (curso: Curso) => void;
   onAjustes: () => void;
+  onBack: () => void;
 }) {
   const [vista, setVista] = useState<Vista>("dia");
   const [sel, setSel] = useState<DiaISO>(hoyISO);
@@ -66,6 +68,7 @@ export function Horario({
       <Header
         eyebrow="Tu semana"
         title="Horario"
+        onBack={onBack}
         right={
           <div style={{ display: "flex", gap: 8 }}>
             <BotonAjustes onClick={onAjustes} />

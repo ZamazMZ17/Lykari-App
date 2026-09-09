@@ -16,3 +16,4 @@ android/local.properties
 # Sistema
 .DS_Store
 Thumbs.db
+bridge/data/

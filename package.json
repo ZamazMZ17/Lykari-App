@@ -10,7 +10,8 @@
     "test": "vitest run",
     "iconos": "node scripts/iconos.mjs",
     "telefono": "node scripts/telefono.mjs",
-    "apk": "node scripts/apk.mjs"
+    "apk": "node scripts/apk.mjs",
+    "sync:bridge": "node bridge/servidor.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.2",

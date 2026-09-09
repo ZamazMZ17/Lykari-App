@@ -9,6 +9,11 @@ const config: CapacitorConfig = {
     backgroundColor: "#DCE0D9",
   },
   plugins: {
+    // En el APK, las llamadas a Sam y a otros servicios salen por la pila de
+    // red nativa de Android, no por la WebView. CORS deja de ser requisito.
+    CapacitorHttp: {
+      enabled: true,
+    },
     LocalNotifications: {
       smallIcon: "ic_stat_lykari",
       iconColor: "#1F4D3F",

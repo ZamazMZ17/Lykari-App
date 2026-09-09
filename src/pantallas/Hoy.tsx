@@ -1,4 +1,4 @@
-import { Pause, Play, Plus } from "lucide-react";
+import { CalendarDays, Pause, Play, Plus } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
@@ -25,6 +25,7 @@ export function Hoy({
   onAlternarPausa,
   onDetalle,
   onAjustes,
+  onHorario,
 }: {
   actividades: Actividad[];
   msPorActividad: Map<number, number>;
@@ -39,6 +40,8 @@ export function Hoy({
   onDetalle: (a: Actividad) => void;
   /** Ajustes cuelga de la raíz de la app, no de una pestaña intermedia. */
   onAjustes: () => void;
+  /** La agenda vive como contexto de Hoy; no compite con las tres áreas principales. */
+  onHorario: () => void;
 }) {
   const franja: [string, string | number][] = [
     ["min registrados", enMinutos(msTotal)],
@@ -53,6 +56,14 @@ export function Hoy({
         title="Tablón de hoy"
         right={
           <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn card"
+              onClick={onHorario}
+              style={{ padding: 9, display: "flex" }}
+              aria-label="Ver agenda"
+            >
+              <CalendarDays size={18} />
+            </button>
             <BotonAjustes onClick={onAjustes} />
             <button
               className="btn card"

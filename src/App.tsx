@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
-import { Activity, CalendarDays, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
+import { Activity, LayoutGrid, Mic, Pause, Play, Timer } from "lucide-react";
 
 import { db, type Actividad, type Curso, type Plan, type Sesion } from "./db/db";
 import {
@@ -64,7 +64,7 @@ import { HojaMascota } from "./pantallas/HojaMascota";
 import { Zamly } from "./pantallas/Zamly";
 import { Burbuja } from "./ui/Burbuja";
 
-type Tab = "hoy" | "capturar" | "camino" | "horario";
+type Tab = "hoy" | "capturar" | "camino";
 
 type HojaAbierta =
   | { t: "nueva" }
@@ -83,7 +83,6 @@ type HojaAbierta =
 const TABS: [Tab, string, typeof LayoutGrid][] = [
   ["hoy", "Hoy", LayoutGrid],
   ["capturar", "Capturar", Mic],
-  ["horario", "Horario", CalendarDays],
   ["camino", "Camino", Activity],
 ];
 
@@ -125,6 +124,8 @@ function empiezaEnScrollHorizontal(objetivo: EventTarget | null, limite: HTMLEle
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("hoy");
+  /** La agenda es una vista contextual de Hoy, no una cuarta área principal. */
+  const [horarioAbierto, setHorarioAbierto] = useState(false);
   const [enSesion, setEnSesion] = useState(false);
   const [seccion, setSeccion] = useState<Seccion | null>(null);
   const [hoja, setHoja] = useState<HojaAbierta>(null);
@@ -228,6 +229,7 @@ export default function App() {
 
   useAtras(enSesion, () => setEnSesion(false));
   useAtras(!!seccion, () => setSeccion(null));
+  useAtras(horarioAbierto, () => setHorarioAbierto(false));
 
   /* ── acciones ──────────────────────────────────────────────────── */
   const iniciar = async (a: Actividad) => {
@@ -362,13 +364,14 @@ export default function App() {
         onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
-  } else if (tab === "horario") {
+  } else if (horarioAbierto) {
     pantalla = (
       <Horario
         cursos={cursos ?? []}
         evaluaciones={evaluaciones ?? []}
         proxima={proxima}
         amplia={amplia}
+        onBack={() => setHorarioAbierto(false)}
         onNuevo={() => setHoja({ t: "nuevoCurso" })}
         onDetalle={(curso) => setHoja({ t: "detalleCurso", curso })}
         onAjustes={() => setHoja({ t: "ajustes" })}
@@ -386,6 +389,7 @@ export default function App() {
         onNueva={() => setHoja({ t: "nueva" })}
         onIniciar={iniciar}
         onAlternarPausa={alternarPausa}
+        onHorario={() => setHorarioAbierto(true)}
         onDetalle={(a) => {
           const plan = planPorActividadId.get(a.id!);
           setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
@@ -399,6 +403,7 @@ export default function App() {
     setTab(k);
     setEnSesion(false);
     setSeccion(null);
+    setHorarioAbierto(false);
   };
 
   /* ── deslizar para cambiar de pestaña ──────────────────────────────
@@ -413,7 +418,7 @@ export default function App() {
   const inicioSwipe = useRef({ x: 0, y: 0, movido: false, permitido: false });
   const historialSwipe = useRef<{ x: number; t: number }[]>([]);
   const sinMovimientoSwipe = useReducedMotion();
-  const puedeSwipe = !enSesion && !hoja && !amplia;
+  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !amplia;
 
   const alMoverSwipe = (e: PointerEvent) => {
     if (!inicioSwipe.current.permitido) return;
@@ -533,7 +538,7 @@ export default function App() {
     </button>
   );
 
-  const activo = (k: Tab) => tab === k && !enSesion;
+  const activo = (k: Tab) => tab === k && !enSesion && !horarioAbierto;
 
   // Lo que llena el anillo ámbar de la burbuja: la referencia de la actividad
   // si la tiene, y si no el límite de las tres horas.
@@ -547,7 +552,7 @@ export default function App() {
 
   // Capturar en tablet: la lista de secciones queda fija a la izquierda del
   // contenido, así se salta de una sección a otra sin entrar y volver.
-  const maestroDetalle = amplia && tab === "capturar" && !enSesion;
+  const maestroDetalle = amplia && tab === "capturar" && !enSesion && !horarioAbierto;
 
   return (
     <div
