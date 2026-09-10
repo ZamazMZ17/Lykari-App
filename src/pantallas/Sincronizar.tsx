@@ -4,10 +4,11 @@ import {
   configuracionSync,
   enviarALaptop,
   guardarConfiguracionSync,
+  probarConexionLaptop,
   traerDeLaptop,
 } from "../sync/cliente";
 
-type Estado = "quieto" | "guardando" | "enviando" | "trayendo" | "listo" | "error";
+type Estado = "quieto" | "guardando" | "probando" | "enviando" | "trayendo" | "listo" | "error";
 
 /** Sincronización manual y explícita: la laptop es un puente, no un rastreador. */
 export function Sincronizar() {
@@ -29,6 +30,18 @@ export function Sincronizar() {
     await guardarConfiguracionSync(url, token);
     setEstado("listo");
     setMensaje("Conexión guardada en este dispositivo.");
+  };
+  const probar = async () => {
+    setEstado("probando");
+    setMensaje("");
+    try {
+      await guardarConfiguracionSync(url, token);
+      setMensaje(await probarConexionLaptop());
+      setEstado("listo");
+    } catch (e) {
+      setEstado("error");
+      setMensaje(e instanceof Error ? e.message : "No se pudo comprobar la conexión.");
+    }
   };
   const enviar = async () => {
     setEstado("enviando");
@@ -55,7 +68,7 @@ export function Sincronizar() {
     }
   };
 
-  const ocupado = estado === "guardando" || estado === "enviando" || estado === "trayendo";
+  const ocupado = estado === "guardando" || estado === "probando" || estado === "enviando" || estado === "trayendo";
 
   return (
     <section>
@@ -64,15 +77,14 @@ export function Sincronizar() {
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 12 }}>
           <Laptop size={17} color="var(--pino)" style={{ marginTop: 2, flexShrink: 0 }} />
           <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: 0, lineHeight: 1.5 }}>
-            Envía una copia completa a tu laptop o trae la última. Si ambos equipos cambiaron,
-            la app te pedirá traer primero para no perder datos. En el APK la conexión es nativa
-            y usa HTTPS; no depende del navegador.
+            Pega la dirección que te da Tailscale y tu clave una sola vez. Lykari completa
+            automáticamente la ruta interna; la conexión usa HTTPS y no depende del navegador.
           </p>
         </div>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://tu-equipo:8585/api/lykari"
+          placeholder="https://tu-equipo.tu-tailnet.ts.net"
           inputMode="url"
           autoCapitalize="none"
           style={campo}
@@ -94,6 +106,9 @@ export function Sincronizar() {
         </div>
         <button className="btn chip" disabled={ocupado} onClick={() => void guardar()} style={{ marginTop: 10, padding: "6px 10px" }}>
           Guardar conexión
+        </button>
+        <button className="btn chip" disabled={ocupado} onClick={() => void probar()} style={{ marginTop: 10, marginLeft: 8, padding: "6px 10px" }}>
+          {estado === "probando" ? <Loader2 className="girando" size={14} /> : "Probar conexión"}
         </button>
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
           <button className="btn" disabled={ocupado} onClick={() => void traer()} style={boton}>

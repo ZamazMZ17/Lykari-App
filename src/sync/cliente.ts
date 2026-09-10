@@ -18,20 +18,52 @@ export interface ConfigSync {
   revision: string;
 }
 
+/**
+ * La dirección que muestra Tailscale normalmente termina en `.ts.net`, pero
+ * la API vive bajo este prefijo. Completarlo aquí evita que el usuario tenga
+ * que recordar una ruta técnica al enlazar un teléfono nuevo.
+ */
+function normalizarUrlSync(valor: string): string {
+  const limpia = valor.trim().replace(/\/$/, "");
+  if (!limpia) return "";
+  try {
+    const url = new URL(limpia);
+    if (!url.pathname || url.pathname === "/") url.pathname = "/api/lykari";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return limpia;
+  }
+}
+
 export async function configuracionSync(): Promise<ConfigSync> {
   const [url, token, revision] = await Promise.all([
     leerAjuste(CLAVE_SYNC_URL),
     leerAjuste(CLAVE_SYNC_TOKEN),
     leerAjuste(CLAVE_SYNC_REVISION),
   ]);
-  return { url: (url ?? "").replace(/\/$/, ""), token: token ?? "", revision: revision ?? "0" };
+  return { url: normalizarUrlSync(url ?? ""), token: token ?? "", revision: revision ?? "0" };
 }
 
 export async function guardarConfiguracionSync(url: string, token: string): Promise<void> {
   await Promise.all([
-    guardarAjuste(CLAVE_SYNC_URL, url.replace(/\/$/, "")),
+    guardarAjuste(CLAVE_SYNC_URL, normalizarUrlSync(url)),
     guardarAjuste(CLAVE_SYNC_TOKEN, token),
   ]);
+}
+
+/** Comprueba URL, HTTPS/Tailscale y clave sin tocar ningún registro personal. */
+export async function probarConexionLaptop(): Promise<string> {
+  const config = await configuracionSync();
+  validar(config);
+  try {
+    const respuesta = await fetch(`${config.url}/v1/academic/feed`, { headers: encabezados(config) });
+    if (respuesta.status === 401) throw new Error("Llegué a la laptop, pero la clave no coincide.");
+    if (!respuesta.ok) throw new Error("La laptop respondió, pero Sam necesita reiniciarse o actualizarse.");
+    return "Conexión lista: laptop y clave verificadas.";
+  } catch (error) {
+    if (error instanceof Error && /clave|Sam necesita/.test(error.message)) throw error;
+    throw new Error("No encuentro la laptop. Abre Tailscale en ambos equipos y confirma que estén en la misma cuenta.");
+  }
 }
 
 function encabezados(config: ConfigSync): HeadersInit {
