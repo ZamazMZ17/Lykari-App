@@ -40,6 +40,10 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(InstaladorPlugin.class);
+        // Dictado con el reconocedor del teléfono (ver Reconocedor.java). Se
+        // registra antes de super.onCreate, que es cuando Capacitor arma el
+        // puente: después ya no lo ve el JS.
+        registerPlugin(Reconocedor.class);
         super.onCreate(savedInstanceState);
         inyectarInsetsEnCSS();
         responderPermisosDeLaWebView();

@@ -33,6 +33,15 @@ sobrescritura silenciosa: si otro equipo cambió el registro, hay que traerlo
 antes de enviar. En el APK esta conexión sale por la red nativa de Android, no
 por la WebView, y por seguridad acepta HTTPS.
 
+**Dictarle a Sam no gasta cuota de la IA.** El micrófono de la pantalla de
+Sam usa el reconocedor de voz del propio teléfono —el mismo servicio de Google
+que dicta en el teclado— y no manda audio a la API: transcribir es justo lo que
+Android ya hace gratis, y con el paquete de español descargado funciona sin
+señal. La key queda libre para el análisis del día y las capturas, que sí
+necesitan una IA. Vive en `src/voz/` y `android/.../Reconocedor.java`, y aguanta
+las pausas al dictar: cuando Android cierra la escucha por silencio, se reabre
+sola y sigue acumulando hasta que sueltas el micrófono.
+
 El [Lykari Bridge](bridge/README.md) se conserva como alternativa mínima si no
 quieres tener Sam encendido. También ofrece MCP para un cliente de chat
 compatible.

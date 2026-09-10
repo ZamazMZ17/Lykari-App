@@ -35,6 +35,18 @@
         </provider>
     </application>
 
+    <!--
+        Desde Android 11 las apps no ven los paquetes de otras salvo que lo
+        declaren. Sin este bloque, SpeechRecognizer no encuentra el servicio
+        de reconocimiento y el dictado falla en silencio en el teléfono,
+        aunque en el navegador funcione.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
 
     <!-- Llamar a la API de la IA. Nada más sale del teléfono. -->
