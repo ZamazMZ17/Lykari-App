@@ -25,9 +25,12 @@ import {
 import {
   CLAVE_API,
   CLAVE_MODELO,
+  CLAVE_SAM_VOZ_ENVIO,
   MODELO_POR_DEFECTO,
   guardarAjuste,
   leerAjuste,
+  modoEnvioVozSam,
+  type ModoEnvioVozSam,
 } from "../ia/ajustes";
 import { procesarPendientes } from "../ia/procesar";
 import { APP_VERSION, buscarActualizacion, type EstadoActualizacion } from "../lib/version";
@@ -50,6 +53,7 @@ export function Ajustes({
 }) {
   const [key, setKey] = useState("");
   const [modelo, setModelo] = useState(MODELO_POR_DEFECTO);
+  const [envioVozSam, setEnvioVozSam] = useState<ModoEnvioVozSam>("revisar");
   const [verKey, setVerKey] = useState(false);
   const [cargado, setCargado] = useState(false);
   const [estado, setEstado] = useState<"quieto" | "guardando" | "listo">("quieto");
@@ -103,6 +107,7 @@ export function Ajustes({
     void (async () => {
       setKey((await leerAjuste(CLAVE_API)) ?? "");
       setModelo((await leerAjuste(CLAVE_MODELO)) ?? MODELO_POR_DEFECTO);
+      setEnvioVozSam(await modoEnvioVozSam());
       setAvisos(await estadoNotificaciones());
       setCargado(true);
     })();
@@ -113,9 +118,11 @@ export function Ajustes({
     setEstado("guardando");
     await guardarAjuste(CLAVE_API, key);
     await guardarAjuste(CLAVE_MODELO, modelo === MODELO_POR_DEFECTO ? "" : modelo);
+    await guardarAjuste(CLAVE_SAM_VOZ_ENVIO, envioVozSam === "enviar" ? "enviar" : "");
     // Con la key puesta, lo que estaba esperando se procesa solo.
     if (key.trim()) await procesarPendientes();
     revisarActualizacion();
+    window.dispatchEvent(new Event("lykari-ajustes-guardados"));
     setEstado("listo");
     setTimeout(onClose, 700);
   };
@@ -218,6 +225,35 @@ export function Ajustes({
       <p style={{ fontSize: 12, color: "var(--ink2)", margin: "0 0 20px" }}>
         Por defecto {MODELO_POR_DEFECTO}.
       </p>
+
+      <div className="eyebrow" style={{ marginBottom: 8 }}>
+        Órdenes por voz a Sam
+      </div>
+      <div className="card" style={{ padding: "8px", marginBottom: 20, display: "grid", gap: 6 }}>
+        {(
+          [
+            ["revisar", "Revisar antes de enviar", "Al soltar, transcribe y deja el texto para corregir."],
+            ["enviar", "Enviar al soltar", "Al soltar, transcribe y manda la orden a Sam."],
+          ] as [ModoEnvioVozSam, string, string][]
+        ).map(([modo, titulo, detalle]) => (
+          <button
+            key={modo}
+            className="btn"
+            onClick={() => setEnvioVozSam(modo)}
+            aria-pressed={envioVozSam === modo}
+            style={{
+              padding: "9px 10px",
+              borderRadius: 9,
+              textAlign: "left",
+              border: `1px solid ${envioVozSam === modo ? "var(--pino)" : "transparent"}`,
+              background: envioVozSam === modo ? "var(--tinte-pino)" : "transparent",
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 500, color: envioVozSam === modo ? "var(--pino)" : "var(--ink)" }}>{titulo}</div>
+            <div style={{ fontSize: 11.5, lineHeight: 1.4, color: "var(--ink2)", marginTop: 2 }}>{detalle}</div>
+          </button>
+        ))}
+      </div>
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>
         Recordatorios

@@ -6,6 +6,9 @@ import { db } from "../db/db";
  */
 export const CLAVE_API = "iaApiKey";
 export const CLAVE_MODELO = "iaModelo";
+/** Decide si una orden de voz a Sam se manda al soltar o espera corrección. */
+export const CLAVE_SAM_VOZ_ENVIO = "samVozEnvio";
+export type ModoEnvioVozSam = "revisar" | "enviar";
 /** Dónde dejó el usuario la burbuja de la mascota: `lado:fraccion`. */
 export const CLAVE_MASCOTA_POS = "mascotaPos";
 /** Día en que la escondió arrastrándola fuera. Vuelve al día siguiente. */
@@ -44,4 +47,9 @@ export async function configuracionIA(): Promise<ConfigIA> {
 
 export async function hayKey(): Promise<boolean> {
   return !!(await leerAjuste(CLAVE_API));
+}
+
+/** Corregir es el valor seguro por defecto: Sam controla otro equipo. */
+export async function modoEnvioVozSam(): Promise<ModoEnvioVozSam> {
+  return (await leerAjuste(CLAVE_SAM_VOZ_ENVIO)) === "enviar" ? "enviar" : "revisar";
 }

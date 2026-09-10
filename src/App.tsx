@@ -375,7 +375,7 @@ export default function App() {
       />
     );
   } else if (samAbierto) {
-    pantalla = <Sam onBack={() => setSamAbierto(false)} />;
+    pantalla = <Sam onBack={() => setSamAbierto(false)} onAjustes={() => setHoja({ t: "ajustes" })} />;
   } else if (aulaAbierta) {
     pantalla = <AulaUPC onBack={() => setAulaAbierta(false)} />;
   } else if (horarioAbierto) {
