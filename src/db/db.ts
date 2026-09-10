@@ -219,6 +219,8 @@ export interface ItemAulaUPC {
   estado: "activo" | "retirado";
   novedad: Bandera;
   leido: Bandera;
+  /** Decisión local: UPC conserva el hecho, pero no vuelve a mostrarse aquí. */
+  oculto?: Bandera;
   convertidoTareaId?: number;
 }
 

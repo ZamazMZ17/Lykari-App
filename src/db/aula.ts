@@ -46,6 +46,7 @@ export async function importarFeedAula(feed: FeedAulaUPC): Promise<void> {
         vence: fechaDe(remoto.vence),
         cursoId: previo?.cursoId ?? resolverCurso(cursos, remoto.cursoClave, remoto.titulo),
         leido: previo?.leido ?? (remoto.novedad ? 0 : 1),
+        oculto: previo?.oculto ?? 0,
         convertidoTareaId: previo?.convertidoTareaId,
       };
       await db.aulaItems.put(item);
@@ -79,6 +80,11 @@ export async function marcarLeidoAula(id: string): Promise<void> {
   await db.aulaItems.update(id, { leido: 1, novedad: 0 });
 }
 
+/** Oculta solo en este dispositivo; una actualización UPC nunca revierte esa decisión. */
+export async function ocultarAula(id: string): Promise<void> {
+  await db.aulaItems.update(id, { oculto: 1, leido: 1, novedad: 0 });
+}
+
 /** La asociación la decide el usuario si UPC no trajo una pista suficiente. */
 export async function vincularAulaACurso(id: string, cursoId: number): Promise<void> {
   await db.aulaItems.update(id, { cursoId });
@@ -97,7 +103,8 @@ export async function convertirAulaEnTarea(item: ItemAulaUPC): Promise<number | 
 
 export async function itemsAulaActivos(): Promise<ItemAulaUPC[]> {
   const items = await db.aulaItems.where("estado").equals("activo").toArray();
-  return items.sort((a, b) => (a.vence ?? "9999").localeCompare(b.vence ?? "9999") || b.actualizado.localeCompare(a.actualizado));
+  return items.filter((item) => !item.oculto)
+    .sort((a, b) => (a.vence ?? "9999").localeCompare(b.vence ?? "9999") || b.actualizado.localeCompare(a.actualizado));
 }
 
 export interface AnalisisCursoAula {
@@ -144,7 +151,7 @@ export async function analisisCursoAula(curso: Curso, ahora = Date.now()): Promi
     minutos28 += minutos;
     if (sesion.dia >= corte7) minutos7 += minutos;
   }
-  const proximo = items.filter((item) => item.estado === "activo" && item.vence && item.vence >= aISO(new Date(ahora)))
+  const proximo = items.filter((item) => item.estado === "activo" && !item.oculto && item.vence && item.vence >= aISO(new Date(ahora)))
     .sort((a, b) => (a.vence ?? "").localeCompare(b.vence ?? ""))[0];
   return { objetivo, pesoEvaluado, puntosAcumulados, promedioRendido, notaNecesaria, minutos7, minutos28, proximo };
 }

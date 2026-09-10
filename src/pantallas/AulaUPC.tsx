@@ -1,7 +1,7 @@
-import { BookOpenCheck, Check, CloudDownload, FilePlus2, RefreshCw } from "lucide-react";
+import { BookOpenCheck, Check, CloudDownload, FilePlus2, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { convertirAulaEnTarea, estadoAula, itemsAulaActivos, marcarLeidoAula, vincularAulaACurso, type FuenteAula } from "../db/aula";
+import { convertirAulaEnTarea, estadoAula, itemsAulaActivos, marcarLeidoAula, ocultarAula, vincularAulaACurso, type FuenteAula } from "../db/aula";
 import { cursosActivos } from "../db/cursos";
 import type { ItemAulaUPC } from "../db/db";
 import { fechaCorta, hoyISO } from "../lib/fecha";
@@ -91,6 +91,7 @@ function Fila({ item, cursos, completa = false }: { item: ItemAulaUPC; cursos: {
   const [ocupado, setOcupado] = useState(false);
   const curso = cursos.find((c) => c.id === item.cursoId)?.nombre ?? item.cursoClave ?? "Curso por vincular";
   const actuar = async () => { setOcupado(true); await convertirAulaEnTarea(item); setOcupado(false); };
+  const quitar = async () => { setOcupado(true); await ocultarAula(item.id); setOcupado(false); };
   return <div className="card" style={{ padding: "11px 12px", borderStyle: item.novedad && !item.leido ? "solid" : "dashed" }}>
     <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
       <CloudDownload size={16} color="var(--pino)" style={{ marginTop: 2, flexShrink: 0 }} />
@@ -101,6 +102,9 @@ function Fila({ item, cursos, completa = false }: { item: ItemAulaUPC; cursos: {
       </button>
       {item.tipo !== "anuncio" && <button className="btn" disabled={ocupado || !!item.convertidoTareaId} onClick={() => void actuar()} aria-label="Convertir en pendiente" style={{ padding: 5, color: item.convertidoTareaId ? "var(--pino)" : "var(--ink2)" }}>
         {item.convertidoTareaId ? <Check size={16} /> : <FilePlus2 size={16} />}
+      </button>}
+      {completa && <button className="btn" disabled={ocupado} onClick={() => void quitar()} aria-label="Quitar de mi Aula" title="Quitar de mi Aula" style={{ padding: 5, color: "var(--ink2)" }}>
+        <Trash2 size={16} />
       </button>}
     </div>
     {!item.cursoId && cursos.length > 0 && <select defaultValue="" onChange={(e) => { if (e.target.value) void vincularAulaACurso(item.id, Number(e.target.value)); }} style={{ margin: "8px 0 0 26px", width: "calc(100% - 26px)", background: "transparent", border: "1px solid var(--line)", borderRadius: 8, color: "var(--ink2)", padding: "6px", font: "inherit", fontSize: 11.5 }}>

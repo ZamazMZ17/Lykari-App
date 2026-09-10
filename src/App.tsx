@@ -378,7 +378,7 @@ export default function App() {
       <Horario
         cursos={cursos ?? []}
         evaluaciones={evaluaciones ?? []}
-        aulaItems={aulaItems.filter((item) => item.estado === "activo")}
+        aulaItems={aulaItems.filter((item) => item.estado === "activo" && !item.oculto)}
         proxima={proxima}
         amplia={amplia}
         onBack={() => setHorarioAbierto(false)}
@@ -400,8 +400,8 @@ export default function App() {
         onIniciar={iniciar}
         onAlternarPausa={alternarPausa}
         onHorario={() => setHorarioAbierto(true)}
-        aulaNovedades={aulaItems.filter((item) => item.novedad && !item.leido && item.estado === "activo").length}
-        aulaProximas={aulaItems.filter((item) => item.vence && item.vence >= dia && item.estado === "activo").length}
+        aulaNovedades={aulaItems.filter((item) => item.novedad && !item.leido && item.estado === "activo" && !item.oculto).length}
+        aulaProximas={aulaItems.filter((item) => item.vence && item.vence >= dia && item.estado === "activo" && !item.oculto).length}
         onAula={() => setAulaAbierta(true)}
         onDetalle={(a) => {
           const plan = planPorActividadId.get(a.id!);
