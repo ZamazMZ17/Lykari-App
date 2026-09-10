@@ -65,6 +65,12 @@ function crearWeb(): ReconocedorWeb | null {
 export function useReconocedor(
   alTerminar: (texto: string) => void,
   frasesFavorecidas: string[] = [],
+  /**
+   * Solo si el teléfono tiene descargado el paquete de voz en español. Sin
+   * él, pedir reconocimiento en el dispositivo no da error claro: devuelve
+   * «sin coincidencias», que es indistinguible de no haber hablado.
+   */
+  priorizarSinConexion = false,
 ) {
   const [estado, setEstado] = useState<EstadoEscucha>("inactivo");
   const [parcial, setParcial] = useState("");
@@ -83,11 +89,16 @@ export function useReconocedor(
   /** El cierre manual espera el resultado final, pero nunca se queda colgado. */
   const cierreManual = useRef<number | null>(null);
   /**
-   * Se arranca prefiriendo el reconocimiento en el teléfono. Si el servicio
-   * contesta que no tiene el idioma descargado, se baja esta bandera y el
-   * siguiente tramo va a la red — mejor lento que mudo.
+   * Reconocer en el teléfono es más rápido, pero solo si está el paquete de
+   * idioma; por eso arranca apagado salvo que se pida. Si el servicio avisa
+   * de que le falta el idioma, se baja y el siguiente tramo va a la red —
+   * mejor lento que mudo.
    */
-  const preferirOffline = useRef(true);
+  const preferirOffline = useRef(false);
+  const priorizarSinConexionRef = useRef(priorizarSinConexion);
+  priorizarSinConexionRef.current = priorizarSinConexion;
+  /** Cuántos tramos cerró el reconocedor. Cero = no contestó nunca. */
+  const cortes = useRef(0);
   /** Sube en cada apertura y cierre; los reinicios viejos se descartan solos. */
   const generacion = useRef(0);
   const frasesRef = useRef<string[]>([]);
@@ -129,11 +140,21 @@ export function useReconocedor(
   const finalizar = useCallback(() => {
     if (!activo.current) return;
     const texto = todo();
+    const contesto = cortes.current > 0;
     base.current = "";
     tramo.current = "";
     soltar();
     setEstado("inactivo");
     setParcial("");
+    // Terminar en blanco no puede parecer que no pasó nada: se dice si el
+    // reconocedor no contestó (otra cosa) o si contestó y no oyó nada.
+    if (!texto) {
+      setError(
+        contesto || !esNativo
+          ? "No se oyó nada. Mantén el micrófono mientras hablas."
+          : "El reconocedor de voz del teléfono no respondió. Comprueba que la app sea la 0.7.2 o más nueva.",
+      );
+    }
     alTerminarRef.current(texto);
   }, [soltar]);
 
@@ -173,6 +194,7 @@ export function useReconocedor(
   const alCorte = useCallback(
     (d: CorteNativo) => {
       if (!activo.current) return;
+      cortes.current += 1;
 
       // El texto final del tramo viene repasado por el servicio: pisa al
       // último parcial, que es un borrador.
@@ -219,6 +241,15 @@ export function useReconocedor(
         base.current = todo();
         tramo.current = "";
       } else {
+        // Nunca se oyó nada y se estaba reconociendo en el teléfono: lo más
+        // probable es que falte el paquete de idioma, que el servicio no
+        // reporta como error sino como «sin coincidencias». Antes de darse
+        // por vencido, se prueba por red.
+        if (!base.current.trim() && preferirOffline.current) {
+          preferirOffline.current = false;
+          silencios.current = 0;
+          return reabrir(0);
+        }
         // Tramo vacío: va callado. A la segunda (~8 s) se cierra sola.
         silencios.current += 1;
         if (silencios.current >= SILENCIOS_SEGUIDOS) return finalizar();
@@ -240,7 +271,7 @@ export function useReconocedor(
     });
     await ReconocedorNativo.addListener("corte", alCorte);
 
-    preferirOffline.current = true;
+    preferirOffline.current = priorizarSinConexionRef.current;
     activo.current = true;
     try {
       // La primera llamada puede pedir el permiso del micrófono.
@@ -258,6 +289,15 @@ export function useReconocedor(
     setEstado("escuchando");
   }, [alCorte]);
 
+  /** Cierra el tramo abierto y espera su resultado final, sin colgarse. */
+  const pedirCierre = useCallback(() => {
+    // Con un cierre ya pedido, repetirlo dejaría dos temporizadores sueltos.
+    if (!activo.current || cierreManual.current !== null) return;
+    if (esNativo) void ReconocedorNativo.detener().catch(() => {});
+    else web.current?.stop();
+    cierreManual.current = window.setTimeout(finalizar, 1300);
+  }, [finalizar]);
+
   const iniciar = useCallback(async () => {
     if (activo.current) return;
     setError(null);
@@ -267,6 +307,7 @@ export function useReconocedor(
     pidioParar.current = false;
     silencios.current = 0;
     erroresDuros.current = 0;
+    cortes.current = 0;
     inicio.current = Date.now();
     setEstado("pidiendo");
 
@@ -278,6 +319,10 @@ export function useReconocedor(
           if (esPluginAusente(e)) throw new Error("apk-viejo");
           throw e;
         }
+        // Abrir el micrófono pasa por el puente y tarda: si soltó el botón
+        // mientras tanto, el «detener» llegó cuando todavía no había nada que
+        // detener y la escucha se habría quedado abierta.
+        if (pidioParar.current) pedirCierre();
         return;
       }
 
@@ -315,7 +360,7 @@ export function useReconocedor(
               : "No se pudo abrir el micrófono. Puedes escribir la indicación.",
       );
     }
-  }, [finalizar, iniciarNativo, soltar]);
+  }, [finalizar, iniciarNativo, pedirCierre, soltar]);
 
   /**
    * Se soltó el micrófono: se pide cerrar el tramo para recibir su resultado
@@ -324,12 +369,11 @@ export function useReconocedor(
    * parcial y termina igual.
    */
   const detener = useCallback(() => {
-    if (!activo.current) return;
+    // Se marca siempre, incluso si la apertura sigue en curso: `iniciar` lo
+    // comprueba al terminar de abrir.
     pidioParar.current = true;
-    if (esNativo) void ReconocedorNativo.detener().catch(() => {});
-    else web.current?.stop();
-    cierreManual.current = window.setTimeout(finalizar, 1300);
-  }, [finalizar]);
+    pedirCierre();
+  }, [pedirCierre]);
 
   /** Salir sin usar lo dictado (cambió de pantalla, por ejemplo). */
   const cancelar = useCallback(() => {

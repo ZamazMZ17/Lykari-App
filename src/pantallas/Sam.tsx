@@ -77,7 +77,9 @@ export function Sam({ onBack, onAjustes }: { onBack: () => void; onAjustes: () =
   const alTerminarDictado = (transcripcion: string) => {
     const dicho = transcripcion.trim();
     if (!dicho) {
-      setAviso("No te escuché. Mantén el micrófono mientras hablas.");
+      // El propio reconocedor explica por qué salió vacío (no se oyó nada, o
+      // no contestó): pisarlo con un aviso genérico esconde la causa.
+      setAviso(null);
       return;
     }
     if (envioVoz === "enviar") {

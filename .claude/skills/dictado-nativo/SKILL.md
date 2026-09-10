@@ -80,11 +80,13 @@ vuelven a pisar todas:
 3. **Reutilizar el `SpeechRecognizer` tras un error lo deja «ocupado»**
    (`ERROR_RECOGNIZER_BUSY`): es la causa clásica de «le hablo y no pasa nada».
    Cada arranque crea uno nuevo y destruye el anterior.
-4. **`EXTRA_PREFER_OFFLINE`.** Sin esto, con señal débil el servicio intenta ir
-   a la red y se queda pensando varios segundos: esa es la demora que se siente
-   al dictar. Con el paquete de idioma descargado corre en el teléfono. Si el
-   servicio contesta que no tiene el idioma, el JS baja la bandera y reintenta
-   por red — mejor lento que mudo.
+4. **`EXTRA_PREFER_OFFLINE` va apagado por defecto, y es importante.**
+   Encendido acelera el dictado —no espera a la red— pero **solo si el teléfono
+   tiene descargado el paquete de voz del idioma**. Si no lo tiene, el servicio
+   no da un error claro: devuelve «sin coincidencias», indistinguible de no
+   haber hablado, y el dictado parece roto («no transcribe nada»). Enciéndelo
+   como opción, nunca como valor por defecto. Las plantillas además reintentan
+   por red solas si un tramo sale vacío estando en modo teléfono.
 5. **El último parcial no es el resultado.** Al cerrar un tramo el servicio
    entrega en `onResults` una versión repasada, mejor puntuada. Hay que emitirla
    y dejar que pise al parcial.
