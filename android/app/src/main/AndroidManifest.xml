@@ -40,6 +40,11 @@
     <!-- Llamar a la API de la IA. Nada más sale del teléfono. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Permite que Lykari entregue su APK descargado al instalador de
+         Android. El sistema siempre pide la confirmación final: la app nunca
+         se instala sola ni abre el navegador. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Grabar las capturas de voz y el audio de cierre de sesión. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Imprescindible aunque no lo parezca: al abrir el micrófono, el motor

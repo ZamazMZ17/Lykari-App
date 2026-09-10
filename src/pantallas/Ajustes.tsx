@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   Bell,
   CalendarDays,
   Check,
@@ -11,9 +12,9 @@ import {
   Sun,
   SunMoon,
 } from "lucide-react";
-import { Browser } from "@capacitor/browser";
 import { useEffect, useRef, useState } from "react";
 import { esNativo } from "../lib/plataforma";
+import { descargarEInstalarApk } from "../lib/instalador";
 import { sembrarCiclo6 } from "../db/semillaCiclo6";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
 import {
@@ -33,17 +34,6 @@ import { APP_VERSION, buscarActualizacion, type EstadoActualizacion } from "../l
 import { BotonPrincipal, Hoja } from "../ui/piezas";
 import { Respaldo } from "./Respaldo";
 import { Sincronizar } from "./Sincronizar";
-
-/**
- * En el APK, `window.open` no abre el navegador del sistema: la WebView de
- * Capacitor lo bloquea o lo abre como un popup vacío en silencio — por eso
- * el botón de descargar no llevaba a ningún lado. `@capacitor/browser` sí
- * lanza el navegador real. En la web (PWA) `window.open` funciona normal.
- */
-function abrirEnNavegador(url: string): void {
-  if (esNativo) void Browser.open({ url });
-  else window.open(url, "_blank");
-}
 
 /** Mantener presionado 600ms el rótulo de Actualizaciones abre el acceso
  *  privado — a propósito no hay nada visible que lo señale. */
@@ -66,6 +56,8 @@ export function Ajustes({
   const [avisos, setAvisos] = useState({ disponible: false, concedido: false, programadas: 0 });
   const [actualizacion, setActualizacion] = useState<EstadoActualizacion>({ estado: "revisando" });
   const [cargandoCursos, setCargandoCursos] = useState(false);
+  const [instalando, setInstalando] = useState(false);
+  const [errorInstalar, setErrorInstalar] = useState<string | null>(null);
   const { tema } = useTema();
   const pulsacionLarga = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -89,6 +81,22 @@ export function Ajustes({
   const revisarActualizacion = () => {
     setActualizacion({ estado: "revisando" });
     void buscarActualizacion().then(setActualizacion);
+  };
+
+  /** En Android el APK se baja dentro de Lykari y se entrega directamente al
+   * instalador del sistema. Nunca navega a GitHub ni abre una pestaña. */
+  const descargar = async () => {
+    if (actualizacion.estado !== "disponible") return;
+    setInstalando(true);
+    setErrorInstalar(null);
+    try {
+      if (esNativo) await descargarEInstalarApk(actualizacion.assetUrl);
+      else window.open(actualizacion.assetUrl, "_blank");
+    } catch (e) {
+      setErrorInstalar(e instanceof Error ? e.message : "No se pudo descargar la actualización.");
+    } finally {
+      setInstalando(false);
+    }
   };
 
   useEffect(() => {
@@ -272,10 +280,12 @@ export function Ajustes({
           {actualizacion.estado === "disponible" ? (
             <button
               className="btn chip"
-              onClick={() => abrirEnNavegador(actualizacion.url)}
-              style={{ padding: "5px 10px" }}
+              onClick={() => void descargar()}
+              disabled={instalando}
+              style={{ padding: "5px 10px", display: "flex", gap: 5, alignItems: "center" }}
             >
-              Descargar
+              {instalando && <Loader2 size={12} className="girando" />}
+              {instalando ? "Descargando…" : "Descargar"}
             </button>
           ) : (
             <button
@@ -289,6 +299,12 @@ export function Ajustes({
             </button>
           )}
         </div>
+        {errorInstalar && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 10, fontSize: 12, color: "var(--ink2)" }}>
+            <AlertTriangle size={13} style={{ flexShrink: 0 }} />
+            {errorInstalar}
+          </div>
+        )}
       </div>
 
       {sinProcesar > 0 && (

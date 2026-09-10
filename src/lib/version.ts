@@ -9,7 +9,9 @@ export const APP_VERSION: string = pkg.version;
 export type EstadoActualizacion =
   | { estado: "revisando" }
   | { estado: "al-dia" }
-  | { estado: "disponible"; version: string; url: string }
+  /** URL directa del APK del release. En Android se descarga dentro de
+   * Lykari; en la versión web se abre normalmente en otra pestaña. */
+  | { estado: "disponible"; version: string; assetUrl: string }
   | { estado: "sin-releases" }
   | { estado: "error" };
 
@@ -26,9 +28,9 @@ function compararVersiones(a: string, b: string): number {
 }
 
 /**
- * Consulta el último release público y abre directamente el APK. No se pide
- * ninguna clave al usuario: consultar una actualización no debe dar acceso al
- * repositorio ni convertir Ajustes en una pantalla técnica.
+ * Consulta el último release público. No se pide ninguna clave al usuario:
+ * consultar una actualización no debe dar acceso al repositorio ni convertir
+ * Ajustes en una pantalla técnica.
  */
 export async function buscarActualizacion(): Promise<EstadoActualizacion> {
   try {
@@ -45,10 +47,10 @@ export async function buscarActualizacion(): Promise<EstadoActualizacion> {
         typeof asset === "object" && asset !== null && (asset as { name?: unknown }).name === "Lykari.apk",
       ) as { browser_download_url?: unknown } | undefined
       : undefined;
-    const url = typeof apk?.browser_download_url === "string" ? apk.browser_download_url : "";
-    if (!version || !url) return { estado: "error" };
+    const assetUrl = typeof apk?.browser_download_url === "string" ? apk.browser_download_url : "";
+    if (!version || !assetUrl) return { estado: "error" };
     return compararVersiones(version, APP_VERSION) > 0
-      ? { estado: "disponible", version, url }
+      ? { estado: "disponible", version, assetUrl }
       : { estado: "al-dia" };
   } catch {
     return { estado: "error" };
