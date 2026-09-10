@@ -1,4 +1,4 @@
-import { CalendarDays, GraduationCap, Pause, Play, Plus } from "lucide-react";
+import { Bot, CalendarDays, ChevronRight, GraduationCap, Pause, Play, Plus } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
@@ -29,6 +29,7 @@ export function Hoy({
   aulaNovedades,
   aulaProximas,
   onAula,
+  onSam,
 }: {
   actividades: Actividad[];
   msPorActividad: Map<number, number>;
@@ -48,6 +49,7 @@ export function Hoy({
   aulaNovedades: number;
   aulaProximas: number;
   onAula: () => void;
+  onSam: () => void;
 }) {
   const franja: [string, string | number][] = [
     ["min registrados", enMinutos(msTotal)],
@@ -102,7 +104,16 @@ export function Hoy({
           <div className="eyebrow" style={{ marginBottom: 2 }}>Universidad</div>
           <div style={{ fontSize: 13.5 }}>{aulaNovedades ? `${aulaNovedades} novedades del aula` : aulaProximas ? `${aulaProximas} fechas próximas` : "Aula UPC y fechas académicas"}</div>
         </div>
-        <CalendarDays size={16} color="var(--ink2)" />
+        <ChevronRight size={16} color="var(--ink2)" />
+      </button>
+
+      <button className="btn card" onClick={onSam} style={{ margin: "0 20px 16px", width: "calc(100% - 40px)", padding: "12px 14px", display: "flex", gap: 11, alignItems: "center", textAlign: "left" }}>
+        <Bot size={18} color="var(--pino)" />
+        <div style={{ flex: 1 }}>
+          <div className="eyebrow" style={{ marginBottom: 2 }}>Tu laptop</div>
+          <div style={{ fontSize: 13.5 }}>Asistente Sam</div>
+        </div>
+        <ChevronRight size={16} color="var(--ink2)" />
       </button>
 
       {actividades.length === 0 ? (

@@ -56,6 +56,7 @@ import { DetallePlan } from "./pantallas/Plan";
 import { Camino } from "./pantallas/Camino";
 import { Horario } from "./pantallas/Horario";
 import { AulaUPC } from "./pantallas/AulaUPC";
+import { Sam } from "./pantallas/Sam";
 import { NuevoCurso } from "./pantallas/NuevoCurso";
 import { Capturar, type Seccion } from "./pantallas/Capturar";
 import { Ideas } from "./pantallas/Ideas";
@@ -129,6 +130,7 @@ export default function App() {
   /** La agenda es una vista contextual de Hoy, no una cuarta área principal. */
   const [horarioAbierto, setHorarioAbierto] = useState(false);
   const [aulaAbierta, setAulaAbierta] = useState(false);
+  const [samAbierto, setSamAbierto] = useState(false);
   const [enSesion, setEnSesion] = useState(false);
   const [seccion, setSeccion] = useState<Seccion | null>(null);
   const [hoja, setHoja] = useState<HojaAbierta>(null);
@@ -237,6 +239,7 @@ export default function App() {
   useAtras(!!seccion, () => setSeccion(null));
   useAtras(horarioAbierto, () => setHorarioAbierto(false));
   useAtras(aulaAbierta, () => setAulaAbierta(false));
+  useAtras(samAbierto, () => setSamAbierto(false));
 
   /* ── acciones ──────────────────────────────────────────────────── */
   const iniciar = async (a: Actividad) => {
@@ -371,6 +374,8 @@ export default function App() {
         onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
+  } else if (samAbierto) {
+    pantalla = <Sam onBack={() => setSamAbierto(false)} />;
   } else if (aulaAbierta) {
     pantalla = <AulaUPC onBack={() => setAulaAbierta(false)} />;
   } else if (horarioAbierto) {
@@ -403,6 +408,7 @@ export default function App() {
         aulaNovedades={aulaItems.filter((item) => item.novedad && !item.leido && item.estado === "activo" && !item.oculto).length}
         aulaProximas={aulaItems.filter((item) => item.vence && item.vence >= dia && item.estado === "activo" && !item.oculto).length}
         onAula={() => setAulaAbierta(true)}
+        onSam={() => setSamAbierto(true)}
         onDetalle={(a) => {
           const plan = planPorActividadId.get(a.id!);
           setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
@@ -418,6 +424,7 @@ export default function App() {
     setSeccion(null);
     setHorarioAbierto(false);
     setAulaAbierta(false);
+    setSamAbierto(false);
   };
 
   /* ── deslizar para cambiar de pestaña ──────────────────────────────
@@ -432,7 +439,7 @@ export default function App() {
   const inicioSwipe = useRef({ x: 0, y: 0, movido: false, permitido: false });
   const historialSwipe = useRef<{ x: number; t: number }[]>([]);
   const sinMovimientoSwipe = useReducedMotion();
-  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !amplia;
+  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !samAbierto && !amplia;
 
   const alMoverSwipe = (e: PointerEvent) => {
     if (!inicioSwipe.current.permitido) return;
