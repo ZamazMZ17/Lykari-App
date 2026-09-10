@@ -63,5 +63,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.nombre }}
+          # Sin esto la acción crea el tag sobre la rama por defecto, no sobre
+          # el commit que acaba de compilar: el APK sale del código correcto
+          # pero `git checkout vX.Y.Z` devuelve otro. Solo se nota al publicar
+          # a mano desde una rama que no es main.
+          target_commitish: ${{ github.sha }}
           files: Lykari.apk
           generate_release_notes: true

@@ -152,7 +152,7 @@ export function useReconocedor(
       setError(
         contesto || !esNativo
           ? "No se oyó nada. Mantén el micrófono mientras hablas."
-          : "El reconocedor de voz del teléfono no respondió. Comprueba que la app sea la 0.7.2 o más nueva.",
+          : "El reconocedor de voz del teléfono no respondió. Comprueba que la app sea la 0.7.3 o más nueva.",
       );
     }
     alTerminarRef.current(texto);
