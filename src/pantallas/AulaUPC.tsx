@@ -117,7 +117,7 @@ export function AulaUPC({ onBack }: { onBack: () => void }) {
           placeholder="https://aulavirtual.upc.edu.pe/…/learn.ics"
           style={{ width: "100%", padding: "10px 11px", borderRadius: 9, border: "1px solid var(--line)", background: "var(--ground)", color: "var(--ink)", fontSize: 12 }}
         />
-        <div style={{ fontSize: 11.5, color: "var(--ink2)", lineHeight: 1.45 }}>Se guarda solo en este teléfono. El APK lo consulta directamente, aunque tu laptop esté apagada.</div>
+        <div style={{ fontSize: 11.5, color: "var(--ink2)", lineHeight: 1.45 }}>Solo en este teléfono. Sin laptop.</div>
         <button className="btn chip" onClick={() => void guardarCalendario()} disabled={actualizando} style={{ justifySelf: "start", display: "inline-flex", gap: 6, alignItems: "center", padding: "6px 10px" }}>
           <Save size={13} /> Guardar y actualizar
         </button>
@@ -139,7 +139,7 @@ export function AulaUPC({ onBack }: { onBack: () => void }) {
       </select>
     </div>
 
-    {visibles.length === 0 ? <Nota icono={<BookOpenCheck size={16} color="var(--ink2)" />}>No hay elementos para este filtro. Con el calendario móvil conectado, podrás actualizarlos incluso con la laptop apagada.</Nota> : <div style={{ padding: "14px 20px", display: "grid", gap: 8 }}>{visibles.map((item) => <Fila key={item.id} item={item} cursos={cursos} completa />)}</div>}
+    {visibles.length === 0 ? <Nota icono={<BookOpenCheck size={16} color="var(--ink2)" />}>No hay elementos para este filtro.</Nota> : <div style={{ padding: "14px 20px", display: "grid", gap: 8 }}>{visibles.map((item) => <Fila key={item.id} item={item} cursos={cursos} completa />)}</div>}
   </div>;
 }
 

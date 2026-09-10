@@ -13,7 +13,7 @@ const normalizar = (texto = "") =>
   texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 const desescapar = (texto = "") =>
-  texto.replace(/\\\\n/gi, "\n").replace(/\\\\,/g, ",").replace(/\\\\;/g, ";").replace(/\\\\\\\\/g, "\\");
+  texto.replace(/\\n/gi, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\");
 
 function fechaIcs(valor?: string): DiaISO | undefined {
   const partes = valor?.match(/^(\d{4})(\d{2})(\d{2})/);
@@ -24,7 +24,7 @@ function tipoDe(titulo: string, descripcion: string): TipoAulaUPC {
   const texto = normalizar(`${titulo} ${descripcion}`);
   if (/examen|ef\b|ep\b|parcial|final/.test(texto)) return "examen";
   if (/control|pc\d|practica calificada/.test(texto)) return "control";
-  if (/evaluacion|evaluacion|gnp|eaaa/.test(texto)) return "evaluacion";
+  if (/evaluacion|gnp|eaaa/.test(texto)) return "evaluacion";
   if (/anuncio|novedad|comunicado/.test(texto)) return "anuncio";
   return "entrega";
 }
