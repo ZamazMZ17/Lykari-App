@@ -30,6 +30,7 @@ import { proximaEvaluacion, todasConFecha } from "./db/evaluaciones";
 import { sembrarRutinasPermanentes } from "./db/planes";
 import { sembrarEstudioDeCursos } from "./db/estudioCursos";
 import { sembrarActividadesPersonales } from "./db/actividadesPersonales";
+import { actualizarAulaUPC } from "./sync/aula";
 import {
   capturasDe,
   capturasSinProcesar,
@@ -54,6 +55,7 @@ import { DetalleActividad, DetalleCurso, SesionEnCurso } from "./pantallas/Hojas
 import { DetallePlan } from "./pantallas/Plan";
 import { Camino } from "./pantallas/Camino";
 import { Horario } from "./pantallas/Horario";
+import { AulaUPC } from "./pantallas/AulaUPC";
 import { NuevoCurso } from "./pantallas/NuevoCurso";
 import { Capturar, type Seccion } from "./pantallas/Capturar";
 import { Ideas } from "./pantallas/Ideas";
@@ -126,6 +128,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("hoy");
   /** La agenda es una vista contextual de Hoy, no una cuarta área principal. */
   const [horarioAbierto, setHorarioAbierto] = useState(false);
+  const [aulaAbierta, setAulaAbierta] = useState(false);
   const [enSesion, setEnSesion] = useState(false);
   const [seccion, setSeccion] = useState<Seccion | null>(null);
   const [hoja, setHoja] = useState<HojaAbierta>(null);
@@ -157,6 +160,7 @@ export default function App() {
   const tareas = useLiveQuery(leerTareas, [], []);
   const cursos = useLiveQuery(cursosActivos, [], []);
   const evaluaciones = useLiveQuery(todasConFecha, [], []);
+  const aulaItems = useLiveQuery(() => db.aulaItems.toArray(), [], []);
   const proxima = useLiveQuery(() => proximaEvaluacion(dia), [dia]);
   const planes = useLiveQuery(() => db.planes.toArray(), [], []);
   const planPorActividadId = useMemo(
@@ -202,6 +206,8 @@ export default function App() {
       await sembrarRutinasPermanentes();
       await sembrarEstudioDeCursos();
       await sembrarActividadesPersonales();
+      // La laptop puede estar apagada: conservar la copia local es el comportamiento normal.
+      await actualizarAulaUPC().catch(() => {});
     })();
   }, [revisar]);
   useAlVolver(() => void revisar());
@@ -230,6 +236,7 @@ export default function App() {
   useAtras(enSesion, () => setEnSesion(false));
   useAtras(!!seccion, () => setSeccion(null));
   useAtras(horarioAbierto, () => setHorarioAbierto(false));
+  useAtras(aulaAbierta, () => setAulaAbierta(false));
 
   /* ── acciones ──────────────────────────────────────────────────── */
   const iniciar = async (a: Actividad) => {
@@ -364,11 +371,14 @@ export default function App() {
         onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
+  } else if (aulaAbierta) {
+    pantalla = <AulaUPC onBack={() => setAulaAbierta(false)} />;
   } else if (horarioAbierto) {
     pantalla = (
       <Horario
         cursos={cursos ?? []}
         evaluaciones={evaluaciones ?? []}
+        aulaItems={aulaItems.filter((item) => item.estado === "activo")}
         proxima={proxima}
         amplia={amplia}
         onBack={() => setHorarioAbierto(false)}
@@ -390,6 +400,9 @@ export default function App() {
         onIniciar={iniciar}
         onAlternarPausa={alternarPausa}
         onHorario={() => setHorarioAbierto(true)}
+        aulaNovedades={aulaItems.filter((item) => item.novedad && !item.leido && item.estado === "activo").length}
+        aulaProximas={aulaItems.filter((item) => item.vence && item.vence >= dia && item.estado === "activo").length}
+        onAula={() => setAulaAbierta(true)}
         onDetalle={(a) => {
           const plan = planPorActividadId.get(a.id!);
           setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
@@ -404,6 +417,7 @@ export default function App() {
     setEnSesion(false);
     setSeccion(null);
     setHorarioAbierto(false);
+    setAulaAbierta(false);
   };
 
   /* ── deslizar para cambiar de pestaña ──────────────────────────────
@@ -418,7 +432,7 @@ export default function App() {
   const inicioSwipe = useRef({ x: 0, y: 0, movido: false, permitido: false });
   const historialSwipe = useRef<{ x: number; t: number }[]>([]);
   const sinMovimientoSwipe = useReducedMotion();
-  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !amplia;
+  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !amplia;
 
   const alMoverSwipe = (e: PointerEvent) => {
     if (!inicioSwipe.current.permitido) return;

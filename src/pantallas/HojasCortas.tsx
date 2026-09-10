@@ -17,6 +17,7 @@ import { duracionLarga } from "../lib/tiempo";
 import { FormularioActividad } from "./NuevaActividad";
 import { FormularioCurso } from "./NuevoCurso";
 import { FormularioEvaluacion, ListaEvaluaciones } from "./Evaluaciones";
+import { ResumenCursoUPC } from "./ResumenCursoUPC";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
 
 const MODALIDAD_LARGA = {
@@ -265,6 +266,8 @@ export function DetalleCurso({
           </div>
         )}
       </div>
+
+      <ResumenCursoUPC curso={curso} />
 
       <div className="eyebrow" style={{ marginBottom: 8 }}>
         Evaluaciones

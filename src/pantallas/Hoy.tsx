@@ -1,4 +1,4 @@
-import { CalendarDays, Pause, Play, Plus } from "lucide-react";
+import { CalendarDays, GraduationCap, Pause, Play, Plus } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
@@ -26,6 +26,9 @@ export function Hoy({
   onDetalle,
   onAjustes,
   onHorario,
+  aulaNovedades,
+  aulaProximas,
+  onAula,
 }: {
   actividades: Actividad[];
   msPorActividad: Map<number, number>;
@@ -42,6 +45,9 @@ export function Hoy({
   onAjustes: () => void;
   /** La agenda vive como contexto de Hoy; no compite con las tres áreas principales. */
   onHorario: () => void;
+  aulaNovedades: number;
+  aulaProximas: number;
+  onAula: () => void;
 }) {
   const franja: [string, string | number][] = [
     ["min registrados", enMinutos(msTotal)],
@@ -89,6 +95,15 @@ export function Hoy({
           </div>
         ))}
       </div>
+
+      <button className="btn card" onClick={onAula} style={{ margin: "0 20px 16px", width: "calc(100% - 40px)", padding: "12px 14px", display: "flex", gap: 11, alignItems: "center", textAlign: "left" }}>
+        <GraduationCap size={18} color="var(--pino)" />
+        <div style={{ flex: 1 }}>
+          <div className="eyebrow" style={{ marginBottom: 2 }}>Universidad</div>
+          <div style={{ fontSize: 13.5 }}>{aulaNovedades ? `${aulaNovedades} novedades del aula` : aulaProximas ? `${aulaProximas} fechas próximas` : "Aula UPC y fechas académicas"}</div>
+        </div>
+        <CalendarDays size={16} color="var(--ink2)" />
+      </button>
 
       {actividades.length === 0 ? (
         <Nota>El tablón está vacío.</Nota>

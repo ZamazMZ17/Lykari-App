@@ -27,6 +27,8 @@ export interface Actividad {
   /** 0 = sin tiempo de referencia. Es solo una marca visual. */
   referenciaMin: number;
   tipo: TipoActividad;
+  /** Curso al que aporta esta actividad, cuando es estudio propio. */
+  cursoId?: number;
   activa: Bandera;
   creada: number;
 }
@@ -175,6 +177,8 @@ export interface Curso {
   /** Texto libre tal como aparece en el sílabo, ej. "NF = 0.10·PC1 + …". Solo
    *  referencia: la app no evalúa la fórmula, calcula sobre `Evaluacion.peso`. */
   formulaNota?: string;
+  /** Referencia personal para el cálculo de nota, no una promesa de resultado. */
+  notaObjetivo?: number;
   activo: Bandera;
   creada: number;
 }
@@ -197,6 +201,36 @@ export interface Evaluacion {
   nota?: number;
   hecha: Bandera;
   creada: number;
+}
+
+export type TipoAulaUPC = "entrega" | "examen" | "control" | "anuncio" | "evaluacion";
+
+/** Hecho publicado por UPC. La fuente manda; las decisiones personales siguen locales. */
+export interface ItemAulaUPC {
+  id: string;
+  cursoClave?: string;
+  cursoId?: number;
+  tipo: TipoAulaUPC;
+  titulo: string;
+  descripcion?: string;
+  publicado?: string;
+  vence?: DiaISO;
+  actualizado: string;
+  estado: "activo" | "retirado";
+  novedad: Bandera;
+  leido: Bandera;
+  convertidoTareaId?: number;
+}
+
+/** Componente oficial recibido desde el aula. No modifica evaluaciones manuales. */
+export interface ComponenteNotaUPC {
+  id: string;
+  cursoClave: string;
+  cursoId?: number;
+  nombre: string;
+  peso?: number;
+  nota?: number;
+  actualizado: string;
 }
 
 /* ── planes de Ejercicio y GymFace ──────────────────────────────────
@@ -279,6 +313,8 @@ class BaseLykari extends Dexie {
   registrosPlan!: Table<RegistroPlan, number>;
   zamlyRacha!: Table<ZamlyRacha, number>;
   zamlyEventos!: Table<ZamlyEvento, number>;
+  aulaItems!: Table<ItemAulaUPC, string>;
+  componentesNotaUPC!: Table<ComponenteNotaUPC, string>;
 
   constructor() {
     super("lykari");
@@ -311,6 +347,10 @@ class BaseLykari extends Dexie {
       registrosPlan: "++id, planId, dia",
       zamlyRacha: "id",
       zamlyEventos: "++id, fecha",
+    });
+    this.version(7).stores({
+      aulaItems: "id, cursoId, vence, estado, novedad, leido, actualizado",
+      componentesNotaUPC: "id, cursoId, cursoClave, actualizado",
     });
   }
 }

@@ -40,6 +40,7 @@ export async function sembrarEstudioDeCursos(): Promise<void> {
         hastaPersonalizado: curso.hasta,
         referenciaMin: 0,
         tipo: "enfoque",
+        cursoId: curso.id,
       });
       continue;
     }
@@ -48,7 +49,9 @@ export async function sembrarEstudioDeCursos(): Promise<void> {
     if (!existente.activa) continue;
 
     if (existente.hasta !== curso.hasta || existente.nombre !== nombre) {
-      await db.actividades.update(existente.id!, { hasta: curso.hasta, nombre });
+      await db.actividades.update(existente.id!, { hasta: curso.hasta, nombre, cursoId: curso.id });
+    } else if (existente.cursoId !== curso.id) {
+      await db.actividades.update(existente.id!, { cursoId: curso.id });
     }
   }
 }

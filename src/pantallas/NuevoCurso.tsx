@@ -51,6 +51,7 @@ export function FormularioCurso({
   const [modalidad, setModalidad] = useState<Modalidad | undefined>(inicial?.modalidad);
   const [creditos, setCreditos] = useState(inicial?.creditos ?? 0);
   const [formulaNota, setFormulaNota] = useState(inicial?.formulaNota ?? "");
+  const [notaObjetivo, setNotaObjetivo] = useState(inicial?.notaObjetivo ?? 13);
 
   const cambiarBloque = (i: number, cambios: Partial<BloqueCurso>) => {
     setBloques(bloques.map((b, j) => (j === i ? { ...b, ...cambios } : b)));
@@ -268,6 +269,10 @@ export function FormularioCurso({
           <p style={{ fontSize: 11.5, color: "var(--ink2)", margin: "6px 0 0" }}>
             Tal cual la trae el sílabo.
           </p>
+          <label style={{ display: "block", marginTop: 14 }}>
+            <span className="eyebrow" style={{ display: "block", marginBottom: 6 }}>Nota objetivo (referencia)</span>
+            <input type="number" min="0" max="20" step="0.1" value={notaObjetivo} onChange={(e) => setNotaObjetivo(Number(e.target.value))} style={campo} />
+          </label>
         </div>
       )}
 
@@ -286,6 +291,7 @@ export function FormularioCurso({
             modalidad,
             creditos: creditos > 0 ? creditos : undefined,
             formulaNota: formulaNota.trim() || undefined,
+            notaObjetivo: Number.isFinite(notaObjetivo) ? Math.min(20, Math.max(0, notaObjetivo)) : 13,
           })
         }
       >

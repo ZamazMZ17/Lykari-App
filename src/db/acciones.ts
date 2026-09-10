@@ -17,6 +17,7 @@ export interface NuevaActividad {
   tipo: TipoActividad;
   /** Solo con alcance "personalizado" (ej. ligada a la duración de un curso). */
   hastaPersonalizado?: DiaISO;
+  cursoId?: number;
 }
 
 export async function crearActividad(datos: NuevaActividad): Promise<number> {

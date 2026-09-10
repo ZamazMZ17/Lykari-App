@@ -16,7 +16,7 @@ import { esNativo } from "../lib/plataforma";
  */
 
 const FORMATO = "lykari-respaldo";
-const VERSION = 2;
+const VERSION = 3;
 /**
  * Una copia tiene que viajar con todo lo que explica el registro. La primera
  * versión omitía cursos y rutinas: al restaurar en otro equipo la actividad
@@ -36,6 +36,8 @@ const TABLAS = [
   "registrosPlan",
   "zamlyRacha",
   "zamlyEventos",
+  "aulaItems",
+  "componentesNotaUPC",
 ] as const;
 type Tabla = (typeof TABLAS)[number];
 

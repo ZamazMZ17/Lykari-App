@@ -8,7 +8,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useState } from "react";
-import type { Curso, Evaluacion } from "../db/db";
+import type { Curso, Evaluacion, ItemAulaUPC } from "../db/db";
 import { bloquesDelDia, type BloqueDelDia } from "../db/cursos";
 import { evaluacionesDelDia } from "../db/evaluaciones";
 import { sembrarCiclo6 } from "../db/semillaCiclo6";
@@ -37,6 +37,7 @@ export interface ProximaEntrega extends Evaluacion {
 export function Horario({
   cursos,
   evaluaciones,
+  aulaItems = [],
   proxima,
   amplia,
   onNuevo,
@@ -46,6 +47,7 @@ export function Horario({
 }: {
   cursos: Curso[];
   evaluaciones: Evaluacion[];
+  aulaItems?: ItemAulaUPC[];
   /** La entrega sin rendir más próxima entre todos los cursos, si hay alguna. */
   proxima?: ProximaEntrega | null;
   amplia?: boolean;
@@ -157,6 +159,7 @@ export function Horario({
           hoy={hoy}
           cursos={cursos}
           evaluaciones={evaluaciones}
+          aulaItems={aulaItems}
           onCambiar={setSel}
           onDetalle={onDetalle}
         />
@@ -176,6 +179,7 @@ export function Horario({
           hoy={hoy}
           cursos={cursos}
           evaluaciones={evaluaciones}
+          aulaItems={aulaItems}
           onCambiar={setSel}
           onIrADia={irADia}
         />
@@ -268,6 +272,7 @@ function VistaDia({
   hoy,
   cursos,
   evaluaciones,
+  aulaItems,
   onCambiar,
   onDetalle,
 }: {
@@ -275,11 +280,13 @@ function VistaDia({
   hoy: DiaISO;
   cursos: Curso[];
   evaluaciones: Evaluacion[];
+  aulaItems: ItemAulaUPC[];
   onCambiar: (d: DiaISO) => void;
   onDetalle: (c: Curso) => void;
 }) {
   const bloques = bloquesDelDia(cursos, sel);
   const entregas = evaluacionesDelDia(evaluaciones, sel);
+  const aula = aulaItems.filter((item) => item.vence === sel && item.estado === "activo");
   return (
     <div>
       <NavPeriodo
@@ -289,7 +296,7 @@ function VistaDia({
         onHoy={() => onCambiar(hoy)}
         mostrarHoy={sel !== hoy}
       />
-      {bloques.length === 0 && entregas.length === 0 ? (
+      {bloques.length === 0 && entregas.length === 0 && aula.length === 0 ? (
         <Nota>No tienes clases ni entregas este día.</Nota>
       ) : (
         <div style={{ padding: "0 20px", display: "grid", gap: 8 }}>
@@ -298,6 +305,7 @@ function VistaDia({
             if (!curso) return null;
             return <FilaEntrega key={`ev-${ev.id}`} ev={ev} curso={curso} onDetalle={onDetalle} />;
           })}
+          {aula.map((item) => <FilaAula key={`upc-${item.id}`} item={item} />)}
           {bloques.map((b, i) => (
             <FilaBloque key={i} b={b} onDetalle={onDetalle} />
           ))}
@@ -305,6 +313,16 @@ function VistaDia({
       )}
     </div>
   );
+}
+
+function FilaAula({ item }: { item: ItemAulaUPC }) {
+  return <div className="card" style={{ padding: "13px 14px", display: "flex", gap: 12, alignItems: "center", borderStyle: "dashed" }}>
+    <CalendarClock size={17} color="var(--pino)" style={{ flexShrink: 0 }} />
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontSize: 14.5, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.titulo}</div>
+      <div style={{ fontSize: 12, color: "var(--ink2)", marginTop: 3 }}>Aula UPC · {item.tipo}</div>
+    </div>
+  </div>;
 }
 
 function FilaEntrega({
@@ -506,6 +524,7 @@ function VistaMes({
   hoy,
   cursos,
   evaluaciones,
+  aulaItems,
   onCambiar,
   onIrADia,
 }: {
@@ -513,6 +532,7 @@ function VistaMes({
   hoy: DiaISO;
   cursos: Curso[];
   evaluaciones: Evaluacion[];
+  aulaItems: ItemAulaUPC[];
   onCambiar: (d: DiaISO) => void;
   onIrADia: (d: DiaISO) => void;
 }) {
@@ -564,7 +584,7 @@ function VistaMes({
           {celdas.map((dia, i) => {
             if (!dia) return <div key={i} />;
             const tieneAlgo =
-              bloquesDelDia(cursos, dia).length > 0 || evaluacionesDelDia(evaluaciones, dia).length > 0;
+              bloquesDelDia(cursos, dia).length > 0 || evaluacionesDelDia(evaluaciones, dia).length > 0 || aulaItems.some((item) => item.vence === dia && item.estado === "activo");
             const esHoy = dia === hoy;
             return (
               <button
