@@ -26,7 +26,7 @@ registro (incluye audios, cursos y rutinas; nunca las claves) a un archivo
 
 **Sincronización opcional con laptop.** Si usas Sam/Zam, es el punto de
 sincronización: en Ajustes → Sincronización con laptop usa
-`https://TU-EQUIPO:8585/api/lykari` y la misma clave configurada en
+`https://TU-EQUIPO.tu-tailnet.ts.net` (sin `:8585`) y la misma clave configurada en
 `ZAM_API_TOKEN`. Desde ahí se puede enviar o traer una copia completa y Sam
 puede responder «resumen de Lykari» o registrar una sesión terminada. No hay
 sobrescritura silenciosa: si otro equipo cambió el registro, hay que traerlo

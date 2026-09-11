@@ -41,6 +41,13 @@ function normalizarUrlSync(valor: string): string {
   if (!limpia) return "";
   try {
     const url = new URL(limpia);
+    // El 8585 es donde Sam escucha dentro de la laptop. Tailscale Serve lo
+    // publica por HTTPS estándar (443); versiones anteriores de la guía
+    // sugerían conservar ese puerto y el teléfono intentaba hablar TLS con
+    // un servidor HTTP. Corregirlo aquí recupera instalaciones ya guardadas.
+    if (url.protocol === "https:" && /\.ts\.net$/i.test(url.hostname) && url.port === "8585") {
+      url.port = "";
+    }
     if (!url.pathname || url.pathname === "/") url.pathname = "/api/lykari";
     return url.toString().replace(/\/$/, "");
   } catch {
