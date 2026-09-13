@@ -12,7 +12,7 @@ import {
   Sun,
   SunMoon,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { esNativo } from "../lib/plataforma";
 import { descargarEInstalarApk } from "../lib/instalador";
 import { sembrarCiclo6 } from "../db/semillaCiclo6";
@@ -38,18 +38,12 @@ import { BotonPrincipal, Hoja } from "../ui/piezas";
 import { Respaldo } from "./Respaldo";
 import { Sincronizar } from "./Sincronizar";
 
-/** Mantener presionado 600ms el rótulo de Actualizaciones abre el acceso
- *  privado — a propósito no hay nada visible que lo señale. */
-const MS_PULSACION_LARGA = 600;
-
 export function Ajustes({
   sinProcesar,
   onClose,
-  onZamly,
 }: {
   sinProcesar: number;
   onClose: () => void;
-  onZamly: () => void;
 }) {
   const [key, setKey] = useState("");
   const [modelo, setModelo] = useState(MODELO_POR_DEFECTO);
@@ -63,15 +57,6 @@ export function Ajustes({
   const [instalando, setInstalando] = useState(false);
   const [errorInstalar, setErrorInstalar] = useState<string | null>(null);
   const { tema } = useTema();
-  const pulsacionLarga = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const empezarPulsacion = () => {
-    pulsacionLarga.current = setTimeout(onZamly, MS_PULSACION_LARGA);
-  };
-  const cancelarPulsacion = () => {
-    if (pulsacionLarga.current) clearTimeout(pulsacionLarga.current);
-    pulsacionLarga.current = null;
-  };
 
   const cargarCursos = async () => {
     setCargandoCursos(true);
@@ -289,14 +274,7 @@ export function Ajustes({
         )}
       </div>
 
-      <div
-        className="eyebrow"
-        style={{ marginBottom: 8, userSelect: "none" }}
-        onPointerDown={empezarPulsacion}
-        onPointerUp={cancelarPulsacion}
-        onPointerLeave={cancelarPulsacion}
-        onPointerCancel={cancelarPulsacion}
-      >
+      <div className="eyebrow" style={{ marginBottom: 8 }}>
         Actualizaciones
       </div>
       <div className="card" style={{ padding: "12px 14px", marginBottom: 8 }}>

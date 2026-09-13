@@ -1,4 +1,4 @@
-import { Bot, CalendarDays, ChevronRight, GraduationCap, Pause, Play, Plus } from "lucide-react";
+import { Bot, CalendarDays, ChevronRight, GraduationCap, Pause, Play, Plus, X } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
@@ -30,6 +30,7 @@ export function Hoy({
   aulaProximas,
   onAula,
   onSam,
+  onPrivado,
 }: {
   actividades: Actividad[];
   msPorActividad: Map<number, number>;
@@ -50,6 +51,8 @@ export function Hoy({
   aulaProximas: number;
   onAula: () => void;
   onSam: () => void;
+  /** Entrada a Zamly (contraseña) — a propósito sin nada que lo describa. */
+  onPrivado: () => void;
 }) {
   const franja: [string, string | number][] = [
     ["min registrados", enMinutos(msTotal)],
@@ -71,6 +74,14 @@ export function Hoy({
               aria-label="Ver agenda"
             >
               <CalendarDays size={18} />
+            </button>
+            <button
+              className="btn card"
+              onClick={onPrivado}
+              style={{ padding: 9, display: "flex" }}
+              aria-label="Privado"
+            >
+              <X size={18} />
             </button>
             <BotonAjustes onClick={onAjustes} />
             <button

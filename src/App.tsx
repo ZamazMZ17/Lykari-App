@@ -414,6 +414,7 @@ export default function App() {
           setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
         }}
         onAjustes={() => setHoja({ t: "ajustes" })}
+        onPrivado={() => setHoja({ t: "zamly" })}
       />
     );
   }
@@ -781,7 +782,6 @@ export default function App() {
           <Ajustes
             sinProcesar={pendientesIA.length}
             onClose={() => setHoja(null)}
-            onZamly={() => setHoja({ t: "zamly" })}
           />
         )}
 
