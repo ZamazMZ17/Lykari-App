@@ -19,7 +19,9 @@ const apps = [
   { paquete: "com.supercell.clashroyale", nombre: "Clash Royale", categoria: "juego", esSistema: false },
   { paquete: "com.android.chrome", nombre: "Chrome", categoria: "navegador", esSistema: false },
 ];
-const permisos: EstadoPermisos = { uso: true, accesibilidad: true, admin: true, superposicion: true, vpn: true, notificaciones: true };
+// Los esenciales vienen concedidos; los opcionales empiezan apagados para
+// mostrar el flujo real (avisos, sección Permisos, concederlos uno a uno).
+const permisos: EstadoPermisos = { uso: true, accesibilidad: true, admin: false, superposicion: false, vpn: false, notificaciones: false };
 
 function usoDia(dia: string): UsoDia {
   const semilla = Number(dia.slice(-2));

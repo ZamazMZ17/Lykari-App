@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Smartphone, Globe, Clock3, ShieldCheck, History, LockKeyhole } from "lucide-react";
+import { LayoutDashboard, Smartphone, Globe, Clock3, ShieldCheck, History, LockKeyhole, KeyRound } from "lucide-react";
 import { esNativo } from "../../lib/plataforma";
 import { guardarReglas, leerReglas, useReglas } from "../../control/almacen";
 import { prepararMock } from "../../control/mock";
 import { motorControl, usaMock } from "../../control/servicio";
 import { sincronizarUso } from "../../control/historial";
-import { ESPERA_APAGAR_ADULTO_MS } from "../../control/tipos";
+import { ESPERA_APAGAR_ADULTO_MS, type EstadoPermisos } from "../../control/tipos";
 import { Apps } from "./Apps";
 import { Webs } from "./Webs";
 import { Modos } from "./Modos";
@@ -19,9 +19,16 @@ import "./control.css";
 
 const secciones = [
   ["Resumen", LayoutDashboard], ["Apps", Smartphone], ["Webs", Globe], ["Modos", Clock3],
-  ["+18", ShieldCheck], ["Historial", History], ["Protección", LockKeyhole],
+  ["+18", ShieldCheck], ["Historial", History], ["Protección", LockKeyhole], ["Permisos", KeyRound],
 ] as const;
 type Seccion = typeof secciones[number][0];
+
+/**
+ * Con estos dos ya se puede ver el uso y poner límites. Admin (protección),
+ * VPN (+18) y superposición se piden cuando se activa esa función, no antes:
+ * exigirlos todos de entrada dejaba la pantalla trabada (ninguna app visible).
+ */
+const PERMISOS_ESENCIALES = ["uso", "accesibilidad"] as const;
 
 /** Se monta dentro del acceso autenticado de Zamly, sin otra hoja exterior. */
 export function Control() {
@@ -40,15 +47,17 @@ function ControlDisponible() {
   }, []);
   const permisos = useConsulta(() => motorControl().estadoPermisos());
   if (!preparado || !permisos.datos) return <div className="control-ui"><Aviso error={error || permisos.error} reintentar={() => void permisos.recargar()} />{!error && !permisos.error && <Vacio>Preparando Control…</Vacio>}</div>;
-  if (Object.values(permisos.datos).some((p) => !p)) return <div className="control-ui"><Aviso error={permisos.error} /><Permisos estado={permisos.datos} recargar={permisos.recargar} /></div>;
+  // Solo los esenciales bloquean la entrada; los demás se piden por función.
+  if (PERMISOS_ESENCIALES.some((p) => !permisos.datos![p])) return <div className="control-ui"><Aviso error={permisos.error} /><Permisos estado={permisos.datos} recargar={permisos.recargar} /></div>;
   return <div className="control-ui">{usaMock() && <p className="eyebrow">Demostración · datos de prueba</p>}
-    <Aviso error={permisos.error} reintentar={() => void permisos.recargar()} /><ContenidoControl />
+    <Aviso error={permisos.error} reintentar={() => void permisos.recargar()} /><ContenidoControl permisos={permisos.datos} recargarPermisos={permisos.recargar} />
   </div>;
 }
 
-function ContenidoControl() {
+function ContenidoControl({ permisos, recargarPermisos }: { permisos: EstadoPermisos; recargarPermisos: () => Promise<void> }) {
   const estado = useReglas();
   const [seccion, setSeccion] = useState<Seccion>("Resumen");
+  const faltanOpcionales = (["admin", "superposicion", "vpn", "notificaciones"] as const).filter((p) => !permisos[p]);
   const [errorApagado, setErrorApagado] = useState("");
   const [reintento, setReintento] = useState(0);
   const sincronizacion = useConsulta(sincronizarUso);
@@ -75,9 +84,14 @@ function ContenidoControl() {
   const reglas = estado?.reglas;
   if (!reglas) return <><Aviso error={estado?.error ?? ""} /><Vacio>Leyendo reglas…</Vacio></>;
   return <>
-    <nav className="ct-nav" aria-label="Secciones de Control">{secciones.map(([nombre, Icono]) => <button key={nombre} className="ct-btn" aria-pressed={seccion === nombre} onClick={() => setSeccion(nombre)}><Icono size={15} />{nombre}</button>)}</nav>
+    <nav className="ct-nav" aria-label="Secciones de Control">{secciones.map(([nombre, Icono]) => <button key={nombre} className="ct-btn" aria-pressed={seccion === nombre} onClick={() => setSeccion(nombre)}>{nombre === "Permisos" && faltanOpcionales.length > 0 ? <span className="ct-punto" aria-hidden /> : <Icono size={15} />}{nombre}</button>)}</nav>
     <Aviso error={sincronizacion.error} reintentar={() => void sincronizacion.recargar()} />
     <Aviso error={errorApagado} reintentar={() => setReintento((n) => n + 1)} />
+    {seccion !== "Permisos" && faltanOpcionales.length > 0 && (
+      <button className="ct-card ct-aviso-permisos" onClick={() => setSeccion("Permisos")}>
+        Faltan {faltanOpcionales.length} permiso{faltanOpcionales.length > 1 ? "s" : ""} para que la protección y el filtro +18 funcionen. Tócalo para completarlos.
+      </button>
+    )}
     {seccion === "Resumen" && <Resumen reglas={reglas} />}
     {seccion === "Apps" && <Apps reglas={reglas} />}
     {seccion === "Webs" && <Webs reglas={reglas} />}
@@ -85,5 +99,6 @@ function ContenidoControl() {
     {seccion === "+18" && <FiltroAdulto reglas={reglas} />}
     {seccion === "Historial" && <Historial />}
     {seccion === "Protección" && <Proteccion reglas={reglas} />}
+    {seccion === "Permisos" && <Permisos estado={permisos} recargar={recargarPermisos} />}
   </>;
 }

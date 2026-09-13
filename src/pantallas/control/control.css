@@ -44,6 +44,8 @@
 .ct-barra { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 10px 0 4px; }
 .ct-barra > span { display: block; height: 100%; background: var(--pino); }
 .ct-corriendo { color: var(--ambar); }
+.ct-punto { width: 7px; height: 7px; border-radius: 50%; background: var(--ambar); flex-shrink: 0; }
+.control-ui .ct-aviso-permisos { text-align: left; width: 100%; cursor: pointer; border-style: dashed; color: var(--ink2); font: inherit; }
 .ct-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
 .ct-tabla th { text-align: left; color: var(--ink2); font-weight: 500; }
 .ct-tabla th, .ct-tabla td { padding: 10px 5px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
