@@ -38,6 +38,9 @@ const TABLAS = [
   "zamlyEventos",
   "aulaItems",
   "componentesNotaUPC",
+  "controlReglas",
+  "controlUsoDiario",
+  "controlIntentos",
 ] as const;
 type Tabla = (typeof TABLAS)[number];
 

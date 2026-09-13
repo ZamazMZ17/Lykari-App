@@ -312,6 +312,7 @@ export default function App() {
         act={actividadAbierta}
         sesion={abierta}
         ahora={ahora}
+        plan={planPorActividadId.get(actividadAbierta.id!)}
         onAlternar={alternarPausa}
         onFin={() => setHoja({ t: "cerrar" })}
         onBack={() => setEnSesion(false)}

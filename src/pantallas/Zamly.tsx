@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { AlertTriangle, Lock, Trophy } from "lucide-react";
 import {
   establecerContrasena,
@@ -6,6 +6,7 @@ import {
   msDeRachaActual,
   obtenerRacha,
   registrarRecaida,
+  sincronizarHashNativo,
   tieneContrasena,
   verificarContrasena,
 } from "../db/zamly";
@@ -13,6 +14,7 @@ import type { ZamlyEvento, ZamlyRacha } from "../db/db";
 import { HORA } from "../lib/tiempo";
 import { useTic } from "../lib/ganchos";
 import { BotonPrincipal, Hoja } from "../ui/piezas";
+import { Control } from "./control/Control";
 
 function diasHoras(ms: number): { dias: number; horas: number } {
   const totalHoras = Math.floor(ms / HORA);
@@ -43,6 +45,9 @@ export function Zamly({ onClose }: { onClose: () => void }) {
   const enviarIngresar = async () => {
     const ok = await verificarContrasena(valor);
     if (!ok) return setError("Contraseña incorrecta.");
+    // El motor nativo necesita el hash para "extender con contraseña" desde la
+    // pantalla de bloqueo. Se refresca en cada ingreso por si se instaló recién.
+    void sincronizarHashNativo();
     setEstado("adentro");
   };
 
@@ -118,6 +123,7 @@ export function Zamly({ onClose }: { onClose: () => void }) {
 }
 
 function ZamlyAdentro({ onClose }: { onClose: () => void }) {
+  const [tab, setTab] = useState<"racha" | "control">("racha");
   const [racha, setRacha] = useState<ZamlyRacha | null>(null);
   const [eventos, setEventos] = useState<ZamlyEvento[]>([]);
   const [confirmando, setConfirmando] = useState(false);
@@ -134,10 +140,8 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!racha) return null;
-
-  const { dias, horas } = diasHoras(msDeRachaActual(racha, ahora));
-  const { dias: diasRecord } = diasHoras(racha.mejorRachaMs);
+  const { dias, horas } = diasHoras(racha ? msDeRachaActual(racha, ahora) : 0);
+  const { dias: diasRecord } = diasHoras(racha?.mejorRachaMs ?? 0);
 
   const confirmarRecaida = async () => {
     await registrarRecaida(nota);
@@ -147,7 +151,32 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Hoja onClose={onClose} eyebrow="Privado" titulo="Racha">
+    <Hoja onClose={onClose} eyebrow="Privado" titulo={tab === "racha" ? "Racha" : "Control"}>
+      <div className="ct-tabs" role="tablist" style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+        <button
+          role="tab"
+          aria-selected={tab === "racha"}
+          className="btn"
+          onClick={() => setTab("racha")}
+          style={tabEstilo(tab === "racha")}
+        >
+          Racha
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === "control"}
+          className="btn"
+          onClick={() => setTab("control")}
+          style={tabEstilo(tab === "control")}
+        >
+          Control
+        </button>
+      </div>
+
+      {tab === "control" && <Control />}
+      {tab === "racha" && !racha && <p style={{ fontSize: 13, color: "var(--ink2)" }}>Cargando…</p>}
+      {tab === "racha" && racha && (
+      <>
       <div style={{ display: "grid", placeItems: "center", margin: "6px 0 6px" }}>
         <div className="mono" style={{ fontSize: 52, fontWeight: 700, lineHeight: 1 }}>
           {dias}
@@ -266,6 +295,21 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
           </div>
         </>
       )}
+      </>
+      )}
     </Hoja>
   );
+}
+
+function tabEstilo(activo: boolean): CSSProperties {
+  return {
+    flex: 1,
+    padding: "9px 0",
+    borderRadius: 10,
+    border: "1px solid var(--line)",
+    background: activo ? "var(--pino)" : "var(--paper)",
+    color: activo ? "#fff" : "var(--ink2)",
+    fontSize: 13.5,
+    fontWeight: activo ? 600 : 400,
+  };
 }

@@ -1,4 +1,6 @@
 import { db, type ZamlyEvento, type ZamlyRacha } from "./db";
+import { esNativo } from "../lib/plataforma";
+import { Control } from "../control/plugin";
 
 /**
  * Sección privada, detrás de contraseña. A diferencia de la racha principal
@@ -23,7 +25,25 @@ export async function tieneContrasena(): Promise<boolean> {
 }
 
 export async function establecerContrasena(nueva: string): Promise<void> {
-  await db.ajustes.put({ clave: CLAVE_HASH, valor: await hashear(nueva) });
+  const hash = await hashear(nueva);
+  await db.ajustes.put({ clave: CLAVE_HASH, valor: hash });
+  await sincronizarHashNativo(hash);
+}
+
+/**
+ * La pantalla de bloqueo nativa compara contra este mismo hash para poder
+ * "extender con contraseña" con la app cerrada. Se copia al motor cada vez que
+ * se crea la contraseña y al entrar a la sección. Nunca sale del dispositivo.
+ */
+export async function sincronizarHashNativo(hash?: string): Promise<void> {
+  if (!esNativo) return;
+  const valor = hash ?? (await db.ajustes.get(CLAVE_HASH))?.valor;
+  if (!valor) return;
+  try {
+    await Control.guardarHashContrasena({ hash: valor });
+  } catch {
+    // APK viejo sin el plugin: se ignora.
+  }
 }
 
 export async function verificarContrasena(intento: string): Promise<boolean> {

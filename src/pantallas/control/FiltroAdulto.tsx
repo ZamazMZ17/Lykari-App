@@ -31,7 +31,7 @@ export function FiltroAdulto({ reglas }: PropsReglas) {
     <div className="ct-lista">
       <div className="ct-card"><h3 className="ct-fila"><ShieldCheck size={20} />{filtro.activo ? "Filtro activo" : "Filtro inactivo"}</h3>
         <p>Capas configuradas; el motor Android aplica el filtro.</p>
-        <p>DNS familiar: {filtro.dns ? "activado" : "desactivado"}<br />Lista local: incluida en el APK<br />SafeSearch: {filtro.forzarSafeSearch ? "forzado" : "sin forzar"}<br />Búsqueda en Telegram: {filtro.bloquearBusquedaTelegram ? "bloqueada" : "permitida"}</p>
+        <p>DNS familiar: {filtro.dns ? "activado" : "desactivado"}<br />Lista local: incluida en el APK<br />SafeSearch: {filtro.forzarSafeSearch ? "forzado" : "sin forzar"}<br />Búsqueda en Telegram: {filtro.bloquearBusquedaTelegram ? "bloqueada" : "permitida"}<br />Puertas (catálogos de canales, grupos, subreddits NSFW): {filtro.bloquearPuertas ? "bloqueadas" : "permitidas"}<br />Marcas de contenido sensible: {filtro.etiquetasSensibles ? "bloquean" : "se ignoran"}<br />Apps vigiladas: {filtro.appsVigiladas.length}</p>
         {listas.map(([clave, titulo]) => <div key={clave}><h3>{titulo} · {filtro[clave].length}</h3><p>{filtro[clave].join(" · ") || "Sin elementos propios."}</p></div>)}
         <button className="ct-btn" onClick={() => setEdicion(reglas)}>Configurar capas y listas</button>
       </div>
@@ -76,6 +76,8 @@ function EditarFiltro({ reglas, onClose }: PropsReglas & { onClose: () => void }
       <Interruptor titulo="DNS familiar" valor={filtro.dns} disabled={original.activo && original.dns} onChange={(dns) => setFiltro({ ...filtro, dns })} />
       <Interruptor titulo="Forzar SafeSearch" valor={filtro.forzarSafeSearch} disabled={original.activo && original.forzarSafeSearch} onChange={(forzarSafeSearch) => setFiltro({ ...filtro, forzarSafeSearch })} />
       <Interruptor titulo="Bloquear búsqueda en Telegram" valor={filtro.bloquearBusquedaTelegram} disabled={original.activo && original.bloquearBusquedaTelegram} onChange={(bloquearBusquedaTelegram) => setFiltro({ ...filtro, bloquearBusquedaTelegram })} />
+      <Interruptor titulo="Bloquear puertas (catálogos de canales, grupos, subreddits NSFW)" valor={filtro.bloquearPuertas} disabled={original.activo && original.bloquearPuertas} onChange={(bloquearPuertas) => setFiltro({ ...filtro, bloquearPuertas })} />
+      <Interruptor titulo="Bloquear marcas de contenido sensible (Telegram, Reddit, X…)" valor={filtro.etiquetasSensibles} disabled={original.activo && original.etiquetasSensibles} onChange={(etiquetasSensibles) => setFiltro({ ...filtro, etiquetasSensibles })} />
       {listas.map(([clave, titulo]) => <label key={clave}>{titulo}<textarea value={textos[clave]} onChange={(e) => setTextos({ ...textos, [clave]: e.target.value })} /><small>{clave === "navegadoresPermitidos" ? "Un paquete por línea. Solo navegadores compatibles con lectura de URL." : "Un elemento por línea."}</small></label>)}
     </fieldset><EstadoAccion accion={accion} /><Guardar ocupado={accion.ocupado} />
   </form></Editor>;
