@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { AlertTriangle, Lock, Trophy } from "lucide-react";
+import { Flame, Lock, RotateCcw, Trophy } from "lucide-react";
 import {
   establecerContrasena,
   eventosRecientes,
@@ -126,8 +126,6 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<"racha" | "control">("racha");
   const [racha, setRacha] = useState<ZamlyRacha | null>(null);
   const [eventos, setEventos] = useState<ZamlyEvento[]>([]);
-  const [confirmando, setConfirmando] = useState(false);
-  const [nota, setNota] = useState("");
   const ahora = useTic(true, 60_000);
 
   const recargar = async () => {
@@ -140,78 +138,152 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const { dias, horas } = diasHoras(racha ? msDeRachaActual(racha, ahora) : 0);
-  const { dias: diasRecord } = diasHoras(racha?.mejorRachaMs ?? 0);
-
-  const confirmarRecaida = async () => {
-    await registrarRecaida(nota);
-    setNota("");
-    setConfirmando(false);
-    await recargar();
-  };
-
   return (
     <Hoja onClose={onClose} eyebrow="Privado" titulo={tab === "racha" ? "Racha" : "Control"}>
-      <div className="ct-tabs" role="tablist" style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        <button
-          role="tab"
-          aria-selected={tab === "racha"}
-          className="btn"
-          onClick={() => setTab("racha")}
-          style={tabEstilo(tab === "racha")}
-        >
+      <div className="ct-tabs" role="tablist" style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+        <button role="tab" aria-selected={tab === "racha"} className="btn" onClick={() => setTab("racha")} style={tabEstilo(tab === "racha")}>
           Racha
         </button>
-        <button
-          role="tab"
-          aria-selected={tab === "control"}
-          className="btn"
-          onClick={() => setTab("control")}
-          style={tabEstilo(tab === "control")}
-        >
+        <button role="tab" aria-selected={tab === "control"} className="btn" onClick={() => setTab("control")} style={tabEstilo(tab === "control")}>
           Control
         </button>
       </div>
 
       {tab === "control" && <Control />}
       {tab === "racha" && !racha && <p style={{ fontSize: 13, color: "var(--ink2)" }}>Cargando…</p>}
-      {tab === "racha" && racha && (
-      <>
-      <div style={{ display: "grid", placeItems: "center", margin: "6px 0 6px" }}>
-        <div className="mono" style={{ fontSize: 52, fontWeight: 700, lineHeight: 1 }}>
-          {dias}
+      {tab === "racha" && racha && <RachaPanel racha={racha} eventos={eventos} ahora={ahora} onRecargar={recargar} />}
+    </Hoja>
+  );
+}
+
+/** Metas de constancia. La barra/anillo avanza hacia la siguiente, sin castigo al reiniciar. */
+const METAS = [1, 3, 7, 14, 30, 60, 90, 180, 365];
+const DIA_MS = 24 * HORA;
+
+function RachaPanel({
+  racha,
+  eventos,
+  ahora,
+  onRecargar,
+}: {
+  racha: ZamlyRacha;
+  eventos: ZamlyEvento[];
+  ahora: number;
+  onRecargar: () => Promise<void>;
+}) {
+  const [confirmando, setConfirmando] = useState(false);
+  const [nota, setNota] = useState("");
+
+  const ms = msDeRachaActual(racha, ahora);
+  const { dias, horas } = diasHoras(ms);
+  const minutos = Math.floor((ms % HORA) / 60_000);
+  const { dias: diasRecord } = diasHoras(racha.mejorRachaMs);
+  const esRecord = ms >= racha.mejorRachaMs && ms > 0;
+
+  const meta = METAS.find((m) => m > dias) ?? null;
+  const metaPrevia = [...METAS].reverse().find((m) => m <= dias) ?? 0;
+  const fraccion = meta
+    ? Math.min(1, Math.max(0, (ms - metaPrevia * DIA_MS) / ((meta - metaPrevia) * DIA_MS)))
+    : 1;
+  const inicio = racha.ultimaRecaida ?? racha.inicio;
+
+  const confirmarRecaida = async () => {
+    await registrarRecaida(nota);
+    setNota("");
+    setConfirmando(false);
+    await onRecargar();
+  };
+
+  const R = 76;
+  const grosor = 9;
+  const r = R - grosor / 2;
+  const circ = 2 * Math.PI * r;
+
+  return (
+    <>
+      {/* Anillo de progreso hacia la próxima meta */}
+      <div style={{ display: "grid", placeItems: "center", marginTop: 4 }}>
+        <div style={{ position: "relative", width: R * 2, height: R * 2 }}>
+          <svg width={R * 2} height={R * 2} style={{ transform: "rotate(-90deg)" }}>
+            <circle cx={R} cy={R} r={r} fill="none" stroke="var(--line)" strokeWidth={grosor} />
+            <circle
+              cx={R}
+              cy={R}
+              r={r}
+              fill="none"
+              stroke="var(--ambar)"
+              strokeWidth={grosor}
+              strokeLinecap="round"
+              strokeDasharray={circ}
+              strokeDashoffset={circ * (1 - fraccion)}
+              style={{ transition: "stroke-dashoffset .6s ease" }}
+            />
+          </svg>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "grid",
+              placeItems: "center",
+              textAlign: "center",
+            }}
+          >
+            <div>
+              <div className="mono" style={{ fontSize: 46, fontWeight: 700, lineHeight: 1, letterSpacing: "-.03em" }}>
+                {dias}
+              </div>
+              <div className="eyebrow" style={{ marginTop: 4 }}>
+                {dias === 1 ? "día" : "días"} limpio
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="eyebrow" style={{ marginTop: 4 }}>
-          {dias === 1 ? "día" : "días"} · {horas} h
+        <div className="mono" style={{ fontSize: 12.5, color: "var(--ink2)", marginTop: 10 }}>
+          {horas} h {String(minutos).padStart(2, "0")} min en curso
+        </div>
+        {meta ? (
+          <div style={{ fontSize: 12.5, color: "var(--ink2)", marginTop: 4 }}>
+            {meta - dias} {meta - dias === 1 ? "día" : "días"} para la meta de {meta}
+          </div>
+        ) : (
+          <div style={{ fontSize: 12.5, color: "var(--ambar)", marginTop: 4 }}>Más de un año. Sostenido.</div>
+        )}
+      </div>
+
+      {/* Estadísticas */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "20px 0 14px" }}>
+        <div className="card" style={{ padding: "12px 13px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <Trophy size={14} color="var(--ambar)" />
+            <span className="eyebrow">Récord</span>
+          </div>
+          <div className="mono" style={{ fontSize: 20, fontWeight: 700 }}>
+            {diasRecord} <span style={{ fontSize: 12, fontWeight: 400, color: "var(--ink2)" }}>{diasRecord === 1 ? "día" : "días"}</span>
+          </div>
+          {esRecord && <div style={{ fontSize: 11, color: "var(--ambar)", marginTop: 2 }}>tu mejor marca, ahora</div>}
+        </div>
+        <div className="card" style={{ padding: "12px 13px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <Flame size={14} color="var(--ambar)" />
+            <span className="eyebrow">Desde</span>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{fechaCorta(inicio)}</div>
+          <div style={{ fontSize: 11, color: "var(--ink2)", marginTop: 2 }}>
+            {eventos.length} {eventos.length === 1 ? "recaída" : "recaídas"} registradas
+          </div>
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{
-          padding: "11px 13px",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          margin: "18px 0",
-        }}
-      >
-        <Trophy size={16} color="var(--ambar)" />
-        <div style={{ flex: 1, fontSize: 13 }}>Récord</div>
-        <div className="mono" style={{ fontSize: 14, fontWeight: 700 }}>
-          {diasRecord} {diasRecord === 1 ? "día" : "días"}
-        </div>
-      </div>
-
+      {/* Registrar recaída */}
       {confirmando ? (
-        <div className="card" style={{ padding: 14, borderStyle: "dashed", marginBottom: 12 }}>
+        <div className="card" style={{ padding: 14, borderStyle: "dashed", marginBottom: 16 }}>
           <p style={{ fontSize: 13, color: "var(--ink2)", lineHeight: 1.5, margin: "0 0 10px" }}>
-            La racha se reinicia. El récord queda guardado.
+            La racha vuelve a empezar. El récord y lo ya recorrido quedan guardados.
           </p>
           <input
             value={nota}
             onChange={(e) => setNota(e.target.value)}
-            placeholder="Nota opcional"
+            placeholder="Nota opcional (qué pasó)"
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -220,35 +292,15 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
               background: "var(--ground)",
               fontSize: 13.5,
               marginBottom: 10,
+              boxSizing: "border-box",
             }}
           />
           <div style={{ display: "flex", gap: 8 }}>
-            <button
-              className="btn"
-              onClick={() => setConfirmando(false)}
-              style={{
-                flex: 1,
-                padding: "11px 0",
-                borderRadius: 12,
-                border: "1px solid var(--line)",
-                fontSize: 13.5,
-              }}
-            >
+            <button className="btn" onClick={() => setConfirmando(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid var(--line)", fontSize: 13.5 }}>
               Cancelar
             </button>
-            <button
-              className="btn"
-              onClick={() => void confirmarRecaida()}
-              style={{
-                flex: 1,
-                padding: "11px 0",
-                borderRadius: 12,
-                border: "1px solid var(--line)",
-                color: "var(--ink2)",
-                fontSize: 13.5,
-              }}
-            >
-              Sí, registrar
+            <button className="btn" onClick={() => void confirmarRecaida()} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid var(--line)", color: "var(--ink2)", fontSize: 13.5 }}>
+              Sí, reiniciar
             </button>
           </div>
         </div>
@@ -256,50 +308,38 @@ function ZamlyAdentro({ onClose }: { onClose: () => void }) {
         <button
           className="btn"
           onClick={() => setConfirmando(true)}
-          style={{
-            width: "100%",
-            padding: "13px 0",
-            marginBottom: 20,
-            borderRadius: 14,
-            border: "1px solid var(--line)",
-            display: "flex",
-            gap: 8,
-            justifyContent: "center",
-            alignItems: "center",
-            fontSize: 14,
-            color: "var(--ink2)",
-          }}
+          style={{ width: "100%", padding: "12px 0", marginBottom: 20, borderRadius: 12, border: "1px solid var(--line)", display: "flex", gap: 8, justifyContent: "center", alignItems: "center", fontSize: 13.5, color: "var(--ink2)" }}
         >
-          <AlertTriangle size={15} /> Registrar recaída
+          <RotateCcw size={15} /> Registrar recaída
         </button>
       )}
 
+      {/* Historial */}
       {eventos.length > 0 && (
         <>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>
-            Historial
-          </div>
-          <div style={{ display: "grid", gap: 6 }}>
-            {eventos.map((e) => (
-              <div
-                key={e.id}
-                className="card"
-                style={{ padding: "9px 12px", display: "flex", flexDirection: "column", gap: 2 }}
-              >
-                <span className="mono" style={{ fontSize: 12, color: "var(--ink2)" }}>
-                  {fechaHora(e.fecha)}
-                </span>
-                {e.nota && <span style={{ fontSize: 13 }}>{e.nota}</span>}
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Historial</div>
+          <div style={{ display: "grid", gap: 0, position: "relative" }}>
+            {eventos.map((e, i) => (
+              <div key={e.id} style={{ display: "flex", gap: 12, paddingBottom: i === eventos.length - 1 ? 0 : 14 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ width: 9, height: 9, borderRadius: 999, background: "var(--ambar)", marginTop: 4, flexShrink: 0 }} />
+                  {i !== eventos.length - 1 && <div style={{ width: 2, flex: 1, background: "var(--line)", marginTop: 3 }} />}
+                </div>
+                <div style={{ flex: 1, paddingBottom: 2 }}>
+                  <div className="mono" style={{ fontSize: 12, color: "var(--ink2)" }}>{fechaHora(e.fecha)}</div>
+                  {e.nota && <div style={{ fontSize: 13, marginTop: 2 }}>{e.nota}</div>}
+                </div>
               </div>
             ))}
           </div>
         </>
       )}
-      </>
-      )}
-    </Hoja>
+    </>
   );
 }
+
+const fechaCorta = (ms: number) =>
+  new Date(ms).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
 
 function tabEstilo(activo: boolean): CSSProperties {
   return {
