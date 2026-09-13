@@ -37,7 +37,7 @@ Rama base: `trabajo-zamly`. Cada tarea va en **su rama**; nadie empuja a `trabaj
 - `Apps.tsx`: `Control.listarApps` con buscador, ordenadas por uso de 7 días (`usoRango`). Hoja por app: minutos/día, aperturas/día opcional, días de la semana, activo.
 - `Webs.tsx`: CRUD de `ReglaWeb` (dominio o palabra).
 - `Modos.tsx`: CRUD de `ModoControl` con plantillas Estudio (lun–vie), Sueño (23:00–07:00), En clase; varios horarios; estrategia bloquear/permitir; selector de apps.
-- `FiltroAdulto.tsx`: estado de capas, palabras, dominios, chats de Telegram bloqueados, navegadores permitidos, contador de intentos (`Control.intentos`). Apagar = registrar `apagadoPedidoEn` y mostrar cuenta regresiva de 24 h; se apaga solo al vencer. No hay forma de saltarse la espera.
+- `FiltroAdulto.tsx`: estado de capas, palabras, dominios, chats de Telegram bloqueados, interruptores `bloquearPuertas` (catálogos de canales, invitaciones a grupos, subreddits NSFW) y `etiquetasSensibles`, lista `appsVigiladas` (selector de apps), navegadores permitidos, contador de intentos (`Control.intentos`). Apagar = registrar `apagadoPedidoEn` y mostrar cuenta regresiva de 24 h; se apaga solo al vencer. No hay forma de saltarse la espera.
 - `Historial.tsx`: uso por semana y mes desde `db.controlUsoDiario`, extensiones (`Control.extensiones`). Datos crudos, sin juicios.
 - `Proteccion.tsx`: activar/desactivar. Desactivar pide la contraseña de nuevo (`verificarContrasena` de `src/db/zamly.ts`) antes de `Control.activarProteccion({activa:false})`.
 - `src/control/almacen.ts`: `leerReglas()` (desde `db.controlReglas` id 1, o `reglasVacias()`), `guardarReglas(reglas)` (escribe Dexie + `Control.guardarReglas`, actualiza `actualizado`), hook `useReglas()` con `useLiveQuery`.

@@ -88,6 +88,20 @@ export interface FiltroAdulto {
   /** Títulos de chats/canales de Telegram marcados a mano. */
   chatsBloqueados: string[];
   bloquearBusquedaTelegram: boolean;
+  /**
+   * Bloquear las "puertas": catálogos de canales/grupos de Telegram, enlaces de
+   * invitación (`t.me/joinchat`, `t.me/+…`) con palabras +18, subreddits NSFW,
+   * sitios de chat con desconocidos. Lista base empaquetada en `Motor.java`.
+   */
+  bloquearPuertas: boolean;
+  /**
+   * En las apps de `appsVigiladas`, bloquear cuando en pantalla aparece una
+   * marca de contenido sensible ("NSFW", "18+", "contenido sensible"…), aunque
+   * el nombre del chat o canal sea inocente.
+   */
+  etiquetasSensibles: boolean;
+  /** Apps cuyo texto visible (título de chat, marcas) se revisa. */
+  appsVigiladas: string[];
   /** Paquetes de navegadores cuya URL se puede leer. Los demás navegadores se bloquean. */
   navegadoresPermitidos: string[];
   /** Si hay una petición de apagado, cuándo se pidió (ms). Se apaga pasadas 24 h. */
@@ -141,6 +155,19 @@ export interface IntentoBloqueado {
 export const DIA_EN_MS = 24 * 60 * 60 * 1000;
 export const ESPERA_APAGAR_ADULTO_MS = DIA_EN_MS;
 
+/** Telegram (y sus clientes), Reddit, X, Discord, Instagram y TikTok. */
+export const APPS_VIGILADAS_BASE: string[] = [
+  "org.telegram.messenger",
+  "org.telegram.messenger.web",
+  "org.thunderdog.challegram",
+  "org.telegram.plus",
+  "com.reddit.frontpage",
+  "com.twitter.android",
+  "com.discord",
+  "com.instagram.android",
+  "com.zhiliaoapp.musically",
+];
+
 export function reglasVacias(ahora = Date.now()): ReglasControl {
   return {
     version: 1,
@@ -155,6 +182,9 @@ export function reglasVacias(ahora = Date.now()): ReglasControl {
       dominios: [],
       chatsBloqueados: [],
       bloquearBusquedaTelegram: false,
+      bloquearPuertas: true,
+      etiquetasSensibles: true,
+      appsVigiladas: APPS_VIGILADAS_BASE,
       navegadoresPermitidos: ["com.android.chrome"],
       apagadoPedidoEn: null,
     },

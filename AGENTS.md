@@ -223,8 +223,11 @@ no un plan contra el cual se lo mide.
   admin de dispositivo + VpnService solo-DNS. JS solo edita reglas (`src/control/tipos.ts`,
   contrato con Java) y lee datos vía el plugin `Control` (`src/control/plugin.ts`).
 - **Límite alcanzado:** bloqueo duro; solo se extiende con la contraseña y la extensión queda registrada.
-- **Filtro +18:** DNS familiar + lista local, palabras clave en navegadores y títulos de chats de
-  Telegram, SafeSearch forzado. **No se extiende nunca**; apagarlo exige contraseña + 24 h de espera.
+- **Filtro +18:** DNS familiar (CleanBrowsing Family, que también fuerza SafeSearch y el modo
+  restringido de YouTube) + lista local, palabras clave en navegadores, títulos de chats y grupos
+  de Telegram, marcas de "contenido sensible"/NSFW en apps vigiladas (Telegram, Reddit, X,
+  Discord, Instagram, TikTok) y **puertas**: catálogos de canales, enlaces de invitación a grupos,
+  subreddits NSFW, chats con desconocidos. **No se extiende nunca**; apagarlo exige contraseña + 24 h de espera.
 - **Anti-desinstalación:** admin + accesibilidad tapando desinstalar/quitar permisos. Se apaga
   solo desde Control con la contraseña.
 - **Tono:** pantallas de bloqueo neutras ("TikTok · 1 h de 1 h hoy"), sin rojo, sin culpa.
