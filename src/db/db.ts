@@ -1,5 +1,6 @@
 import Dexie, { type Table } from "dexie";
 import type { DiaISO } from "../lib/fecha";
+import type { MotivoBloqueo, ReglasControl } from "../control/tipos";
 
 /**
  * `siempre` — indefinida, sin fecha de fin (Ejercicio, GymFace: CLAUDE.md
@@ -281,6 +282,8 @@ export interface RegistroPlan {
   ejerciciosHechos: string[];
   completo: Bandera;
   creada: number;
+  /** Sesión cronometrada durante la que se marcó la rutina, si la hubo. */
+  sesionId?: number;
 }
 
 /* ── Zamly: racha privada, detrás de contraseña ───────────────────────
@@ -301,6 +304,30 @@ export interface ZamlyEvento {
   nota?: string;
 }
 
+/* ── Control: tiempo en pantalla ──────────────────────────────────────
+ * Las reglas viven como un único documento (id 1) para empujarlas enteras al
+ * motor nativo. El uso diario se fotografía al abrir la app, porque Android
+ * solo guarda detalle de pocos días. Tipos en `src/control/tipos.ts`. */
+export interface ControlReglasFila {
+  id: number;
+  reglas: ReglasControl;
+}
+
+export interface ControlUsoDiario {
+  id?: number;
+  dia: DiaISO;
+  paquete: string;
+  ms: number;
+  aperturas: number;
+}
+
+export interface ControlIntento {
+  id?: number;
+  fecha: number;
+  motivo: MotivoBloqueo;
+  origen: string;
+}
+
 class BaseLykari extends Dexie {
   actividades!: Table<Actividad, number>;
   sesiones!: Table<Sesion, number>;
@@ -317,6 +344,9 @@ class BaseLykari extends Dexie {
   zamlyEventos!: Table<ZamlyEvento, number>;
   aulaItems!: Table<ItemAulaUPC, string>;
   componentesNotaUPC!: Table<ComponenteNotaUPC, string>;
+  controlReglas!: Table<ControlReglasFila, number>;
+  controlUsoDiario!: Table<ControlUsoDiario, number>;
+  controlIntentos!: Table<ControlIntento, number>;
 
   constructor() {
     super("lykari");
@@ -353,6 +383,12 @@ class BaseLykari extends Dexie {
     this.version(7).stores({
       aulaItems: "id, cursoId, vence, estado, novedad, leido, actualizado",
       componentesNotaUPC: "id, cursoId, cursoClave, actualizado",
+    });
+    // `RegistroPlan.sesionId` no se indexa.
+    this.version(8).stores({
+      controlReglas: "id",
+      controlUsoDiario: "++id, dia, paquete, [dia+paquete]",
+      controlIntentos: "++id, fecha, motivo",
     });
   }
 }
