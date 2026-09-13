@@ -1,0 +1,52 @@
+.control-ui { color: var(--ink); font-size: 14px; line-height: 1.5; min-width: 0; }
+.control-ui h2 { margin: 0; font-size: 21px; line-height: 1.2; }
+.control-ui h3 { margin: 0 0 8px; font-size: 15px; }
+.control-ui p { margin: 7px 0; color: var(--ink2); }
+.control-ui small { color: var(--ink2); font-size: 12px; }
+.control-ui input:not([type=checkbox]), .control-ui select, .control-ui textarea {
+  display: block; width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--ground); color: var(--ink); font: inherit; margin-top: 5px;
+}
+.control-ui input[type=checkbox] { accent-color: var(--pino); width: 19px; height: 19px; flex-shrink: 0; }
+.control-ui textarea { min-height: 100px; resize: vertical; }
+.control-ui label { display: block; font-weight: 500; }
+.control-ui :focus-visible { outline: 2px solid var(--pino); outline-offset: 3px; }
+.control-ui fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.control-ui fieldset:disabled { opacity: .65; }
+.ct-nav { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 0 14px; }
+.ct-btn { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-height: 44px; background: var(--paper); color: var(--ink); font: inherit; cursor: pointer; display: inline-flex; gap: 7px; align-items: center; justify-content: center; }
+.ct-btn:disabled { opacity: .55; cursor: default; }
+.ct-btn[aria-pressed=true], .ct-primario { background: var(--pino); border-color: var(--pino); color: var(--paper); }
+.ct-nav .ct-btn { flex-shrink: 0; font-size: 12.5px; }
+.ct-titulo { margin-bottom: 18px; }
+.ct-titulo p { font-size: 12.5px; }
+.ct-lista, .ct-form, .ct-form > fieldset { display: grid; gap: 12px; }
+.ct-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; overflow-wrap: anywhere; }
+.ct-fila { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ct-entre { justify-content: space-between; }
+.ct-wrap { flex-wrap: wrap; }
+.ct-crece { flex: 1; min-width: 0; }
+.ct-numero { font-family: "JetBrains Mono Variable", monospace; font-variant-numeric: tabular-nums; }
+.ct-total { font-size: 30px; font-weight: 600; letter-spacing: -.04em; }
+.ct-bloque { display: block; }
+.ct-muted { color: var(--ink2); }
+.ct-icono { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; color: var(--pino); }
+.ct-icono img { width: 28px; height: 28px; object-fit: contain; }
+.control-ui .ct-check { display: flex; align-items: center; gap: 10px; padding: 9px 0; min-height: 44px; font-weight: 400; }
+.ct-dias .ct-fila { gap: 5px; margin: 6px 0; }
+.ct-dias .ct-btn { flex: 1; padding: 9px 0; }
+.ct-aviso, .ct-vacio { border: 1px dashed var(--line); padding: 13px; border-radius: 12px; margin: 12px 0; }
+.ct-aviso p { margin-top: 0; }
+.ct-editor { position: fixed; inset: auto 0 0; margin: 0 auto; width: min(100%, 560px); max-width: 100%; max-height: 90dvh; padding: 18px 20px calc(24px + var(--safe-b)); background: var(--paper); border: 1px solid var(--line); border-radius: 20px 20px 0 0; overflow: auto; }
+.ct-editor::backdrop { background: var(--scrim); }
+.ct-editor > .ct-fila { margin-bottom: 20px; }
+.ct-selector-lista { max-height: 230px; overflow-y: auto; margin: 8px 0; }
+.ct-barra { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 10px 0 4px; }
+.ct-barra > span { display: block; height: 100%; background: var(--pino); }
+.ct-corriendo { color: var(--ambar); }
+.ct-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ct-tabla th { text-align: left; color: var(--ink2); font-weight: 500; }
+.ct-tabla th, .ct-tabla td { padding: 10px 5px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.ct-tabla th:first-child { width: 43%; }
+.ct-demo { max-width: 560px; padding: 24px 20px; margin: 0 auto; }
+@media (max-width: 360px) { .ct-total { font-size: 25px; } .ct-editor { padding-inline: 14px; } }
