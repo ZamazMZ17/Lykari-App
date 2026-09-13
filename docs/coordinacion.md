@@ -16,13 +16,17 @@ Rama base: `trabajo-zamly`. Cada tarea va en **su rama**; nadie empuja a `trabaj
 | # | Tarea | Ejecutor | Rama | Estado |
 |---|---|---|---|---|
 | 0 | Contratos, migración Dexie v8, CLAUDE/AGENTS §11 | Claude | `trabajo-zamly` | hecho |
-| 1 | Motor nativo Control + filtro +18 | Claude | `control-nativo` | pendiente |
-| 2 | Lógica pura `src/control/reglas.ts` + tests | Claude (subagente) | `control-reglas` | pendiente |
-| 3 | UI de Control | ChatGPT/Codex | `codex/control-ui` | pendiente |
-| 4 | Sesión de ejercicio con rutina visible | ChatGPT/Codex | `codex/entrenamiento` | pendiente |
-| 5 | Entrada `X` en Hoy + pestañas Racha/Control en Zamly | Claude (subagente) | `zamly-entrada` | pendiente |
-| 6 | Integración, versión 0.8.0, APK | Claude | `trabajo-zamly` | pendiente |
-| 7 | Revisión cruzada | ambos | — | pendiente |
+| 1 | Motor nativo Control + filtro +18 | Claude | `control-nativo` | hecho |
+| 2 | Lógica pura de horarios/uso/dominios | Claude | `presentacion.ts` + `Motor.java` | hecho (fusionada en 1 y 3) |
+| 3 | UI de Control | ChatGPT/Codex + Claude | `codex/control-ui` | hecho (Claude terminó +18 tras agotarse los tokens de Codex) |
+| 4 | Sesión de ejercicio con rutina visible | ChatGPT/Codex | `codex/entrenamiento` | hecho |
+| 5 | Entrada `X` en Hoy + pestañas Racha/Control en Zamly | Claude | `zamly-entrada` + integración | hecho |
+| 6 | Integración, versión 0.8.0, APK | Claude | `trabajo-zamly` | hecho (build + APK OK, 282 tests) |
+| 7 | Revisión cruzada | pendiente | — | pendiente (probar en el teléfono) |
+
+**Estado 2026-09-13:** todo integrado en `trabajo-zamly`. `npm run build`, `npm test`
+(282) y `npm run apk` pasan. Falta probar en un teléfono real: conceder permisos,
+límite de una app, un modo, una web y un chat +18, y la protección anti-desinstalar.
 
 ---
 
