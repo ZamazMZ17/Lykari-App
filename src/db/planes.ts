@@ -244,6 +244,7 @@ export async function guardarAvanceHoy(
   diaRutinaIndice: number,
   ejerciciosHechos: string[],
   completo: boolean,
+  sesionId?: number,
 ): Promise<void> {
   await db.transaction("rw", db.planes, db.registrosPlan, async () => {
     const plan = await db.planes.get(planId);
@@ -259,6 +260,7 @@ export async function guardarAvanceHoy(
         diaRutinaIndice,
         ejerciciosHechos,
         completo: completo ? 1 : 0,
+        ...(sesionId != null ? { sesionId } : {}),
       });
     } else {
       await db.registrosPlan.add({
@@ -269,6 +271,7 @@ export async function guardarAvanceHoy(
         ejerciciosHechos,
         completo: completo ? 1 : 0,
         creada: Date.now(),
+        ...(sesionId != null ? { sesionId } : {}),
       });
     }
 
