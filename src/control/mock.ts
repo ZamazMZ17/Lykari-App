@@ -21,7 +21,7 @@ const apps = [
 ];
 // Los esenciales vienen concedidos; los opcionales empiezan apagados para
 // mostrar el flujo real (avisos, sección Permisos, concederlos uno a uno).
-const permisos: EstadoPermisos = { uso: true, accesibilidad: true, admin: false, superposicion: false, vpn: false, notificaciones: false };
+const permisos: EstadoPermisos = { uso: true, accesibilidad: true, admin: false, superposicion: false, vpn: false, notificaciones: false, noMolestar: false };
 
 function usoDia(dia: string): UsoDia {
   const semilla = Number(dia.slice(-2));
@@ -37,7 +37,7 @@ export async function prepararMock(): Promise<void> {
       { paquete: apps[0].paquete, minutosDia: 60, dias: [], activo: true },
       { paquete: apps[1].paquete, minutosDia: 90, aperturasDia: 20, dias: [], activo: true },
     ];
-    reglas.modos = [{ id: "sueno-demo", nombre: "Sueño", plantilla: "sueno", horarios: [{ dias: [], desde: "23:00", hasta: "07:00" }], estrategia: "bloquear", apps: apps.slice(0, 4).map((a) => a.paquete), webs: [], activo: true }];
+    reglas.modos = [{ id: "sueno-demo", nombre: "Sueño", plantilla: "sueno", horarios: [{ dias: [], desde: "00:00", hasta: "05:00" }], estrategia: "bloquear", apps: apps.slice(0, 4).map((a) => a.paquete), webs: [], silencio: true, activo: true }];
     await tablasMock.controlReglas.put({ id: 1, reglas });
   }
   await base.transaction("rw", tablasMock.controlUsoDiario, async () => {

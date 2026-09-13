@@ -3,13 +3,16 @@ import { Flame, Lock, RotateCcw, Trophy } from "lucide-react";
 import {
   establecerContrasena,
   eventosRecientes,
+  metodoAcceso,
   msDeRachaActual,
   obtenerRacha,
   registrarRecaida,
   sincronizarHashNativo,
   tieneContrasena,
   verificarContrasena,
+  type MetodoAcceso,
 } from "../db/zamly";
+import { PatronPad } from "./PatronPad";
 import type { ZamlyEvento, ZamlyRacha } from "../db/db";
 import { HORA } from "../lib/tiempo";
 import { useTic } from "../lib/ganchos";
@@ -27,97 +30,107 @@ const fechaHora = (ms: number) =>
 /** La hoja se cierra sola al tocar fuera de la parte desbloqueada, como el resto de la app. */
 export function Zamly({ onClose }: { onClose: () => void }) {
   const [estado, setEstado] = useState<"cargando" | "crear" | "ingresar" | "adentro">("cargando");
+  const [metodo, setMetodo] = useState<MetodoAcceso>("patron");
   const [valor, setValor] = useState("");
   const [confirmar, setConfirmar] = useState("");
+  const [primerPatron, setPrimerPatron] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void tieneContrasena().then((si) => setEstado(si ? "ingresar" : "crear"));
+    void tieneContrasena().then(async (si) => {
+      if (si) setMetodo(await metodoAcceso());
+      setEstado(si ? "ingresar" : "crear");
+    });
   }, []);
 
-  const enviarCrear = async () => {
-    if (valor.length < 4) return setError("Al menos 4 caracteres.");
-    if (valor !== confirmar) return setError("No coinciden.");
-    await establecerContrasena(valor);
-    setEstado("adentro");
-  };
-
-  const enviarIngresar = async () => {
-    const ok = await verificarContrasena(valor);
-    if (!ok) return setError("Contraseña incorrecta.");
+  const alDesbloquear = () => {
     // El motor nativo necesita el hash para "extender con contraseña" desde la
     // pantalla de bloqueo. Se refresca en cada ingreso por si se instaló recién.
     void sincronizarHashNativo();
     setEstado("adentro");
   };
 
-  if (estado === "cargando") return null;
+  const enviarCrearClave = async () => {
+    if (valor.length < 4) return setError("Al menos 4 caracteres.");
+    if (valor !== confirmar) return setError("No coinciden.");
+    await establecerContrasena(valor, "clave");
+    alDesbloquear();
+  };
 
-  if (estado === "adentro") {
-    return <ZamlyAdentro onClose={onClose} />;
-  }
+  const patronCreado = async (secuencia: string) => {
+    if (secuencia.split("-").length < 4) return setError("Une al menos 4 puntos.");
+    setError("");
+    if (primerPatron === null) {
+      setPrimerPatron(secuencia);
+      return;
+    }
+    if (secuencia !== primerPatron) {
+      setPrimerPatron(null);
+      return setError("Los patrones no coinciden. Empieza de nuevo.");
+    }
+    await establecerContrasena(secuencia, "patron");
+    alDesbloquear();
+  };
+
+  const verificar = async (secreto: string) => {
+    const ok = await verificarContrasena(secreto);
+    if (!ok) return setError(metodo === "patron" ? "Patrón incorrecto." : "Contraseña incorrecta.");
+    alDesbloquear();
+  };
+
+  if (estado === "cargando") return null;
+  if (estado === "adentro") return <ZamlyAdentro onClose={onClose} />;
+
+  const titulo = estado === "crear" ? (metodo === "patron" ? "Crea tu patrón" : "Crea tu contraseña") : "Acceso privado";
 
   return (
-    <Hoja onClose={onClose} eyebrow="Privado" titulo={estado === "crear" ? "Crear contraseña" : "Acceso privado"}>
-      <div style={{ display: "grid", placeItems: "center", margin: "8px 0 18px" }}>
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 999,
-            display: "grid",
-            placeItems: "center",
-            background: "var(--tinte-pino)",
-          }}
-        >
+    <Hoja onClose={onClose} eyebrow="Privado" titulo={titulo}>
+      <div style={{ display: "grid", placeItems: "center", margin: "6px 0 14px" }}>
+        <div style={{ width: 52, height: 52, borderRadius: 999, display: "grid", placeItems: "center", background: "var(--tinte-pino)" }}>
           <Lock size={22} color="var(--pino)" />
         </div>
       </div>
-      <input
-        value={valor}
-        onChange={(e) => {
-          setValor(e.target.value);
-          setError("");
-        }}
-        type="password"
-        autoComplete="off"
-        autoFocus
-        placeholder="Contraseña"
-        style={{
-          width: "100%",
-          padding: "13px 14px",
-          borderRadius: 12,
-          border: "1px solid var(--line)",
-          background: "var(--ground)",
-          fontSize: 15,
-          marginBottom: estado === "crear" ? 10 : 8,
-        }}
-      />
+
+      {/* Elegir método solo al crear */}
       {estado === "crear" && (
-        <input
-          value={confirmar}
-          onChange={(e) => {
-            setConfirmar(e.target.value);
-            setError("");
-          }}
-          type="password"
-          autoComplete="off"
-          placeholder="Repetila"
-          style={{
-            width: "100%",
-            padding: "13px 14px",
-            borderRadius: 12,
-            border: "1px solid var(--line)",
-            background: "var(--ground)",
-            fontSize: 15,
-            marginBottom: 8,
-          }}
-        />
+        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+          <button className="btn" onClick={() => { setMetodo("patron"); setValor(""); setConfirmar(""); setPrimerPatron(null); setError(""); }} style={tabEstilo(metodo === "patron")}>Patrón</button>
+          <button className="btn" onClick={() => { setMetodo("clave"); setPrimerPatron(null); setError(""); }} style={tabEstilo(metodo === "clave")}>Contraseña</button>
+        </div>
       )}
-      {error && <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 12px" }}>{error}</p>}
-      <BotonPrincipal onClick={() => void (estado === "crear" ? enviarCrear() : enviarIngresar())}>
-        {estado === "crear" ? "Crear y entrar" : "Entrar"}
-      </BotonPrincipal>
+
+      {/* Patrón */}
+      {metodo === "patron" && (estado === "crear" || estado === "ingresar") && (
+        <>
+          {estado === "crear" && (
+            <p style={{ fontSize: 13, color: "var(--ink2)", textAlign: "center", margin: "0 0 6px" }}>
+              {primerPatron === null ? "Une los puntos para dibujar tu patrón." : "Vuelve a dibujarlo para confirmar."}
+            </p>
+          )}
+          <PatronPad key={estado + (primerPatron ?? "")} onCompletar={(s) => void (estado === "crear" ? patronCreado(s) : verificar(s))} />
+        </>
+      )}
+
+      {/* Contraseña */}
+      {metodo === "clave" && (
+        <>
+          <input value={valor} onChange={(e) => { setValor(e.target.value); setError(""); }} type="password" autoComplete="off" autoFocus placeholder="Contraseña"
+            style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--line)", background: "var(--ground)", fontSize: 15, marginBottom: estado === "crear" ? 10 : 8, boxSizing: "border-box" }} />
+          {estado === "crear" && (
+            <input value={confirmar} onChange={(e) => { setConfirmar(e.target.value); setError(""); }} type="password" autoComplete="off" placeholder="Repítela"
+              style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--line)", background: "var(--ground)", fontSize: 15, marginBottom: 8, boxSizing: "border-box" }} />
+          )}
+        </>
+      )}
+
+      {error && <p style={{ fontSize: 12.5, color: "var(--ink2)", margin: "0 0 12px", textAlign: "center" }}>{error}</p>}
+
+      {/* Botón solo para contraseña; el patrón se confirma al soltar */}
+      {metodo === "clave" && (
+        <BotonPrincipal onClick={() => void (estado === "crear" ? enviarCrearClave() : verificar(valor))}>
+          {estado === "crear" ? "Crear y entrar" : "Entrar"}
+        </BotonPrincipal>
+      )}
     </Hoja>
   );
 }

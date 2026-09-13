@@ -22,6 +22,8 @@ public class ArranqueReceptor extends BroadcastReceiver {
                 vpn.setAction(FiltroDns.ACCION_INICIAR);
                 contexto.startService(vpn);
             }
+            // Reprograma el silencio de los modos tras reiniciar.
+            PlanificadorModos.reprogramar(contexto);
         } catch (Exception e) {
             Log.w(ReglasStore.TAG, "arranque", e);
         }

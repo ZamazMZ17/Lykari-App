@@ -90,6 +90,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Enciende/apaga No molestar en cada frontera de horario de los modos. -->
+        <receiver
+            android:name=".control.AlarmaModos"
+            android:exported="false" />
     </application>
 
     <!--
@@ -143,4 +148,6 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- VPN local solo-DNS del filtro +18. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Silencio automático (No molestar) en los modos Sueño, Estudio y En clase. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 </manifest>

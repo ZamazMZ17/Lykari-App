@@ -50,6 +50,7 @@ public class VigilanteAccesibilidad extends AccessibilityService {
 
     private String ultimoPaquete = "";
     private long ultimaAccion = 0;
+    private long ultimoDnd = 0;
 
     @Override
     protected void onServiceConnected() {
@@ -70,6 +71,13 @@ public class VigilanteAccesibilidad extends AccessibilityService {
 
         ReglasStore store = ReglasStore.de(this);
         long ahora = System.currentTimeMillis();
+
+        // Backstop del silencio de los modos mientras el teléfono está en uso
+        // (por si se perdió una alarma). Como mucho una vez cada 30 s.
+        if (ahora - ultimoDnd > 30_000) {
+            ultimoDnd = ahora;
+            AplicadorDnd.aplicar(this);
+        }
 
         try {
             // 1. Protección: tapar desinstalar/quitar permisos, aunque sea en Ajustes.

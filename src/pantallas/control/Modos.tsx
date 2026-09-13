@@ -1,28 +1,38 @@
 import { useState } from "react";
-import { BookOpen, GraduationCap, Moon, Plus, Trash2 } from "lucide-react";
+import { BellOff, BookOpen, GraduationCap, Moon, Plus, Trash2 } from "lucide-react";
 import { guardarReglas } from "../../control/almacen";
 import { motorControl } from "../../control/servicio";
-import type { ModoControl, PlantillaModo, ReglasControl } from "../../control/tipos";
+import { horariosDeClase } from "../../control/horarioClases";
+import type { HorarioModo, ModoControl, PlantillaModo, ReglasControl } from "../../control/tipos";
 import { Aviso, Dias, Editor, EstadoAccion, Guardar, Interruptor, SelectorApps, Titulo, useAccion, useConsulta, Vacio, type PropsReglas } from "./comun";
 
 const plantillas = [
   { tipo: "estudio" as const, nombre: "Estudio", icono: BookOpen, desde: "09:00", hasta: "11:00" },
-  { tipo: "sueno" as const, nombre: "Sueño", icono: Moon, desde: "23:00", hasta: "07:00" },
+  { tipo: "sueno" as const, nombre: "Sueño", icono: Moon, desde: "00:00", hasta: "05:00" },
   { tipo: "clase" as const, nombre: "En clase", icono: GraduationCap, desde: "08:00", hasta: "10:00" },
   { tipo: "propio" as const, nombre: "Nuevo modo", icono: Plus, desde: "09:00", hasta: "10:00" },
 ];
 
 export function Modos({ reglas }: PropsReglas) {
   const [edicion, setEdicion] = useState<{ modo: ModoControl; reglas: ReglasControl }>();
-  const crear = (tipo: PlantillaModo) => {
+  const [error, setError] = useState("");
+  const crear = async (tipo: PlantillaModo) => {
+    setError("");
     const plantilla = plantillas.find((p) => p.tipo === tipo)!;
-    setEdicion({ reglas, modo: { id: crypto.randomUUID(), nombre: plantilla.nombre, plantilla: tipo, activo: true, estrategia: "bloquear", apps: [], webs: [],
-      horarios: [{ desde: plantilla.desde, hasta: plantilla.hasta, dias: tipo === "estudio" || tipo === "clase" ? [1, 2, 3, 4, 5] : [] }] } });
+    // "En clase" toma los bloques reales del horario de cursos de la app.
+    let horarios: HorarioModo[] = [{ desde: plantilla.desde, hasta: plantilla.hasta, dias: tipo === "estudio" ? [1, 2, 3, 4, 5] : [] }];
+    if (tipo === "clase") {
+      const deClases = await horariosDeClase();
+      if (deClases.length) horarios = deClases;
+      else setError("No encontré bloques de clase en tu horario; usé un horario de ejemplo que puedes ajustar.");
+    }
+    setEdicion({ reglas, modo: { id: crypto.randomUUID(), nombre: plantilla.nombre, plantilla: tipo, activo: true, estrategia: "bloquear", apps: [], webs: [], silencio: tipo !== "propio", horarios } });
   };
-  return <><Titulo titulo="Modos" detalle="Agrupa reglas por horario. Un horario nocturno continúa al día siguiente." />
-    <div className="ct-fila ct-wrap">{plantillas.map(({ tipo, nombre, icono: Icono }) => <button className="ct-btn" key={tipo} onClick={() => crear(tipo)}><Icono size={16} />{nombre}</button>)}</div>
+  return <><Titulo titulo="Modos" detalle="Agrupa reglas por horario. Pueden silenciar el teléfono (No molestar) y bloquear apps. Un horario nocturno continúa al día siguiente." />
+    <div className="ct-fila ct-wrap">{plantillas.map(({ tipo, nombre, icono: Icono }) => <button className="ct-btn" key={tipo} onClick={() => void crear(tipo)}><Icono size={16} />{nombre}</button>)}</div>
+    {error && <small style={{ display: "block", marginTop: 8 }}>{error}</small>}
     <div className="ct-lista" style={{ marginTop: 14 }}>{reglas.modos.map((m) => <button key={m.id} className="ct-btn ct-card" style={{ textAlign: "left", justifyContent: "start" }} onClick={() => setEdicion({ modo: m, reglas })}>
-      <span><strong className="ct-bloque">{m.nombre}</strong><small>{m.activo ? "Activo" : "Inactivo"} · {m.horarios.length} horarios · {m.apps.length} apps</small><span className="ct-bloque ct-numero">{m.horarios.map((h) => h.desde + "–" + h.hasta).join(" · ")}</span></span>
+      <span><strong className="ct-bloque">{m.nombre}</strong><small>{m.activo ? "Activo" : "Inactivo"} · {m.horarios.length} horarios · {m.apps.length} apps{m.silencio ? " · silencio" : ""}</small><span className="ct-bloque ct-numero">{m.horarios.map((h) => h.desde + "–" + h.hasta).join(" · ")}</span></span>
     </button>)}</div>
     {!reglas.modos.length && <Vacio>No hay modos guardados. Elige una plantilla para empezar.</Vacio>}
     {edicion && <EditarModo inicial={edicion.modo} reglas={edicion.reglas} onClose={() => setEdicion(undefined)} />}
@@ -50,6 +60,7 @@ function EditarModo({ inicial, reglas, onClose }: PropsReglas & { inicial: ModoC
         {modo.horarios.length > 1 && <button type="button" className="ct-btn" onClick={() => setModo({ ...modo, horarios: modo.horarios.filter((_, n) => n !== i) })}><Trash2 size={16} />Quitar horario {i + 1}</button>}
       </div>)}
       <button className="ct-btn" type="button" onClick={() => setModo({ ...modo, horarios: [...modo.horarios, { dias: [], desde: "12:00", hasta: "13:00" }] })}><Plus size={16} />Agregar horario</button>
+      <div className="ct-card"><Interruptor titulo="Silencio (No molestar)" valor={modo.silencio} onChange={(silencio) => setModo({ ...modo, silencio })} /><small><BellOff size={12} style={{ verticalAlign: "middle" }} /> Silencia llamadas, mensajes y notificaciones durante el horario. La alarma del despertador sigue sonando. Necesita el permiso «No molestar».</small></div>
       <label>Estrategia<select value={modo.estrategia} onChange={(e) => setModo({ ...modo, estrategia: e.target.value as ModoControl["estrategia"] })}><option value="bloquear">Bloquear las apps seleccionadas</option><option value="permitir">Permitir solo las apps seleccionadas</option></select></label>
       <small>{modo.estrategia === "permitir" ? "LyKari y el teléfono siguen disponibles. Sin selección, solo esas apps quedan permitidas." : "Sin selección no se bloquean apps por este modo."}</small>
       <Aviso error={consulta.error} reintentar={() => void consulta.recargar()} />

@@ -13,6 +13,7 @@ const permisos: [TipoPermiso, string, string, boolean, string?][] = [
   ["admin", "Administración del dispositivo", "Sostiene la protección contra desinstalación.", false, RESTRINGIDO],
   ["superposicion", "Mostrar sobre otras apps", "Muestra la pantalla al alcanzar un límite.", false],
   ["vpn", "Filtro DNS", "Filtra dominios con una conexión VPN local (filtro +18). Acepta el aviso de conexión VPN.", false],
+  ["noMolestar", "No molestar", "Deja que los modos Sueño, En clase y Estudio silencien el teléfono automáticamente.", false],
   ["notificaciones", "Notificaciones", "Muestra los avisos del servicio de Control.", false],
 ];
 

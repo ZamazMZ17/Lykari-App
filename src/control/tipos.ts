@@ -74,6 +74,8 @@ export interface ModoControl {
   estrategia: "bloquear" | "permitir";
   apps: string[];
   webs: string[];
+  /** Poner el teléfono en No molestar (silencio, sin notificaciones) mientras el modo está activo. */
+  silencio: boolean;
   activo: boolean;
 }
 
@@ -131,6 +133,8 @@ export interface EstadoPermisos {
   superposicion: boolean;
   vpn: boolean;
   notificaciones: boolean;
+  /** Acceso a No molestar, para el silencio automático de los modos. */
+  noMolestar: boolean;
 }
 
 export type TipoPermiso = keyof EstadoPermisos;

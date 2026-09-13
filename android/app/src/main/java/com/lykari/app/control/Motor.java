@@ -138,6 +138,38 @@ public final class Motor {
         return permitir ? !enLista : enLista;
     }
 
+    /** ¿Hay algún modo activo con silencio cuyo horario cubra este instante? */
+    static boolean algunModoSilenciaAhora(JSONArray modos, Calendar ahora) {
+        if (modos == null) return false;
+        for (int i = 0; i < modos.length(); i++) {
+            JSONObject m = modos.optJSONObject(i);
+            if (m == null || !m.optBoolean("activo", false) || !m.optBoolean("silencio", false)) continue;
+            JSONArray horarios = m.optJSONArray("horarios");
+            if (horarios == null) continue;
+            for (int k = 0; k < horarios.length(); k++) {
+                JSONObject h = horarios.optJSONObject(k);
+                if (h != null && horarioActivo(h, ahora)) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Minutos hasta el próximo cambio de estado de silencio (un modo empieza o
+     * termina), mirando dentro de las próximas 24 h. Sirve para programar la
+     * alarma que enciende/apaga No molestar aunque el teléfono esté quieto.
+     * Devuelve 1..1440; si no encuentra nada, 60 como colchón.
+     */
+    static int minutosAlProximoCambio(JSONArray modos, Calendar ahora) {
+        boolean estadoAhora = algunModoSilenciaAhora(modos, ahora);
+        Calendar t = (Calendar) ahora.clone();
+        for (int m = 1; m <= 24 * 60; m++) {
+            t.add(Calendar.MINUTE, 1);
+            if (algunModoSilenciaAhora(modos, t) != estadoAhora) return m;
+        }
+        return 60;
+    }
+
     static boolean esEsencial(String paquete) {
         for (String p : SIEMPRE_PERMITIDAS) if (p.equals(paquete)) return true;
         return false;

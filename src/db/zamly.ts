@@ -10,7 +10,15 @@ import { Control } from "../control/plugin";
  */
 
 const CLAVE_HASH = "zamlyPasswordHash";
+const CLAVE_METODO = "zamlyMetodo";
 const RACHA_ID = 1;
+
+export type MetodoAcceso = "patron" | "clave";
+
+export async function metodoAcceso(): Promise<MetodoAcceso> {
+  const guardado = await db.ajustes.get(CLAVE_METODO);
+  return guardado?.valor === "patron" ? "patron" : "clave";
+}
 
 async function hashear(texto: string): Promise<string> {
   const datos = new TextEncoder().encode(texto);
@@ -24,9 +32,10 @@ export async function tieneContrasena(): Promise<boolean> {
   return !!(await db.ajustes.get(CLAVE_HASH));
 }
 
-export async function establecerContrasena(nueva: string): Promise<void> {
+export async function establecerContrasena(nueva: string, metodo: MetodoAcceso = "clave"): Promise<void> {
   const hash = await hashear(nueva);
   await db.ajustes.put({ clave: CLAVE_HASH, valor: hash });
+  await db.ajustes.put({ clave: CLAVE_METODO, valor: metodo });
   await sincronizarHashNativo(hash);
 }
 

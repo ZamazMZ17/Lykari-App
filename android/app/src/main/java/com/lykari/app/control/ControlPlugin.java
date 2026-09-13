@@ -101,6 +101,8 @@ public class ControlPlugin extends Plugin {
         ReglasStore store = ReglasStore.de(getContext());
         store.guardarReglas(reglas);
         sincronizarFiltroDns(store);
+        // Aplica el silencio de los modos ahora y programa la próxima frontera.
+        PlanificadorModos.reprogramar(getContext());
         call.resolve();
     }
 
@@ -144,6 +146,7 @@ public class ControlPlugin extends Plugin {
         r.put("superposicion", Settings.canDrawOverlays(getContext()));
         r.put("vpn", VpnService.prepare(getContext()) == null);
         r.put("notificaciones", NotificationManagerCompat.from(getContext()).areNotificationsEnabled());
+        r.put("noMolestar", AplicadorDnd.tieneAcceso(getContext()));
         call.resolve(r);
     }
 
@@ -166,6 +169,9 @@ public class ControlPlugin extends Plugin {
             case "notificaciones":
                 i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                         .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
+                break;
+            case "noMolestar":
+                i = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
                 break;
             case "admin": {
                 ComponentName admin = new ComponentName(getContext(), AdminReceptor.class);
