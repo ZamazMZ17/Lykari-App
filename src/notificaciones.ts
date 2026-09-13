@@ -15,6 +15,8 @@ import { esNativo } from "./lib/plataforma";
 
 /** Rango reservado para el diario, uno por día. */
 const BASE_DIARIO = 1000;
+/** Reservado para el descanso; no pertenece al diario ni a las tareas. */
+export const ID_DESCANSO = 499_999;
 /** Rango reservado para las tareas: id de la tarea + este desplazamiento. */
 const BASE_TAREA = 500_000;
 const DIAS_PROGRAMADOS = 14;
@@ -39,8 +41,9 @@ export async function pedirPermisoNotificaciones(): Promise<boolean> {
 /** Borra todo lo que teníamos programado, para reprogramar desde cero. */
 async function limpiarProgramadas(): Promise<void> {
   const { notifications } = await LocalNotifications.getPending();
-  if (notifications.length === 0) return;
-  await LocalNotifications.cancel({ notifications: notifications.map((n) => ({ id: n.id })) });
+  const recordatorios = notifications.filter((n) => n.id !== ID_DESCANSO);
+  if (recordatorios.length === 0) return;
+  await LocalNotifications.cancel({ notifications: recordatorios.map((n) => ({ id: n.id })) });
 }
 
 /**
@@ -117,3 +120,27 @@ export async function estadoNotificaciones(): Promise<{
 
 /** El día lógico de hoy, para que Ajustes pueda decir si falta el diario. */
 export const diaDeHoy = hoyISO;
+
+/** Se programa al ocultar la app: Android puede suspender JavaScript. */
+export async function programarAvisoDescanso(nombre: string, terminaEn: number): Promise<void> {
+  if (!esNativo || terminaEn <= Date.now()) return;
+  if ((await LocalNotifications.checkPermissions()).display !== "granted") return;
+  await LocalNotifications.schedule({ notifications: [{
+    id: ID_DESCANSO,
+    title: "Descanso terminado",
+    body: nombre,
+    schedule: { at: new Date(terminaEn), allowWhileIdle: true },
+  }] });
+}
+
+export async function cancelarAvisoDescanso(): Promise<void> {
+  if (esNativo) await LocalNotifications.cancel({ notifications: [{ id: ID_DESCANSO }] });
+}
+
+/** Fallback web mientras la pestaña sigue abierta y tiene permiso. */
+export async function avisarDescansoWeb(nombre: string): Promise<void> {
+  if (esNativo || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const registro = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+  if (registro) await registro.showNotification("Descanso terminado", { body: nombre, tag: "descanso" });
+  else new Notification("Descanso terminado", { body: nombre, tag: "descanso" });
+}

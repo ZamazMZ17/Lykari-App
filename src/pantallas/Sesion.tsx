@@ -1,5 +1,5 @@
 import { AlertTriangle, Pause, Play, Square, Timer } from "lucide-react";
-import type { Actividad, Sesion as SesionDB } from "../db/db";
+import type { Actividad, Plan, Sesion as SesionDB } from "../db/db";
 import { icono } from "../lib/iconos";
 import {
   AVISO_RECREATIVA,
@@ -12,8 +12,11 @@ import {
 } from "../lib/tiempo";
 import { Header } from "../ui/piezas";
 
+import { RutinaDelDia } from "./plan/RutinaDelDia";
+
 export function Sesion({
   act,
+  plan,
   sesion,
   ahora,
   onAlternar,
@@ -21,6 +24,7 @@ export function Sesion({
   onBack,
 }: {
   act: Actividad;
+  plan?: Plan;
   sesion: SesionDB;
   ahora: number;
   onAlternar: () => void;
@@ -40,6 +44,34 @@ export function Sesion({
   const C = 2 * Math.PI * R;
 
   const pasoElAviso = act.tipo === "recreativa" && ms >= AVISO_RECREATIVA;
+
+  if (plan) return (
+    <div style={{ minHeight: "100%" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 2, background: "var(--ground)", borderBottom: "1px solid var(--line)" }}>
+        <Header eyebrow="Sesión en curso" title={act.nombre} onBack={onBack} />
+        <div style={{ padding: "0 20px 14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+            <div className="mono" role="timer" aria-label="Tiempo registrado" style={{ fontSize: 30, fontWeight: 700, color: corriendo ? "var(--ambar)" : "var(--ink2)" }}>{cronometro(ms)}</div>
+            <span className="eyebrow">{corriendo ? "grabando tiempo" : "en pausa"}</span>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn card" onClick={onAlternar} style={{ flex: 1, padding: "12px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {corriendo ? <><Pause size={17} /> Pausar</> : <><Play size={17} /> Continuar</>}
+            </button>
+            <button className="btn" onClick={onFin} style={{ flex: 1, padding: "12px 0", borderRadius: 14, background: "var(--pino)", color: "var(--paper)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <Square size={15} fill="currentColor" /> Finalizar
+            </button>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--ink2)", margin: "10px 0 0" }}>
+            {act.tipo === "enfoque" ? "Se cierra sola a las 3 h si te olvidas" : "No se cierra sola. Te aviso a las 2 h y sigue contando"}
+          </p>
+        </div>
+      </div>
+      <div style={{ padding: "0 20px calc(20px + var(--safe-b))" }}>
+        <RutinaDelDia key={plan.id} plan={plan} actividad={act} sesionId={sesion.id} />
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100%", display: "flex", flexDirection: "column" }}>
