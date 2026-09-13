@@ -119,8 +119,7 @@ public class ControlPlugin extends Plugin {
             i.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
             i.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
                     "LyKari usa el administrador para que no puedas desinstalarla por impulso.");
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(i);
+            lanzar(i);
         } else {
             // JS ya verificó la contraseña. Damos unos minutos de gracia para que la
             // accesibilidad no tape la pantalla de desinstalar mientras tanto.
@@ -184,9 +183,24 @@ public class ControlPlugin extends Plugin {
                 call.reject("Permiso desconocido: " + tipo);
                 return;
         }
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getContext().startActivity(i);
+        lanzar(i);
         call.resolve();
+    }
+
+    /**
+     * Lanza la pantalla de un permiso desde la Activity, no desde el contexto de
+     * la app. En Samsung, abrir el consentimiento de VPN o el alta de admin desde
+     * el contexto de aplicación (con NEW_TASK) suele fallar o quedarse en blanco;
+     * desde la Activity se abre y regresa bien. Solo se cae a NEW_TASK si no hay
+     * Activity (caso raro).
+     */
+    private void lanzar(Intent i) {
+        if (getActivity() != null) {
+            getActivity().startActivity(i);
+        } else {
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+        }
     }
 
     /* ── Extensiones e intentos ───────────────────────────────────────── */
