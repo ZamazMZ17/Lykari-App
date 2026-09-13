@@ -80,7 +80,6 @@ type HojaAbierta =
   | { t: "mascota" }
   | { t: "nuevoCurso" }
   | { t: "detalleCurso"; curso: Curso }
-  | { t: "zamly" }
   | null;
 
 const TABS: [Tab, string, typeof LayoutGrid][] = [
@@ -131,6 +130,7 @@ export default function App() {
   const [horarioAbierto, setHorarioAbierto] = useState(false);
   const [aulaAbierta, setAulaAbierta] = useState(false);
   const [samAbierto, setSamAbierto] = useState(false);
+  const [privadoAbierto, setPrivadoAbierto] = useState(false);
   const [enSesion, setEnSesion] = useState(false);
   const [seccion, setSeccion] = useState<Seccion | null>(null);
   const [hoja, setHoja] = useState<HojaAbierta>(null);
@@ -240,6 +240,7 @@ export default function App() {
   useAtras(horarioAbierto, () => setHorarioAbierto(false));
   useAtras(aulaAbierta, () => setAulaAbierta(false));
   useAtras(samAbierto, () => setSamAbierto(false));
+  useAtras(privadoAbierto, () => setPrivadoAbierto(false));
 
   /* ── acciones ──────────────────────────────────────────────────── */
   const iniciar = async (a: Actividad) => {
@@ -377,6 +378,8 @@ export default function App() {
     );
   } else if (samAbierto) {
     pantalla = <Sam onBack={() => setSamAbierto(false)} onAjustes={() => setHoja({ t: "ajustes" })} />;
+  } else if (privadoAbierto) {
+    pantalla = <Zamly onBack={() => setPrivadoAbierto(false)} />;
   } else if (aulaAbierta) {
     pantalla = <AulaUPC onBack={() => setAulaAbierta(false)} />;
   } else if (horarioAbierto) {
@@ -415,7 +418,7 @@ export default function App() {
           setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
         }}
         onAjustes={() => setHoja({ t: "ajustes" })}
-        onPrivado={() => setHoja({ t: "zamly" })}
+        onPrivado={() => setPrivadoAbierto(true)}
       />
     );
   }
@@ -441,7 +444,7 @@ export default function App() {
   const inicioSwipe = useRef({ x: 0, y: 0, movido: false, permitido: false });
   const historialSwipe = useRef<{ x: number; t: number }[]>([]);
   const sinMovimientoSwipe = useReducedMotion();
-  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !samAbierto && !amplia;
+  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !samAbierto && !privadoAbierto && !amplia;
 
   const alMoverSwipe = (e: PointerEvent) => {
     if (!inicioSwipe.current.permitido) return;
@@ -561,7 +564,7 @@ export default function App() {
     </button>
   );
 
-  const activo = (k: Tab) => tab === k && !enSesion && !horarioAbierto;
+  const activo = (k: Tab) => tab === k && !enSesion && !horarioAbierto && !privadoAbierto;
 
   // Lo que llena el anillo ámbar de la burbuja: la referencia de la actividad
   // si la tiene, y si no el límite de las tres horas.
@@ -712,7 +715,7 @@ export default function App() {
 
               {/* Dentro de la app y en las tres pantallas, nunca encima del
                   sistema operativo ni de la pantalla de sesión. */}
-              {!enSesion && (
+              {!enSesion && !privadoAbierto && (
                 <Burbuja
                   progresoSesion={progresoSesion}
                   onAbrir={() => setHoja({ t: "mascota" })}
@@ -785,8 +788,6 @@ export default function App() {
             onClose={() => setHoja(null)}
           />
         )}
-
-        {hoja?.t === "zamly" && <Zamly onClose={() => setHoja(null)} />}
 
         {hoja?.t === "mascota" && (
           <HojaMascota
