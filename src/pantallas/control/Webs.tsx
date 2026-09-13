@@ -32,7 +32,7 @@ function EditarWeb({ inicial, reglas, onClose }: PropsReglas & { inicial: ReglaW
   return <Editor titulo={existe ? "Editar regla web" : "Nueva regla web"} onClose={onClose}><form className="ct-form" onSubmit={(e) => { e.preventDefault(); void accion.ejecutar(() => guardar()); }}>
     <fieldset disabled={accion.ocupado}>
       <label>Tipo<select value={regla.tipo} onChange={(e) => setRegla({ ...regla, tipo: e.target.value as ReglaWeb["tipo"] })}><option value="dominio">Dominio</option><option value="palabra">Palabra clave</option></select></label>
-      <label>{regla.tipo === "dominio" ? "Dominio sin https://" : "Palabra clave"}<input required value={regla.valor} onChange={(e) => setRegla({ ...regla, valor: e.target.value })} placeholder={regla.tipo === "dominio" ? "instagram.com" : "Palabra"} /></label>
+      <label>{regla.tipo === "dominio" ? "Dominio o enlace" : "Palabra clave"}<input required value={regla.valor} onChange={(e) => setRegla({ ...regla, valor: e.target.value })} placeholder={regla.tipo === "dominio" ? "instagram.com o pega el enlace" : "Palabra"} /><small>{regla.tipo === "dominio" ? "Puedes pegar la dirección completa; se guarda solo el dominio." : "Bloquea cualquier página cuya dirección contenga esta palabra."}</small></label>
       <Interruptor titulo="Bloquear siempre" valor={regla.minutosDia === null} onChange={(si) => setRegla({ ...regla, minutosDia: si ? null : 30 })} />
       {regla.minutosDia !== null && <label>Minutos por día<input type="number" required min="0" max="1440" step="1" value={regla.minutosDia} onChange={(e) => setRegla({ ...regla, minutosDia: e.target.valueAsNumber })} /></label>}
       <Interruptor titulo="Regla activa" valor={regla.activo} onChange={(activo) => setRegla({ ...regla, activo })} />

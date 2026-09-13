@@ -1,5 +1,6 @@
 package com.lykari.app.control;
 
+import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,10 +18,13 @@ import android.util.Base64;
 
 import androidx.core.app.NotificationManagerCompat;
 
+import androidx.activity.result.ActivityResult;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import org.json.JSONArray;
@@ -146,6 +150,7 @@ public class ControlPlugin extends Plugin {
     @PluginMethod
     public void abrirAjustesPermiso(PluginCall call) {
         String tipo = call.getString("tipo", "");
+        android.util.Log.i(ReglasStore.TAG, "abrirAjustesPermiso: " + tipo + " (activity=" + (getActivity() != null) + ")");
         Intent i = null;
         switch (tipo) {
             case "uso":
@@ -170,14 +175,16 @@ public class ControlPlugin extends Plugin {
             }
             case "vpn": {
                 Intent preparar = VpnService.prepare(getContext());
-                if (preparar != null) {
-                    i = preparar; // diálogo de permiso de VPN
-                } else {
+                android.util.Log.i(ReglasStore.TAG, "vpn prepare -> " + (preparar == null ? "ya autorizada" : "pide consentimiento"));
+                if (preparar == null) {
                     arrancarFiltro(); // ya autorizada: solo la levantamos
                     call.resolve();
                     return;
                 }
-                break;
+                // El consentimiento de VPN debe pedirse esperando su resultado; si
+                // no, en Samsung se abre y no queda registrado el permiso.
+                startActivityForResult(call, preparar, "resultadoVpn");
+                return;
             }
             default:
                 call.reject("Permiso desconocido: " + tipo);
@@ -185,6 +192,17 @@ public class ControlPlugin extends Plugin {
         }
         lanzar(i);
         call.resolve();
+    }
+
+    @ActivityCallback
+    private void resultadoVpn(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        boolean ok = result != null && result.getResultCode() == Activity.RESULT_OK;
+        android.util.Log.i(ReglasStore.TAG, "resultado consentimiento VPN: " + ok);
+        if (ok) arrancarFiltro();
+        JSObject r = new JSObject();
+        r.put("concedido", VpnService.prepare(getContext()) == null);
+        call.resolve(r);
     }
 
     /**

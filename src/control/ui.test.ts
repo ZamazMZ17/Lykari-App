@@ -54,9 +54,20 @@ describe("Datos presentados", () => {
       { paquete: "a", ms: 8, aperturas: 5 }, { paquete: "b", ms: 2, aperturas: 1 },
     ]);
   });
-  it("normaliza dominios sin almacenar URLs completas", () => {
-    expect(normalizarDominio(" Instagram.COM ")).toBe("instagram.com");
-    for (const entrada of ["https://instagram.com", "instagram.com/chat", "instagram.com?token=abc", "*.com", "-mal.com"]) {
+  it("extrae el dominio de lo que pegue el usuario y no guarda URLs completas", () => {
+    // Acepta la URL completa y guarda solo el dominio (sin esquema, www, ruta ni query).
+    for (const entrada of [
+      " Instagram.COM ",
+      "https://instagram.com",
+      "https://www.instagram.com/p/abc123",
+      "instagram.com/chat",
+      "instagram.com?token=abc",
+      "http://user@instagram.com:8080/x",
+    ]) {
+      expect(normalizarDominio(entrada)).toBe("instagram.com");
+    }
+    // Sigue rechazando lo que no es un dominio.
+    for (const entrada of ["*.com", "-mal.com", "hola", "", "https://"]) {
       expect(() => normalizarDominio(entrada)).toThrow();
     }
   });

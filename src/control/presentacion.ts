@@ -42,10 +42,19 @@ export function sumarUso(apps: UsoApp[]): UsoApp[] {
 }
 
 export function normalizarDominio(valor: string): string {
-  const limpio = valor.trim().toLowerCase();
-  // No aceptar rutas, puertos ni URLs completas: se guarda solo un dominio.
-  if (!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/.test(limpio)) {
-    throw new Error("Escribe un dominio sin https:// ni rutas, por ejemplo instagram.com.");
+  // Acepta lo que sea que pegue el usuario y extrae el dominio: quita esquema
+  // (http/https), "www.", usuario, puerto, ruta, query y fragmento. Así puede
+  // pegar la URL completa (https://www.instagram.com/p/123) y se guarda
+  // "instagram.com" sin obligarlo a limpiarla a mano.
+  let d = valor.trim().toLowerCase();
+  d = d.replace(/^[a-z][a-z0-9+.-]*:\/\//, ""); // esquema
+  d = d.replace(/^[^/@]*@/, "");                 // usuario:clave@
+  d = d.split(/[/?#]/)[0];                        // ruta, query, fragmento
+  d = d.split(":")[0];                            // puerto
+  d = d.replace(/^www\./, "");                    // www.
+  d = d.replace(/\.+$/, "");                      // punto final
+  if (!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/.test(d)) {
+    throw new Error("No reconocí un dominio ahí. Escribe algo como instagram.com (o pega su enlace).");
   }
-  return limpio;
+  return d;
 }
