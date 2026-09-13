@@ -44,6 +44,8 @@ public class MainActivity extends BridgeActivity {
         // registra antes de super.onCreate, que es cuando Capacitor arma el
         // puente: después ya no lo ve el JS.
         registerPlugin(Reconocedor.class);
+        // Control: tiempo en pantalla y filtro +18 (ver control/ControlPlugin.java).
+        registerPlugin(com.lykari.app.control.ControlPlugin.class);
         super.onCreate(savedInstanceState);
         inyectarInsetsEnCSS();
         responderPermisosDeLaWebView();

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Políticas del admin de dispositivo. A propósito no pide poderes fuertes: no
+  bloquea ni borra el teléfono. Basta con estar activo para que Android exija
+  desactivarlo antes de desinstalar LyKari, y esa pantalla la tapa la
+  accesibilidad mientras la protección esté puesta.
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <force-lock />
+    </uses-policies>
+</device-admin>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuración del servicio que vigila qué app está adelante para poder
+  bloquear por límite, modo o contenido +18. Escucha cambios de ventana y de
+  contenido, y puede leer el texto de la pantalla (flagRetrieveInteractiveWindows)
+  para ver la URL del navegador y el título del chat.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="200"
+    android:description="@string/accesibilidad_desc" />

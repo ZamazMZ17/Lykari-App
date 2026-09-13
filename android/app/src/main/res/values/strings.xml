@@ -4,4 +4,5 @@
     <string name="title_activity_main">Lykari</string>
     <string name="package_name">com.lykari.app</string>
     <string name="custom_url_scheme">com.lykari.app</string>
+    <string name="accesibilidad_desc">Permite que LyKari sepa qué app está en primer plano para aplicar tus propios límites de tiempo y el filtro de contenido. No envía nada fuera del teléfono.</string>
 </resources>
