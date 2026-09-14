@@ -6,10 +6,11 @@ import { CabezaHusky } from "./Husky";
 import { estadoDeLaRacha, piezasDeLaSemana, estaPuesta, type PiezaKey } from "../db/mascota";
 import { CLAVE_MASCOTA_OCULTA, CLAVE_MASCOTA_POS, guardarAjuste, leerAjuste } from "../ia/ajustes";
 import { hoyISO } from "../lib/fecha";
+import { useCompanero } from "./useCompanero";
 
 const TAMANO = 56;
 /** La cabeza con orejas es más alta que ancha (proporción del propio dibujo). */
-const ALTO = Math.round((TAMANO * 268) / 220);
+const ALTO = Math.round((TAMANO * 244) / 216);
 /** Por debajo de esto el gesto fue un toque, no un arrastre. */
 const TOQUE_PX = 6;
 /** Cuántas muestras de posición+tiempo se guardan para estimar la velocidad
@@ -55,8 +56,9 @@ export function Burbuja({
 }) {
   const guardadaPos = useLiveQuery(() => leerAjuste(CLAVE_MASCOTA_POS), []);
   const ocultaEl = useLiveQuery(() => leerAjuste(CLAVE_MASCOTA_OCULTA), []);
-  const racha = useLiveQuery(() => estadoDeLaRacha(), []);
-  const piezas = useLiveQuery(() => piezasDeLaSemana(), [], []);
+  const { nombre, tranquilo, dia } = useCompanero();
+  const racha = useLiveQuery(() => estadoDeLaRacha(dia), [dia]);
+  const piezas = useLiveQuery(() => piezasDeLaSemana(dia), [dia], []);
   const sinMovimiento = useReducedMotion();
 
   const [pos, setPos] = useState<Posicion>(POR_DEFECTO);
@@ -160,7 +162,7 @@ export function Burbuja({
     const estilo = getComputedStyle(elemento);
     const zonaAlta = parseFloat(estilo.getPropertyValue("--zona-alta")) || 12;
     const zonaBaja = parseFloat(estilo.getPropertyValue("--zona-baja")) || 84;
-    const altoDisponible = Math.max(0, caja.height - zonaAlta - zonaBaja - TAMANO);
+    const altoDisponible = Math.max(0, caja.height - zonaAlta - zonaBaja - ALTO);
     const xFinal = lado === "izq" ? 12 : caja.width - 12 - TAMANO;
     const yFinal = zonaAlta + altoDisponible * fraccion;
 
@@ -206,9 +208,9 @@ export function Burbuja({
       onPointerDown={alPresionar}
       role="button"
       tabIndex={0}
-      aria-label={`Mascota · ${racha?.dias ?? 0} días de racha`}
+      aria-label={`${nombre} · Tu compañero · ${racha?.dias ?? 0} días de racha`}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onAbrir();
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onAbrir(); }
       }}
       style={{
         position: "absolute",
@@ -222,14 +224,14 @@ export function Burbuja({
           ? { left: x, top: y }
           : {
               [pos.lado === "izq" ? "left" : "right"]: 12,
-              top: `calc(var(--zona-alta) + (100% - var(--zona-alta) - var(--zona-baja) - ${TAMANO}px) * ${pos.fraccion})`,
+              top: `calc(var(--zona-alta) + (100% - var(--zona-alta) - var(--zona-baja) - ${ALTO}px) * ${pos.fraccion})`,
             }),
       }}
     >
       {/* La cabeza es la burbuja: su propia silueta, con las orejas fuera. El
           progreso de la sesión recorre el contorno del cráneo. */}
       <div style={{ pointerEvents: "none" }}>
-        <CabezaHusky size={TAMANO} piezas={puestas} progreso={progresoSesion} />
+        <CabezaHusky size={TAMANO} piezas={puestas} progreso={progresoSesion} tranquilo={tranquilo} />
       </div>
     </motion.div>
   );

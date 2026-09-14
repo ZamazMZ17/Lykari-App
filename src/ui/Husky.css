@@ -1,0 +1,16 @@
+.husky { overflow: visible; max-width: 100%; }
+.husky-mini { filter: drop-shadow(0 3px 3px rgba(21,26,18,.2)); }
+.husky-cuerpo { animation: husky-respirar 4.6s ease-in-out infinite; transform-origin: 160px 346px; }
+.husky-cabeza { animation: husky-mirar 11s ease-in-out infinite; transform-origin: 160px 212px; }
+.husky-oreja { animation: husky-escuchar 9s ease-in-out infinite; transform-origin: 111px 99px; }
+.husky-ojos { animation: husky-parpadeo 6.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+.husky-cola { animation: husky-cola 5s ease-in-out infinite; transform-origin: 229px 299px; }
+.husky-saludo .husky-pata { animation: husky-saludo .8s ease-in-out 1; transform-origin: 184px 287px; }
+.husky-quieto * { animation: none !important; }
+@keyframes husky-respirar { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.986); } }
+@keyframes husky-mirar { 0%,55%,100% { transform: rotate(0); } 65%,78% { transform: rotate(4deg); } }
+@keyframes husky-escuchar { 0%,86%,100% { transform: rotate(0); } 90% { transform: rotate(-8deg); } 94% { transform: rotate(2deg); } }
+@keyframes husky-parpadeo { 0%,42%,46%,94%,98%,100% { transform: scaleY(1); } 44%,96% { transform: scaleY(.08); } }
+@keyframes husky-cola { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(5deg); } }
+@keyframes husky-saludo { 0%,100% { transform: rotate(0); } 30%,70% { transform: rotate(-24deg) translateY(-6px); } 50% { transform: rotate(-12deg) translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .husky * { animation: none !important; } }

@@ -1,0 +1,57 @@
+.comp-refugio { position: relative; isolation: isolate; height: 320px; overflow: hidden; border: 1px solid var(--line); border-radius: 24px; background: var(--ground); }
+.comp-paisaje { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.comp-estado { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 20px; padding: 6px 10px; font-size: 10px; color: var(--ink2); background: var(--paper); }
+.comp-corriendo { color: var(--ambar); }
+.comp-luz { width: 5px; height: 5px; border-radius: 50%; background: var(--ambar); }
+.comp-personaje { position: absolute; left: 50%; top: 23px; transform: translateX(-50%); padding: 0; width: 220px; height: 261px; -webkit-tap-highlight-color: transparent; }
+.comp-identidad { position: absolute; bottom: 16px; left: 18px; max-width: calc(100% - 36px); }
+.comp-nombre { display: flex; gap: 7px; align-items: center; font-size: 27px; line-height: 1.1; overflow-wrap: anywhere; }
+.comp-nombre > span { max-width: 240px; }
+.comp-icono { display: inline-grid; place-items: center; min-width: 36px; min-height: 36px; padding: 6px; flex-shrink: 0; }
+.comp-subtitulo { color: var(--ink2); font-size: 10px; letter-spacing: .04em; }
+.comp-saludar { display: flex; gap: 5px; align-items: center; position: absolute; top: 18px; right: 14px; color: var(--ink2); font-size: 9px; pointer-events: none; }
+.comp-editar { padding: 12px 0 0; font-size: 12px; }
+.comp-editar > div { display: flex; margin-top: 6px; gap: 4px; }
+.comp-editar input { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--paper); color: var(--ink); font: inherit; }
+.comp-mensaje { margin: 14px 8px; text-align: center; font-size: 13px; line-height: 1.55; color: var(--ink2); }
+.comp-fin-prueba { display: flex; gap: 5px; align-items: center; margin: -6px auto 12px; min-height: 36px; font-size: 11px; color: var(--pino); }
+.comp-tabs { display: flex; border: 1px solid var(--line); background: var(--ground); border-radius: 13px; padding: 4px; gap: 4px; margin: 16px 0; }
+.comp-tabs button { display: flex; justify-content: center; align-items: center; gap: 7px; flex: 1; min-height: 40px; border-radius: 9px; font-size: 12px; color: var(--ink2); }
+.comp-tabs button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: var(--sombra-tarjeta); }
+.comp-tabs .mono { font-size: 10px; }
+.comp-semana-titulo { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; color: var(--ink2); margin-bottom: 12px; }
+.comp-semana { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 6px; }
+.comp-dia { display: grid; gap: 7px; justify-items: center; color: var(--ink2); font-size: 10px; }
+.comp-dia > div { display: grid; place-items: center; border-radius: 50%; width: 34px; height: 34px; border: 1px solid var(--line); }
+.comp-dia-hecho > div { background: var(--pino); color: var(--paper); border-color: var(--pino); }
+.comp-dia-hoy > div { outline: 1px solid var(--ink2); outline-offset: 3px; }
+.comp-punto { width: 4px; height: 4px; border-radius: 50%; background: var(--line); }
+.comp-cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 22px 0 12px; }
+.comp-cifras > div { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 14px 12px; background: var(--paper); }
+.comp-cifras strong { font-size: 26px; font-weight: 500; }
+.comp-cifras span { font-size: 10px; line-height: 1.5; color: var(--ink2); }
+.comp-nudos { color: var(--ambar); }
+.comp-nota { font-size: 12px; line-height: 1.6; color: var(--ink2); margin: 10px 0; }
+.comp-descanso { display: flex; align-items: flex-start; gap: 9px; margin: 13px 0; color: var(--ink2); font-size: 11px; line-height: 1.55; }
+.comp-descanso svg { flex-shrink: 0; margin-top: 2px; }
+.comp-piezas { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.comp-pieza { display: flex; flex-direction: column; text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.comp-pieza.comp-seleccionada { border-color: var(--pino); box-shadow: inset 0 0 0 1px var(--pino); }
+.comp-pieza-icono { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 10px; }
+.comp-pieza-titulo { font-size: 14px; font-weight: 600; }
+.comp-pieza-area { color: var(--ink2); font-size: 11px; margin-top: 2px; }
+.comp-pieza-barra { display: block; width: 100%; height: 3px; border-radius: 2px; background: var(--line); margin: 12px 0 8px; overflow: hidden; }
+.comp-pieza-barra > span { display: block; height: 100%; }
+.comp-pieza-regla { color: var(--ink2); font-size: 10px; line-height: 1.5; }
+.comp-pieza-conteo { margin-top: 6px; font-size: 9px; color: var(--ink2); }
+.comp-camino { display: flex; justify-content: space-between; align-items: center; width: 100%; background: var(--pino); color: var(--paper); border-radius: 12px; padding: 15px; margin: 18px 0 10px; font-size: 13px; }
+.comp-calma { display: flex; align-items: center; gap: 9px; width: 100%; padding: 12px 0; text-align: left; }
+.comp-calma > span:first-of-type { flex: 1; }
+.comp-calma strong { font-size: 12px; display: block; font-weight: 500; }
+.comp-calma small { display: block; color: var(--ink2); font-size: 10px; margin-top: 4px; line-height: 1.4; }
+.comp-switch { flex-shrink: 0; width: 32px; height: 20px; padding: 3px; border-radius: 12px; background: var(--line); }
+.comp-switch::after { content: ""; display: block; border-radius: 50%; width: 14px; height: 14px; background: var(--paper); }
+.comp-switch[data-activo="true"] { background: var(--pino); }
+.comp-switch[data-activo="true"]::after { transform: translateX(12px); }
+.comp-esconder { display: flex; justify-content: center; align-items: center; gap: 7px; width: 100%; min-height: 44px; color: var(--ink2); font-size: 11px; }
+@media (max-width: 360px) { .comp-saludar { display: none; } .comp-cifras > div { padding: 11px 8px; gap: 6px; } .comp-cifras strong { font-size: 22px; } .comp-dia > div { width: 29px; height: 29px; } }
