@@ -41,15 +41,15 @@ export async function establecerContrasena(nueva: string, metodo: MetodoAcceso =
 
 /**
  * La pantalla de bloqueo nativa compara contra este mismo hash para poder
- * "extender con contraseña" con la app cerrada. Se copia al motor cada vez que
- * se crea la contraseña y al entrar a la sección. Nunca sale del dispositivo.
+ * verificar el patrón girado con la app cerrada. Se copia al motor cada vez que
+ * se crea el acceso y al entrar a la sección. Nunca sale del dispositivo.
  */
 export async function sincronizarHashNativo(hash?: string): Promise<void> {
   if (!esNativo) return;
   const valor = hash ?? (await db.ajustes.get(CLAVE_HASH))?.valor;
   if (!valor) return;
   try {
-    await Control.guardarHashContrasena({ hash: valor });
+    await Control.guardarHashContrasena({ hash: valor, metodo: await metodoAcceso() });
   } catch {
     // APK viejo sin el plugin: se ignora.
   }

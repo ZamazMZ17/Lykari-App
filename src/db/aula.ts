@@ -103,7 +103,11 @@ export async function convertirAulaEnTarea(item: ItemAulaUPC): Promise<number | 
 
 export async function itemsAulaActivos(): Promise<ItemAulaUPC[]> {
   const items = await db.aulaItems.where("estado").equals("activo").toArray();
-  return items.filter((item) => !item.oculto)
+  // UPC conserva las entregas históricas en el feed. Una entrega ya enviada no
+  // necesita competir con lo que aún requiere atención; sigue en la copia
+  // local y puede volver a entrar si UPC deja de marcarla como entregada.
+  const entregada = (item: ItemAulaUPC) => /\b(entregad[oa]s?|turn[ -]?ed[ -]?in|submitted|entrega[ -]?realizada)\b/i.test(`${item.titulo} ${item.descripcion ?? ""}`);
+  return items.filter((item) => !item.oculto && !entregada(item))
     .sort((a, b) => (a.vence ?? "9999").localeCompare(b.vence ?? "9999") || b.actualizado.localeCompare(a.actualizado));
 }
 

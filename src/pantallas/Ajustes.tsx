@@ -4,8 +4,10 @@ import {
   CalendarDays,
   Check,
   Download,
+  Droplets,
   Eye,
   EyeOff,
+  Glasses,
   Loader2,
   Moon,
   RotateCcw,
@@ -19,6 +21,8 @@ import { sembrarCiclo6 } from "../db/semillaCiclo6";
 import { guardarTema, useTema, type Tema } from "../lib/tema";
 import {
   estadoNotificaciones,
+  CLAVE_AVISO_AGUA,
+  CLAVE_AVISO_VISTA,
   pedirPermisoNotificaciones,
   reprogramarRecordatorios,
 } from "../notificaciones";
@@ -52,6 +56,8 @@ export function Ajustes({
   const [cargado, setCargado] = useState(false);
   const [estado, setEstado] = useState<"quieto" | "guardando" | "listo">("quieto");
   const [avisos, setAvisos] = useState({ disponible: false, concedido: false, programadas: 0 });
+  const [avisoAgua, setAvisoAgua] = useState(true);
+  const [avisoVista, setAvisoVista] = useState(true);
   const [actualizacion, setActualizacion] = useState<EstadoActualizacion>({ estado: "revisando" });
   const [cargandoCursos, setCargandoCursos] = useState(false);
   const [instalando, setInstalando] = useState(false);
@@ -93,6 +99,8 @@ export function Ajustes({
       setKey((await leerAjuste(CLAVE_API)) ?? "");
       setModelo((await leerAjuste(CLAVE_MODELO)) ?? MODELO_POR_DEFECTO);
       setEnvioVozSam(await modoEnvioVozSam());
+      setAvisoAgua((await leerAjuste(CLAVE_AVISO_AGUA)) !== "0");
+      setAvisoVista((await leerAjuste(CLAVE_AVISO_VISTA)) !== "0");
       setAvisos(await estadoNotificaciones());
       setCargado(true);
     })();
@@ -104,6 +112,9 @@ export function Ajustes({
     await guardarAjuste(CLAVE_API, key);
     await guardarAjuste(CLAVE_MODELO, modelo === MODELO_POR_DEFECTO ? "" : modelo);
     await guardarAjuste(CLAVE_SAM_VOZ_ENVIO, envioVozSam === "enviar" ? "enviar" : "");
+    await guardarAjuste(CLAVE_AVISO_AGUA, avisoAgua ? "1" : "0");
+    await guardarAjuste(CLAVE_AVISO_VISTA, avisoVista ? "1" : "0");
+    await reprogramarRecordatorios();
     // Con la key puesta, lo que estaba esperando se procesa solo.
     if (key.trim()) await procesarPendientes();
     revisarActualizacion();
@@ -268,9 +279,17 @@ export function Ajustes({
           )}
         </div>
         {avisos.disponible && (
-          <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 0", lineHeight: 1.5 }}>
-            Diario a las 8:00 pm y cada pendiente la mañana en que vence.
-          </p>
+          <>
+            <p style={{ fontSize: 12, color: "var(--ink2)", margin: "8px 0 10px", lineHeight: 1.5 }}>
+              Diario a las 8:00 pm, pendientes y pausas de cuidado durante el día.
+            </p>
+            <label style={{ display: "flex", gap: 9, alignItems: "center", padding: "7px 0", fontSize: 12.5 }}>
+              <input type="checkbox" checked={avisoAgua} onChange={(e) => setAvisoAgua(e.target.checked)} /> <Droplets size={15} color="var(--pino)" /> Agua cada 2 horas (10 am–8 pm)
+            </label>
+            <label style={{ display: "flex", gap: 9, alignItems: "center", padding: "7px 0", fontSize: 12.5 }}>
+              <input type="checkbox" checked={avisoVista} onChange={(e) => setAvisoVista(e.target.checked)} /> <Glasses size={15} color="var(--pino)" /> Lentes y mirada a lo lejos cada 2 horas
+            </label>
+          </>
         )}
       </div>
 

@@ -27,6 +27,7 @@ public final class ReglasStore {
     private static final String PREFS = "lykari_control";
     private static final String CLAVE_REGLAS = "reglas";
     private static final String CLAVE_HASH = "hash";
+    private static final String CLAVE_METODO_ACCESO = "metodoAcceso";
     private static final String CLAVE_EXTENSIONES = "extensiones";
     private static final String CLAVE_INTENTOS = "intentos";
     private static final String CLAVE_GRACIA = "graciaProteccionHasta";
@@ -96,12 +97,19 @@ public final class ReglasStore {
 
     /* ── Contraseña (espejo del hash de Zamly) ────────────────────────── */
 
-    public void guardarHash(String hashHex) {
-        prefs.edit().putString(CLAVE_HASH, hashHex == null ? null : hashHex.toLowerCase()).apply();
+    public void guardarHash(String hashHex, String metodo) {
+        prefs.edit()
+                .putString(CLAVE_HASH, hashHex == null ? null : hashHex.toLowerCase())
+                .putString(CLAVE_METODO_ACCESO, "patron".equals(metodo) ? "patron" : "clave")
+                .apply();
     }
 
     public boolean tieneHash() {
         return prefs.getString(CLAVE_HASH, null) != null;
+    }
+
+    public boolean usaPatron() {
+        return "patron".equals(prefs.getString(CLAVE_METODO_ACCESO, "clave"));
     }
 
     /** Misma cuenta que `src/db/zamly.ts`: SHA-256 del texto en UTF-8, en hex. */
@@ -109,6 +117,24 @@ public final class ReglasStore {
         String guardado = prefs.getString(CLAVE_HASH, null);
         if (guardado == null || contrasena == null) return false;
         return guardado.equals(sha256Hex(contrasena));
+    }
+
+    /** El patrón que se dibuja en el bloqueo debe ser el original girado 90° a la derecha. */
+    public boolean verificarPatronGirado(String patronGirado) {
+        if (!"patron".equals(prefs.getString(CLAVE_METODO_ACCESO, "clave")) || patronGirado == null) return false;
+        String[] partes = patronGirado.split("-");
+        // índice visto en la cuadrícula girada → índice del patrón que se guardó.
+        final int[] inversa = {6, 3, 0, 7, 4, 1, 8, 5, 2};
+        StringBuilder original = new StringBuilder();
+        for (int i = 0; i < partes.length; i++) {
+            try {
+                int punto = Integer.parseInt(partes[i]);
+                if (punto < 0 || punto > 8) return false;
+                if (i > 0) original.append('-');
+                original.append(inversa[punto]);
+            } catch (NumberFormatException e) { return false; }
+        }
+        return verificar(original.toString());
     }
 
     static String sha256Hex(String texto) {
@@ -125,18 +151,31 @@ public final class ReglasStore {
 
     /* ── Extensiones ──────────────────────────────────────────────────── */
 
-    public synchronized void agregarExtension(String paquete, int minutos) {
+    /** Una única extensión de cinco minutos para todas las apps, por día. */
+    public synchronized boolean puedeUsarExtensionHoy() {
+        JSONArray lista = parsearLista(prefs.getString(CLAVE_EXTENSIONES, null));
+        long hoy = inicioDeHoy();
+        for (int i = 0; i < lista.length(); i++) {
+            JSONObject previa = lista.optJSONObject(i);
+            if (previa != null && previa.optLong("fecha", 0) >= hoy) return false;
+        }
+        return true;
+    }
+
+    public synchronized boolean agregarExtensionUnica(String paquete) {
+        if (!puedeUsarExtensionHoy()) return false;
         JSONArray lista = parsearLista(prefs.getString(CLAVE_EXTENSIONES, null));
         JSONObject e = new JSONObject();
         try {
             e.put("fecha", System.currentTimeMillis());
             e.put("paquete", paquete);
-            e.put("minutos", minutos);
+            e.put("minutos", 5);
         } catch (JSONException ignorado) {
-            return;
+            return false;
         }
         lista.put(e);
         prefs.edit().putString(CLAVE_EXTENSIONES, recortar(lista, MAX_EXTENSIONES).toString()).apply();
+        return true;
     }
 
     public synchronized JSONArray extensiones(long desde) {

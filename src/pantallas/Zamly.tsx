@@ -44,8 +44,8 @@ export function Zamly({ onBack }: { onBack: () => void }) {
   const verificar = async (secreto: string) => {
     const ok = await verificarContrasena(secreto);
     if (!ok) return setError(metodo === "patron" ? "Patrón incorrecto." : "Contraseña incorrecta.");
-    // El motor nativo necesita el hash para "extender con contraseña" desde la
-    // pantalla de bloqueo. Se refresca en cada ingreso por si se instaló recién.
+    // El motor nativo necesita el hash y el método para validar el patrón
+    // girado de una extensión única. Se refresca en cada ingreso.
     void sincronizarHashNativo();
     setEstado("adentro");
   };

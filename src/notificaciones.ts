@@ -3,6 +3,7 @@ import { db } from "./db/db";
 import { hayDiarioHoy } from "./db/capturas";
 import { aISO, desdeISO, hoyISO, sumarDias, type DiaISO } from "./lib/fecha";
 import { esNativo } from "./lib/plataforma";
+import { leerAjuste } from "./ia/ajustes";
 
 /**
  * Los recordatorios son del sistema, no de la app: tienen que llegar con
@@ -19,10 +20,27 @@ const BASE_DIARIO = 1000;
 export const ID_DESCANSO = 499_999;
 /** Rango reservado para las tareas: id de la tarea + este desplazamiento. */
 const BASE_TAREA = 500_000;
+/** Rangos separados para que los avisos de cuidado no pisen diario, tareas ni descanso. */
+const BASE_AGUA = 1_500_000;
+const BASE_VISTA = 1_700_000;
 const DIAS_PROGRAMADOS = 14;
 
 export const HORA_DIARIO = 20; // 8:00 pm (CLAUDE.md §5)
 const HORA_TAREA = 9;
+
+export const CLAVE_AVISO_AGUA = "avisosAgua";
+export const CLAVE_AVISO_VISTA = "avisosVista";
+
+/** Las horas son deliberadamente espaciadas: acompañan el día sin convertirlo en una alarma constante. */
+const HORAS_AGUA = [10, 12, 14, 16, 18, 20];
+const HORAS_VISTA = [9, 11, 13, 15, 17, 19];
+
+export async function configuracionAvisosBienestar(): Promise<{ agua: boolean; vista: boolean }> {
+  const [agua, vista] = await Promise.all([leerAjuste(CLAVE_AVISO_AGUA), leerAjuste(CLAVE_AVISO_VISTA)]);
+  // Se activan como punto de partida porque forman parte de la configuración guiada;
+  // la persona puede apagarlos desde Ajustes cuando no le sirvan.
+  return { agua: agua !== "0", vista: vista !== "0" };
+}
 
 const idDiario = (dia: DiaISO) => BASE_DIARIO + Number(dia.replaceAll("-", "")) % 400_000;
 
@@ -55,6 +73,7 @@ export async function reprogramarRecordatorios(): Promise<number> {
 
   await limpiarProgramadas();
   const ahora = Date.now();
+  const bienestar = await configuracionAvisosBienestar();
   const pendientes: Parameters<typeof LocalNotifications.schedule>[0]["notifications"] = [];
 
   // Diario: a las 8 pm, saltando el de hoy si ya grabó.
@@ -96,6 +115,27 @@ export async function reprogramarRecordatorios(): Promise<number> {
       body: t.descripcion ?? "Vence hoy.",
       schedule: { at: cuando, allowWhileIdle: true },
     });
+  }
+
+  // Cuidado básico durante horas razonables. No infiere productividad ni usa
+  // lenguaje de culpa: son pausas breves que se pueden apagar en Ajustes.
+  for (let i = 0; i < DIAS_PROGRAMADOS; i++) {
+    const dia = aISO(sumarDias(new Date(), i));
+    for (const [tipo, horas] of [["agua", HORAS_AGUA], ["vista", HORAS_VISTA]] as const) {
+      if ((tipo === "agua" && !bienestar.agua) || (tipo === "vista" && !bienestar.vista)) continue;
+      for (const hora of horas) {
+        const cuando = desdeISO(dia);
+        cuando.setHours(hora, 0, 0, 0);
+        if (cuando.getTime() <= ahora) continue;
+        const id = (tipo === "agua" ? BASE_AGUA : BASE_VISTA) + Number(dia.replaceAll("-", "")) % 100_000 * 10 + hora;
+        pendientes.push({
+          id,
+          title: tipo === "agua" ? "Pausa para tomar agua" : "Pausa de vista",
+          body: tipo === "agua" ? "Toma un poco de agua y vuelve cuando estés listo." : "Si seguirás con pantalla, ponte los lentes y mira a lo lejos un momento.",
+          schedule: { at: cuando, allowWhileIdle: true },
+        });
+      }
+    }
   }
 
   if (pendientes.length > 0) await LocalNotifications.schedule({ notifications: pendientes });

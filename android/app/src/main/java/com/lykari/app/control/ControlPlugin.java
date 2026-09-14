@@ -109,7 +109,8 @@ public class ControlPlugin extends Plugin {
     @PluginMethod
     public void guardarHashContrasena(PluginCall call) {
         String hash = call.getString("hash");
-        ReglasStore.de(getContext()).guardarHash(hash);
+        String metodo = call.getString("metodo", "clave");
+        ReglasStore.de(getContext()).guardarHash(hash, metodo);
         call.resolve();
     }
 

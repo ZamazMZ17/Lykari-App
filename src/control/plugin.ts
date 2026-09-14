@@ -31,7 +31,8 @@ export interface ControlPlugin {
 
   guardarReglas(opciones: { reglas: ReglasControl }): Promise<void>;
   /** Espejo del hash SHA-256 de la contraseña de Zamly (hex), para la pantalla de bloqueo. */
-  guardarHashContrasena(opciones: { hash: string }): Promise<void>;
+  /** El método permite que Android pida el patrón girado, nunca la clave plana. */
+  guardarHashContrasena(opciones: { hash: string; metodo?: "patron" | "clave" }): Promise<void>;
   /** Solo llamar después de verificar la contraseña en JS. */
   activarProteccion(opciones: { activa: boolean }): Promise<void>;
 

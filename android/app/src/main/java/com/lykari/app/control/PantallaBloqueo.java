@@ -2,27 +2,31 @@ package com.lykari.app.control;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Se pone encima de la app bloqueada. Neutra, con los tokens de LyKari, sin
  * rojo ni culpa: dice qué se bloqueó y por qué, y ofrece volver al inicio.
  *
- * Para límite/modo/web hay "Extender con contraseña" (queda registrado). Para
- * el filtro +18 y para la protección no hay salida acá: eso solo se cambia
- * desde Control, con contraseña y la espera de 24 h.
+ * La única salida de un límite es una extensión de cinco minutos, una vez por
+ * día, dibujando el patrón de Zamly girado 90°. El filtro +18 y la protección
+ * tampoco tienen salida desde aquí.
  */
 public class PantallaBloqueo extends Activity {
 
@@ -57,7 +61,9 @@ public class PantallaBloqueo extends Activity {
         LinearLayout raiz = new LinearLayout(this);
         raiz.setOrientation(LinearLayout.VERTICAL);
         raiz.setGravity(Gravity.CENTER);
-        raiz.setBackgroundColor(GROUND);
+        // Ilustración propia del bloqueo: se reserva aire en la parte alta para
+        // que la tarjeta siga siendo legible, sin recurrir a un mensaje punitivo.
+        raiz.setBackgroundResource(com.lykari.app.R.drawable.guardian_focus_lock);
         raiz.setPadding(pad, pad, pad, pad);
 
         LinearLayout tarjeta = new LinearLayout(this);
@@ -101,13 +107,13 @@ public class PantallaBloqueo extends Activity {
         inicio.setOnClickListener(v -> irAlInicio());
         tarjeta.addView(inicio, botonLp());
 
-        if (extensible) {
+        if (extensible && ReglasStore.de(this).usaPatron() && ReglasStore.de(this).puedeUsarExtensionHoy()) {
             Button extender = new Button(this);
             extender.setAllCaps(false);
-            extender.setText("Extender con contraseña");
+            extender.setText("Usar 5 min de extensión");
             extender.setTextColor(INK);
             extender.setBackground(fondoRedondeado(PAPER, LINE, dp(14)));
-            extender.setOnClickListener(v -> pedirContrasena());
+            extender.setOnClickListener(v -> pedirPatronGirado());
             tarjeta.addView(extender, botonLp());
         }
 
@@ -129,31 +135,43 @@ public class PantallaBloqueo extends Activity {
         finish();
     }
 
-    private void pedirContrasena() {
-        final EditText campo = new EditText(this);
-        campo.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        campo.setHint("Contraseña");
+    private void pedirPatronGirado() {
+        final android.app.AlertDialog dialogo;
         int pad = dp(16);
         LinearLayout caja = new LinearLayout(this);
         caja.setOrientation(LinearLayout.VERTICAL);
         caja.setPadding(pad, pad, pad, 0);
-        caja.addView(campo);
+        TextView indicacion = new TextView(this);
+        indicacion.setText("Gira mentalmente tu patrón 90° hacia la derecha y dibújalo. Solo hay una extensión de 5 min para todo el día.");
+        indicacion.setTextColor(INK2);
+        indicacion.setTextSize(14);
+        indicacion.setLineSpacing(dp(2), 1f);
+        caja.addView(indicacion);
+        PatronGiradoView padPatron = new PatronGiradoView(this);
+        caja.addView(padPatron, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(250)));
 
-        new android.app.AlertDialog.Builder(this)
-                .setTitle("Extender 15 min")
+        dialogo = new android.app.AlertDialog.Builder(this)
+                .setTitle("Extensión única")
                 .setView(caja)
-                .setPositiveButton("Extender", (d, w) -> {
-                    String texto = campo.getText().toString();
-                    if (ReglasStore.de(this).verificar(texto)) {
-                        ReglasStore.de(this).agregarExtension(origen, 15);
-                        Toast.makeText(this, "15 minutos más", Toast.LENGTH_SHORT).show();
-                        finish(); // vuelve a la app; el servicio ya no bloqueará por 15 min
-                    } else {
-                        Toast.makeText(this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
-                    }
-                })
                 .setNegativeButton("Cancelar", null)
-                .show();
+                .create();
+        padPatron.setOnCompletar(patron -> {
+            ReglasStore store = ReglasStore.de(this);
+            if (!store.verificarPatronGirado(patron)) {
+                Toast.makeText(this, "Patrón girado incorrecto", Toast.LENGTH_SHORT).show();
+                padPatron.limpiar();
+                return;
+            }
+            if (!store.agregarExtensionUnica(origen)) {
+                Toast.makeText(this, "La extensión única de hoy ya se usó", Toast.LENGTH_SHORT).show();
+                dialogo.dismiss();
+                return;
+            }
+            Toast.makeText(this, "5 minutos disponibles", Toast.LENGTH_SHORT).show();
+            dialogo.dismiss();
+            finish();
+        });
+        dialogo.show();
     }
 
     private static String eyebrowSegunMotivo(String motivo) {
@@ -199,5 +217,73 @@ public class PantallaBloqueo extends Activity {
 
     private static int dpEstatico(int v) {
         return Math.round(v * android.content.res.Resources.getSystem().getDisplayMetrics().density);
+    }
+
+    /** Patrón dibujable local: no guarda trazos; solo entrega la secuencia al soltar. */
+    private static final class PatronGiradoView extends View {
+        interface AlCompletar { void completar(String patron); }
+        private final Paint linea = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint nodo = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final List<Integer> seleccion = new ArrayList<>();
+        private AlCompletar alCompletar;
+        private float lado;
+
+        PatronGiradoView(android.content.Context contexto) {
+            super(contexto);
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            linea.setColor(Color.parseColor("#C98209"));
+            linea.setStrokeWidth(dpEstatico(4));
+            linea.setStrokeCap(Paint.Cap.ROUND);
+            nodo.setStyle(Paint.Style.STROKE);
+            nodo.setStrokeWidth(dpEstatico(2));
+            nodo.setColor(LINE);
+        }
+
+        void setOnCompletar(AlCompletar listener) { alCompletar = listener; }
+        void limpiar() { seleccion.clear(); invalidate(); }
+
+        @Override protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            lado = Math.min(getWidth(), getHeight());
+            float x0 = (getWidth() - lado) / 2f;
+            float y0 = (getHeight() - lado) / 2f;
+            for (int i = 1; i < seleccion.size(); i++) {
+                float[] a = centro(seleccion.get(i - 1), x0, y0), b = centro(seleccion.get(i), x0, y0);
+                canvas.drawLine(a[0], a[1], b[0], b[1], linea);
+            }
+            for (int i = 0; i < 9; i++) {
+                float[] c = centro(i, x0, y0);
+                nodo.setStyle(Paint.Style.STROKE); nodo.setColor(LINE);
+                canvas.drawCircle(c[0], c[1], lado / 12f, nodo);
+                if (seleccion.contains(i)) {
+                    nodo.setStyle(Paint.Style.FILL); nodo.setColor(Color.parseColor("#C98209"));
+                    canvas.drawCircle(c[0], c[1], lado / 28f, nodo);
+                }
+            }
+        }
+
+        @Override public boolean onTouchEvent(MotionEvent evento) {
+            int punto = puntoEn(evento.getX(), evento.getY());
+            if (evento.getAction() == MotionEvent.ACTION_DOWN) { limpiar(); agregar(punto); return true; }
+            if (evento.getAction() == MotionEvent.ACTION_MOVE) { agregar(punto); return true; }
+            if (evento.getAction() == MotionEvent.ACTION_UP || evento.getAction() == MotionEvent.ACTION_CANCEL) {
+                agregar(punto);
+                if (seleccion.size() >= 2 && alCompletar != null) {
+                    StringBuilder patron = new StringBuilder();
+                    for (int i = 0; i < seleccion.size(); i++) { if (i > 0) patron.append('-'); patron.append(seleccion.get(i)); }
+                    alCompletar.completar(patron.toString());
+                } else limpiar();
+                return true;
+            }
+            return true;
+        }
+
+        private void agregar(int punto) { if (punto >= 0 && !seleccion.contains(punto)) { seleccion.add(punto); invalidate(); } }
+        private int puntoEn(float x, float y) {
+            float l = Math.min(getWidth(), getHeight()), x0 = (getWidth() - l) / 2f, y0 = (getHeight() - l) / 2f;
+            for (int i = 0; i < 9; i++) { float[] c = centro(i, x0, y0); if (Math.hypot(x - c[0], y - c[1]) < l / 9f) return i; }
+            return -1;
+        }
+        private float[] centro(int i, float x0, float y0) { return new float[]{x0 + (i % 3) * lado / 3f + lado / 6f, y0 + (i / 3) * lado / 3f + lado / 6f}; }
     }
 }

@@ -64,7 +64,7 @@ export const controlMock: ControlPlugin = {
   async guardarHashContrasena() {},
   async activarProteccion() {},
   async extensiones(opciones) {
-    const extensiones = [{ fecha: Date.now() - 3_600_000, paquete: apps[0].paquete, minutos: 15 }];
+    const extensiones = [{ fecha: Date.now() - 3_600_000, paquete: apps[0].paquete, minutos: 5 }];
     return { extensiones: extensiones.filter((e) => e.fecha >= (opciones?.desde ?? 0)) };
   },
   async intentos(opciones) {

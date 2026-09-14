@@ -124,6 +124,7 @@ export function AulaUPC({ onBack }: { onBack: () => void }) {
       </div>}
       {estado?.fuentes?.aula?.estado === "sin_sesion" && <button className="btn chip" onClick={() => void abrirSesion()} style={{ justifySelf: "start" }}>Abrir sesión UPC en laptop</button>}
       {mensaje && <div style={{ fontSize: 12, color: "var(--ink2)" }}>{mensaje}</div>}
+      <div style={{ fontSize: 11.5, color: "var(--ink2)" }}>Las entregas que UPC marca como enviadas se ocultan automáticamente.</div>
     </div>
 
     {proximos.length > 0 && <section style={{ padding: "0 20px 14px" }}>
