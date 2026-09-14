@@ -44,7 +44,7 @@
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
             android:noHistory="true"
-            android:theme="@style/AppTheme.NoActionBarLaunch" />
+            android:theme="@style/AppTheme.Bloqueo" />
 
         <!-- Vigila qué app está adelante para aplicar límites y el filtro. -->
         <service

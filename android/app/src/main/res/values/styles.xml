@@ -26,4 +26,16 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <!-- La pantalla de bloqueo no usa SplashScreen: es una pantalla completa
+         propia, no el arranque de la app. -->
+    <style name="AppTheme.Bloqueo" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#0C1620</item>
+        <item name="android:navigationBarColor">#0C1620</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:fontFamily">sans</item>
+    </style>
 </resources>

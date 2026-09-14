@@ -13,6 +13,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,7 +38,6 @@ public class PantallaBloqueo extends Activity {
     public static final String EXTRA_DETALLE = "detalle"; // ej. "1 h de 1 h hoy"
     public static final String EXTRA_EXTENSIBLE = "extensible";
 
-    private static final int GROUND = Color.parseColor("#DCE0D9");
     private static final int PAPER = Color.parseColor("#F3F5F0");
     private static final int INK = Color.parseColor("#151A12");
     private static final int INK2 = Color.parseColor("#5D6656");
@@ -57,18 +58,34 @@ public class PantallaBloqueo extends Activity {
         String detalle = getIntent().getStringExtra(EXTRA_DETALLE);
         boolean extensible = getIntent().getBooleanExtra(EXTRA_EXTENSIBLE, false);
 
+        getWindow().setStatusBarColor(Color.parseColor("#0C1620"));
+        getWindow().setNavigationBarColor(Color.parseColor("#0C1620"));
+
         int pad = dp(24);
+        FrameLayout escena = new FrameLayout(this);
+
+        // El dibujo vive en un ImageView con CENTER_CROP: Android no puede
+        // fragmentarlo en los márgenes al aplicar los insets de la pantalla.
+        ImageView ilustracion = new ImageView(this);
+        ilustracion.setImageResource(com.lykari.app.R.drawable.guardian_focus_lock);
+        ilustracion.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        ilustracion.setContentDescription(null);
+        escena.addView(ilustracion, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
+        View velo = new View(this);
+        velo.setBackgroundColor(Color.argb(92, 12, 22, 32));
+        escena.addView(velo, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+
         LinearLayout raiz = new LinearLayout(this);
         raiz.setOrientation(LinearLayout.VERTICAL);
         raiz.setGravity(Gravity.CENTER);
-        // Ilustración propia del bloqueo: se reserva aire en la parte alta para
-        // que la tarjeta siga siendo legible, sin recurrir a un mensaje punitivo.
-        raiz.setBackgroundResource(com.lykari.app.R.drawable.guardian_focus_lock);
         raiz.setPadding(pad, pad, pad, pad);
 
         LinearLayout tarjeta = new LinearLayout(this);
         tarjeta.setOrientation(LinearLayout.VERTICAL);
-        tarjeta.setBackground(fondoRedondeado(PAPER, LINE, dp(20)));
+        tarjeta.setBackground(fondoRedondeado(Color.argb(246, 243, 245, 240), LINE, dp(20)));
         tarjeta.setPadding(pad, pad, pad, pad);
         LinearLayout.LayoutParams lpTarjeta = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -118,7 +135,9 @@ public class PantallaBloqueo extends Activity {
         }
 
         raiz.addView(tarjeta);
-        setContentView(raiz);
+        escena.addView(raiz, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        setContentView(escena);
     }
 
     /** No se puede salir con "atrás": eso saltaría el bloqueo. */
