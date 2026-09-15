@@ -37,6 +37,16 @@ public final class Motor {
     };
 
     /**
+     * En estas redes, la pantalla solo se revisa para marcas explícitas que
+     * pone la propia app. Sus publicaciones y controles mezclan texto fuera
+     * de contexto, así que no se analizan por palabras sueltas.
+     */
+    static final String[] APPS_SOLO_MARCAS_SENSIBLES = {
+        "com.instagram.android",
+        "com.zhiliaoapp.musically",
+    };
+
+    /**
      * Términos +18 inequívocos. Se buscan dentro del texto "compactado" (sin
      * espacios, acentos ni sustituciones tipo p0rn), así que no pueden ser
      * palabras que aparezcan dentro de otras normales.
@@ -172,6 +182,12 @@ public final class Motor {
 
     static boolean esEsencial(String paquete) {
         for (String p : SIEMPRE_PERMITIDAS) if (p.equals(paquete)) return true;
+        return false;
+    }
+
+    /** TikTok e Instagram no se bloquean por texto suelto de publicaciones. */
+    static boolean usaSoloMarcasSensibles(String paquete) {
+        for (String p : APPS_SOLO_MARCAS_SENSIBLES) if (p.equals(paquete)) return true;
         return false;
     }
 

@@ -23,7 +23,8 @@ import java.util.Map;
  *  - Límite de tiempo o de aperturas de una app (usa {@link ContadorUso}).
  *  - Modo activo (estudio/sueño/clase).
  *  - Filtro +18: URL y palabras en navegadores, texto visible en apps
- *    vigiladas (Telegram, Reddit…), puertas e invitaciones a grupos.
+ *    vigiladas (Telegram, Reddit…), puertas e invitaciones a grupos. En
+ *    TikTok e Instagram solo se aceptan marcas explícitas de la propia app.
  *  - Protección: tapa la pantalla de desinstalar LyKari o de quitarle
  *    permisos/admin/accesibilidad.
  *
@@ -195,10 +196,13 @@ public class VigilanteAccesibilidad extends AccessibilityService {
                 if (filtro.optBoolean("etiquetasSensibles", true) && Motor.tieneEtiquetaSensible(texto)) {
                     return "sensible";
                 }
-                if (Motor.esTextoAdulto(texto, palabras)) return "texto";
+                // En TikTok e Instagram, palabras de la publicación, las
+                // recomendaciones y los controles no son evidencia suficiente
+                // para cerrar la app. Solo vale la marca explícita anterior.
+                if (!Motor.usaSoloMarcasSensibles(paquete) && Motor.esTextoAdulto(texto, palabras)) return "texto";
                 // Chats/canales marcados a mano por el usuario.
                 JSONArray chats = filtro.optJSONArray("chatsBloqueados");
-                if (chats != null) {
+                if (!Motor.usaSoloMarcasSensibles(paquete) && chats != null) {
                     String t = Motor.normalizarConEspacios(texto);
                     for (int i = 0; i < chats.length(); i++) {
                         String c = Motor.normalizarConEspacios(chats.optString(i));

@@ -27,11 +27,12 @@ export function FiltroAdulto({ reglas }: PropsReglas) {
     const actuales = await leerReglas();
     await guardarReglas({ ...actuales, filtroAdulto: { ...actuales.filtroAdulto, ...cambios } });
   };
-  return <><Titulo titulo="Filtro +18" detalle="DNS familiar, lista local y detección en navegadores y Telegram. No admite extensiones." />
+  return <><Titulo titulo="Filtro +18" detalle="DNS familiar, lista local y detección en navegadores y apps compatibles. No admite extensiones." />
     <div className="ct-lista">
       <div className="ct-card"><h3 className="ct-fila"><ShieldCheck size={20} />{filtro.activo ? "Filtro activo" : "Filtro inactivo"}</h3>
         <p>Capas configuradas; el motor Android aplica el filtro.</p>
         <p>DNS familiar: {filtro.dns ? "activado" : "desactivado"}<br />Lista local: incluida en el APK<br />SafeSearch: {filtro.forzarSafeSearch ? "forzado" : "sin forzar"}<br />Búsqueda en Telegram: {filtro.bloquearBusquedaTelegram ? "bloqueada" : "permitida"}<br />Puertas (catálogos de canales, grupos, subreddits NSFW): {filtro.bloquearPuertas ? "bloqueadas" : "permitidas"}<br />Marcas de contenido sensible: {filtro.etiquetasSensibles ? "bloquean" : "se ignoran"}<br />Apps vigiladas: {filtro.appsVigiladas.length}</p>
+        <small>En TikTok e Instagram, solo una marca explícita de contenido sensible, un límite de uso o un modo activo puede pausar la app.</small>
         {listas.map(([clave, titulo]) => <div key={clave}><h3>{titulo} · {filtro[clave].length}</h3><p>{filtro[clave].join(" · ") || "Sin elementos propios."}</p></div>)}
         <button className="ct-btn" onClick={() => setEdicion(reglas)}>Configurar capas y listas</button>
       </div>
