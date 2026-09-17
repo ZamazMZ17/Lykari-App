@@ -1,4 +1,4 @@
-import { Bot, CalendarDays, ChevronRight, GraduationCap, Pause, Play, Plus, X } from "lucide-react";
+import { BookOpen, Bot, CalendarDays, ChevronRight, GraduationCap, Pause, Play, Plus, X } from "lucide-react";
 import type { Actividad, Sesion } from "../db/db";
 import { fechaLarga } from "../lib/fecha";
 import { icono } from "../lib/iconos";
@@ -30,6 +30,7 @@ export function Hoy({
   aulaProximas,
   onAula,
   onSam,
+  onEstudiar,
   onPrivado,
 }: {
   actividades: Actividad[];
@@ -51,6 +52,8 @@ export function Hoy({
   aulaProximas: number;
   onAula: () => void;
   onSam: () => void;
+  /** Repaso accesible desde el tablón; no da un crédito sin una app destino. */
+  onEstudiar: () => void;
   /** Entrada a Zamly (contraseña) — a propósito sin nada que lo describa. */
   onPrivado: () => void;
 }) {
@@ -123,6 +126,15 @@ export function Hoy({
         <div style={{ flex: 1 }}>
           <div className="eyebrow" style={{ marginBottom: 2 }}>Tu laptop</div>
           <div style={{ fontSize: 13.5 }}>Asistente Sam</div>
+        </div>
+        <ChevronRight size={16} color="var(--ink2)" />
+      </button>
+
+      <button className="btn card" onClick={onEstudiar} style={{ margin: "0 20px 16px", width: "calc(100% - 40px)", padding: "12px 14px", display: "flex", gap: 11, alignItems: "center", textAlign: "left" }}>
+        <BookOpen size={18} color="var(--pino)" />
+        <div style={{ flex: 1 }}>
+          <div className="eyebrow" style={{ marginBottom: 2 }}>Estudio</div>
+          <div style={{ fontSize: 13.5 }}>Repasar con preguntas de tus cursos</div>
         </div>
         <ChevronRight size={16} color="var(--ink2)" />
       </button>

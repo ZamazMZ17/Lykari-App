@@ -453,6 +453,10 @@ export default function App() {
         aulaProximas={aulaItems.filter((item) => item.vence && item.vence >= dia && item.estado === "activo" && !item.oculto).length}
         onAula={() => setAulaAbierta(true)}
         onSam={() => setSamAbierto(true)}
+        onEstudiar={() => {
+          setQuizDestino(undefined);
+          setQuizAbierto(true);
+        }}
         onDetalle={(a) => {
           const plan = planPorActividadId.get(a.id!);
           setHoja(plan ? { t: "plan", act: a, plan } : { t: "detalle", act: a });
