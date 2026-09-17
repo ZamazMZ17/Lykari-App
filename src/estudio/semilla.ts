@@ -1,5 +1,5 @@
 import { cursosActivos } from "../db/cursos";
-import { contarPreguntas, agregarPreguntas } from "./preguntas";
+import { preguntasDeCurso, agregarPreguntas } from "./preguntas";
 import type { PreguntaCurso } from "./tipos";
 
 type PreguntaSin = Omit<PreguntaCurso, "id" | "cursoId" | "vecesVista" | "vecesCorrecta">;
@@ -1240,22 +1240,42 @@ const PREGUNTAS_POR_CURSO: Record<string, PreguntaSin[]> = {
   "Redes y Comunicaciones de Datos": REDES,
 };
 
+function normalizar(nombre: string): string {
+  return nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+/** Los nombres del aula no siempre coinciden letra por letra con los del sílabo. */
+function preguntasParaCurso(nombre: string): PreguntaSin[] | undefined {
+  const n = normalizar(nombre);
+  if (n.includes("arquitectura") && n.includes("negocio")) return ARQ_NEGOCIO;
+  if (n.includes("calculo") && n.includes("ii")) return CALCULO_II;
+  if (n.includes("diseno") && n.includes("experimento")) return DISENO_EXP;
+  if (n.includes("fundamento") && n.includes("sistema") && n.includes("informacion")) return FUNDAMENTOS_SI;
+  if (n.includes("redes") && (n.includes("comunic") || n.includes("conexion")) && n.includes("dato")) return REDES;
+  return undefined;
+}
+
 /**
- * Siembra las preguntas pre-generadas para cada curso activo.
- * Idempotente: si ya hay preguntas en la DB, no hace nada.
+ * Siembra preguntas para cada curso activo sin depender de una coincidencia
+ * literal de su nombre. Si todavía no hay cursos creados, deja un banco
+ * general (cursoId 0) para que la puerta no quede vacía el primer día.
  */
 export async function sembrarPreguntas(): Promise<void> {
-  const existentes = await contarPreguntas();
-  if (existentes > 0) return;
-
   const cursos = await cursosActivos();
   const porInsertar: Omit<PreguntaCurso, "id" | "vecesVista" | "vecesCorrecta">[] = [];
 
   for (const curso of cursos) {
-    const preguntas = PREGUNTAS_POR_CURSO[curso.nombre];
+    const preguntas = preguntasParaCurso(curso.nombre);
     if (!preguntas || !curso.id) continue;
+    if ((await preguntasDeCurso(curso.id)).length > 0) continue;
     for (const p of preguntas) {
       porInsertar.push({ ...p, cursoId: curso.id });
+    }
+  }
+
+  if (cursos.length === 0 && (await preguntasDeCurso(0)).length === 0) {
+    for (const preguntas of Object.values(PREGUNTAS_POR_CURSO)) {
+      for (const p of preguntas) porInsertar.push({ ...p, cursoId: 0 });
     }
   }
 

@@ -12,6 +12,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { cursosActivos } from "../db/cursos";
 import { contarPreguntas, preguntasDeCurso } from "../estudio/preguntas";
 import { iniciarQuiz, responder, siguiente, aprobo, finalizarQuiz } from "../estudio/quiz";
+import { sembrarPreguntas } from "../estudio/semilla";
 import type { EstadoQuiz } from "../estudio/tipos";
 import type { Curso } from "../db/db";
 
@@ -26,6 +27,10 @@ export function Quiz({ onBack, paqueteDestino }: { onBack: () => void; paqueteDe
 
   const cursos = useLiveQuery(cursosActivos, [], []);
   const totalPreguntas = useLiveQuery(contarPreguntas, [], 0);
+
+  // La puerta puede abrirse antes de que Hoy termine su inicialización.
+  // Sembrar es idempotente y así el primer intento nunca llega a un quiz vacío.
+  useEffect(() => { void sembrarPreguntas().catch(() => setError("No se pudieron preparar las preguntas.")); }, []);
 
   const empezar = useCallback(async (cursoId: number | null) => {
     setCargando(true);
