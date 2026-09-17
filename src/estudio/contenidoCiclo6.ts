@@ -18,7 +18,7 @@ export interface ContenidoCurso {
   conceptos: ConceptoCurso[];
 }
 
-function q(tema: string, pregunta: string, correcta: string, incorrectas: string[], explicacion: string, fuente: string): PreguntaBase {
+function q(tema: string, pregunta: string, correcta: string, incorrectas: string[], explicacion: string | undefined, fuente: string): PreguntaBase {
   return { tema, pregunta, opciones: [correcta, ...incorrectas], respuestaCorrecta: 0, explicacion, fuente };
 }
 function t(tema: string, frente: string, reverso: string, fuente: string): TarjetaBase {
@@ -196,9 +196,11 @@ function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso
   const preguntas = memorias.flatMap((memoria, indice) => {
     const alternativas = memorias.filter((_, otra) => otra !== indice).slice(0, 3);
     return [
-      q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), `${memoria.frente}: ${memoria.reverso}`, memoria.fuente),
-      q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `El concepto es ${memoria.frente}. ${memoria.reverso}`, memoria.fuente),
-      q(memoria.tema, `Una situación requiere lo siguiente: ${memoria.reverso} ¿Qué concepto se aplica?`, memoria.frente, alternativas.map((otra) => otra.frente), `${memoria.frente}: ${memoria.reverso}`, memoria.fuente),
+      // La definición ya aparece completa como alternativa: repetirla abajo
+      // no añade estudio, solo alarga la pantalla.
+      q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), undefined, memoria.fuente),
+      q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `El término correcto es ${memoria.frente}.`, memoria.fuente),
+      q(memoria.tema, `Una situación requiere lo siguiente: ${memoria.reverso} ¿Qué concepto se aplica?`, memoria.frente, alternativas.map((otra) => otra.frente), `El concepto que se aplica es ${memoria.frente}.`, memoria.fuente),
     ];
   });
   return {

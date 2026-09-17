@@ -316,6 +316,7 @@ function Pregunta({
   const enFeedback = quiz.fase === "feedback";
   const respuestaUsuario = quiz.respuestas[quiz.indice];
   const esCorrecta = respuestaUsuario === p.respuestaCorrecta;
+  const definicionYaVisible = p.pregunta.startsWith("¿Qué describe ");
   const feedbackRef = useRef<HTMLDivElement>(null);
   const cuerpoRef = useRef<HTMLDivElement>(null);
 
@@ -382,11 +383,7 @@ function Pregunta({
             <p className={esCorrecta ? "qz-feedback-ok" : "qz-feedback-mal"}>
               {esCorrecta ? "Correcto" : "Incorrecto"}
             </p>
-            <p className="qz-respuesta-clave">
-              <span>Respuesta clave</span>
-              {p.opciones[p.respuestaCorrecta]}
-            </p>
-            {p.explicacion && <p className="qz-explicacion">{p.explicacion}</p>}
+            {!definicionYaVisible && p.explicacion && <p className="qz-explicacion">{p.explicacion}</p>}
             <button className="qz-btn-siguiente" onClick={onSiguiente}>
               {quiz.indice + 1 < quiz.preguntas.length ? "Siguiente" : "Ver resultado"}
               <ChevronRight size={18} />
