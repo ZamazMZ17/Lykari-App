@@ -4,6 +4,7 @@ import { motorControl } from "../control/servicio";
 import { seleccionarParaQuiz, registrarRespuesta } from "./preguntas";
 import type { EstadoQuiz, SesionEstudio } from "./tipos";
 import type { OrigenCreditoEstudio, ResultadoCreditoEstudio } from "../control/tipos";
+import type { RangoPeriodoEstudio } from "./periodos";
 
 export function crearQuiz(preguntas: EstadoQuiz["preguntas"]): EstadoQuiz {
   return {
@@ -20,8 +21,9 @@ export function crearQuiz(preguntas: EstadoQuiz["preguntas"]): EstadoQuiz {
 export async function iniciarQuiz(
   cantidad: number,
   cursoId: number | null,
+  rango?: RangoPeriodoEstudio,
 ): Promise<EstadoQuiz | null> {
-  const preguntas = await seleccionarParaQuiz(cantidad, cursoId);
+  const preguntas = await seleccionarParaQuiz(cantidad, cursoId, rango);
   if (preguntas.length === 0) return null;
   return { ...crearQuiz(preguntas), cursoId };
 }

@@ -16,6 +16,7 @@ import { sembrarPreguntas } from "../estudio/semilla";
 import type { EstadoQuiz } from "../estudio/tipos";
 import type { Curso } from "../db/db";
 import { QUIZ_PUERTA, type ConfiguracionQuiz } from "../estudio/configuracionQuiz";
+import { periodosDisponibles, tipoPeriodoCurso, type RangoPeriodoEstudio } from "../estudio/periodos";
 
 const MINUTOS_DESBLOQUEADOS = 15;
 
@@ -39,16 +40,16 @@ export function Quiz({
 
   useEffect(() => { void sembrarPreguntas().catch(() => setError("No se pudieron preparar las preguntas.")); }, []);
 
-  const empezar = useCallback(async (cursoId: number | null) => {
+  const empezar = useCallback(async (cursoId: number | null, rango?: RangoPeriodoEstudio) => {
     setCargando(true);
     setError("");
     try {
       // El curso puede abrirse antes de que el efecto inicial termine de
       // sembrar IndexedDB; esta operación es idempotente y evita un quiz vacío.
       await sembrarPreguntas();
-      const q = await iniciarQuiz(configuracion.cantidad, cursoId);
-      if (!q) {
-        setError("No hay preguntas disponibles para este curso.");
+      const q = await iniciarQuiz(configuracion.cantidad, cursoId, rango ?? configuracion.rango);
+      if (!q || q.preguntas.length < configuracion.cantidad) {
+        setError(`No hay ${configuracion.cantidad} preguntas disponibles para este rango.`);
         return;
       }
       setQuiz(q);
@@ -57,7 +58,7 @@ export function Quiz({
     } finally {
       setCargando(false);
     }
-  }, [configuracion.cantidad]);
+  }, [configuracion.cantidad, configuracion.rango]);
 
   // Si viene de Estudio con un curso elegido, arrancar directo.
   const autoIniciado = useRef(false);
@@ -140,12 +141,13 @@ function Selector({
   totalPreguntas: number;
   cargando: boolean;
   error: string;
-  onEmpezar: (cursoId: number | null) => void;
+  onEmpezar: (cursoId: number | null, rango?: RangoPeriodoEstudio) => void;
   onBack: () => void;
   paqueteDestino?: string;
   configuracion: ConfiguracionQuiz;
 }) {
   const [conteos, setConteos] = useState<Map<number, number>>(new Map());
+  const [cursoParaFiltrar, setCursoParaFiltrar] = useState<Curso | null>(null);
 
   useEffect(() => {
     let cancelado = false;
@@ -162,6 +164,10 @@ function Selector({
     if (cursos.length > 0) void cargar();
     return () => { cancelado = true; };
   }, [cursos]);
+
+  if (cursoParaFiltrar) {
+    return <SelectorRango curso={cursoParaFiltrar} configuracion={configuracion} onBack={() => setCursoParaFiltrar(null)} onEmpezar={onEmpezar} />;
+  }
 
   return (
     <div className="qz">
@@ -201,7 +207,7 @@ function Selector({
               key={c.id}
               className="qz-curso"
               disabled={cargando || (conteos.get(c.id!) ?? 0) === 0}
-              onClick={() => onEmpezar(c.id!)}
+              onClick={() => setCursoParaFiltrar(c)}
             >
               <span className="qz-curso-icono"><GraduationCap size={20} /></span>
               <span className="qz-curso-info">
@@ -214,6 +220,80 @@ function Selector({
         </div>
 
         {error && <p className="qz-error" role="alert">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
+function SelectorRango({
+  curso,
+  configuracion,
+  onBack,
+  onEmpezar,
+}: {
+  curso: Curso;
+  configuracion: ConfiguracionQuiz;
+  onBack: () => void;
+  onEmpezar: (cursoId: number, rango: RangoPeriodoEstudio) => void;
+}) {
+  const preguntas = useLiveQuery(() => preguntasDeCurso(curso.id!), [curso.id], []);
+  const tipo = tipoPeriodoCurso(curso.nombre);
+  const periodos = periodosDisponibles(preguntas, tipo);
+  const [desde, setDesde] = useState<number | null>(null);
+  const [hasta, setHasta] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (periodos.length > 0) {
+      setDesde(periodos[0]);
+      setHasta(periodos[periodos.length - 1]);
+    }
+  }, [curso.id, periodos.join(",")]);
+
+  const nombrePeriodo = tipo === "semana" ? "Semana" : "Unidad";
+  const incluidas = preguntas.filter((pregunta) => {
+    const numero = periodosDisponibles([pregunta], tipo)[0];
+    return numero != null && desde != null && hasta != null && numero >= desde && numero <= hasta;
+  }).length;
+
+  return (
+    <div className="qz">
+      <header className="qz-header">
+        <button className="btn" onClick={onBack} aria-label="Volver"><ArrowLeft size={20} /></button>
+        <div>
+          <span className="eyebrow">{configuracion.tipo === "puerta" ? "Puerta de estudio" : "Simulacro de práctica"}</span>
+          <h1 className="disp" style={{ fontSize: 22 }}>Elige el contenido</h1>
+        </div>
+      </header>
+      <div className="qz-body">
+        <p className="qz-intro">{curso.nombre}. Incluye solo el contenido que ya entra en tu evaluación.</p>
+        {periodos.length > 0 && desde != null && hasta != null ? (
+          <section className="qz-rango">
+            <span className="eyebrow">Rango del cuestionario</span>
+            <p>{incluidas} preguntas disponibles entre los límites elegidos.</p>
+            <div>
+              <label>Desde
+                <select value={desde} onChange={(e) => setDesde(Math.min(Number(e.target.value), hasta))}>
+                  {periodos.map((numero) => <option key={numero} value={numero}>{nombrePeriodo} {numero}</option>)}
+                </select>
+              </label>
+              <label>Hasta
+                <select value={hasta} onChange={(e) => setHasta(Math.max(Number(e.target.value), desde))}>
+                  {periodos.map((numero) => <option key={numero} value={numero}>{nombrePeriodo} {numero}</option>)}
+                </select>
+              </label>
+            </div>
+          </section>
+        ) : <p className="qz-error">Aún no hay preguntas clasificadas por {tipo} para este curso.</p>}
+        <button
+          className="qz-btn-primario"
+          disabled={desde == null || hasta == null || incluidas < configuracion.cantidad}
+          onClick={() => onEmpezar(curso.id!, { tipo, desde: desde!, hasta: hasta! })}
+        >
+          Empezar con este rango <ChevronRight size={18} />
+        </button>
+        {incluidas > 0 && incluidas < configuracion.cantidad && (
+          <p className="qz-error">Este formato requiere {configuracion.cantidad} preguntas; amplía el rango para continuar.</p>
+        )}
       </div>
     </div>
   );

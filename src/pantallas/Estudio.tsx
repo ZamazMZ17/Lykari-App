@@ -5,6 +5,7 @@ import { cursosActivos } from "../db/cursos";
 import { CONTENIDO_CICLO6, contenidoParaCurso, type ContenidoCurso } from "../estudio/contenidoCiclo6";
 import { sembrarPreguntas } from "../estudio/semilla";
 import { QUIZ_PUERTA, SIMULACRO_PRACTICA, type ConfiguracionQuiz } from "../estudio/configuracionQuiz";
+import { periodosDisponibles, tipoPeriodoCurso, type RangoPeriodoEstudio } from "../estudio/periodos";
 
 type OpcionCurso = { id: number; nombre: string; contenido: ContenidoCurso };
 type Modo = "inicio" | "tarjetas" | "conceptos";
@@ -15,6 +16,7 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
   const [modo, setModo] = useState<Modo>("inicio");
   const [tarjeta, setTarjeta] = useState(0);
   const [girada, setGirada] = useState(false);
+  const [rango, setRango] = useState<RangoPeriodoEstudio | undefined>();
 
   useEffect(() => { void sembrarPreguntas(); }, []);
 
@@ -29,6 +31,12 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
   }, [cursos]);
 
   const elegida = opciones.find((opcion) => opcion.id === cursoId);
+  useEffect(() => {
+    if (!elegida) return;
+    const tipo = tipoPeriodoCurso(elegida.nombre);
+    const periodos = periodosDisponibles(elegida.contenido.preguntas, tipo);
+    if (periodos.length > 0) setRango({ tipo, desde: periodos[0], hasta: periodos.at(-1)! });
+  }, [cursoId]);
   const volver = () => {
     if (modo !== "inicio") {
       setModo("inicio");
@@ -72,8 +80,10 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
         ) : modo === "inicio" ? (
           <Modos
             contenido={elegida.contenido}
-            onQuiz={() => onQuiz(elegida.id, QUIZ_PUERTA)}
-            onSimulacro={() => onQuiz(elegida.id, SIMULACRO_PRACTICA)}
+            rango={rango}
+            onRango={setRango}
+            onQuiz={() => onQuiz(elegida.id, { ...QUIZ_PUERTA, rango })}
+            onSimulacro={() => onQuiz(elegida.id, { ...SIMULACRO_PRACTICA, rango })}
             onTarjetas={() => setModo("tarjetas")}
             onConceptos={() => setModo("conceptos")}
           />
@@ -93,7 +103,9 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
   );
 }
 
-function Modos({ contenido, onQuiz, onSimulacro, onTarjetas, onConceptos }: { contenido: ContenidoCurso; onQuiz: () => void; onSimulacro: () => void; onTarjetas: () => void; onConceptos: () => void }) {
+function Modos({ contenido, rango, onRango, onQuiz, onSimulacro, onTarjetas, onConceptos }: { contenido: ContenidoCurso; rango?: RangoPeriodoEstudio; onRango: (rango: RangoPeriodoEstudio) => void; onQuiz: () => void; onSimulacro: () => void; onTarjetas: () => void; onConceptos: () => void }) {
+  const tipo = tipoPeriodoCurso(contenido.nombre);
+  const periodos = periodosDisponibles(contenido.preguntas, tipo);
   const opciones = [
     { icono: BookOpen, titulo: "Cuestionario", texto: "12 preguntas · necesitas 10 correctas para aprobar.", accion: onQuiz },
     { icono: ClipboardCheck, titulo: "Simulacro de práctica", texto: "30 preguntas · 0.5 puntos por respuesta correcta.", accion: onSimulacro },
@@ -103,6 +115,24 @@ function Modos({ contenido, onQuiz, onSimulacro, onTarjetas, onConceptos }: { co
   return (
     <>
       <p className="qz-intro">Escoge cómo quieres repasar. Puedes alternar entre recordar, responder y leer antes de volver al cuestionario.</p>
+      {rango && periodos.length > 0 && (
+        <section className="qz-rango" aria-label="Contenido incluido en el cuestionario">
+          <span className="eyebrow">Contenido del cuestionario</span>
+          <p>Incluye solo {tipo === "semana" ? "las semanas" : "las unidades"} que selecciones.</p>
+          <div>
+            <label>Desde
+              <select value={rango.desde} onChange={(e) => onRango({ ...rango, desde: Math.min(Number(e.target.value), rango.hasta) })}>
+                {periodos.map((numero) => <option key={numero} value={numero}>{tipo === "semana" ? "Semana" : "Unidad"} {numero}</option>)}
+              </select>
+            </label>
+            <label>Hasta
+              <select value={rango.hasta} onChange={(e) => onRango({ ...rango, hasta: Math.max(Number(e.target.value), rango.desde) })}>
+                {periodos.map((numero) => <option key={numero} value={numero}>{tipo === "semana" ? "Semana" : "Unidad"} {numero}</option>)}
+              </select>
+            </label>
+          </div>
+        </section>
+      )}
       <div className="qz-cursos">
         {opciones.map(({ icono: Icono, titulo, texto, accion }) => (
           <button key={titulo} className="qz-curso" onClick={accion}>

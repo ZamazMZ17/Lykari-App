@@ -7,6 +7,8 @@ export interface ConfiguracionQuiz {
   cantidad: number;
   umbral?: number;
   puntosPorRespuesta?: number;
+  /** Semanas o unidades que el usuario decidió incluir en este intento. */
+  rango?: RangoPeriodoEstudio;
 }
 
 export const QUIZ_PUERTA: ConfiguracionQuiz = {
@@ -20,3 +22,4 @@ export const SIMULACRO_PRACTICA: ConfiguracionQuiz = {
   cantidad: 30,
   puntosPorRespuesta: 0.5,
 };
+import type { RangoPeriodoEstudio } from "./periodos";

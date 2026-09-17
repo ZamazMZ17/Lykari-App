@@ -1,5 +1,6 @@
 import { db } from "../db/db";
 import type { PreguntaCurso } from "./tipos";
+import { estaEnRango, type RangoPeriodoEstudio } from "./periodos";
 
 export async function preguntasDeCurso(cursoId: number): Promise<PreguntaCurso[]> {
   return db.preguntasCurso.where("cursoId").equals(cursoId).toArray();
@@ -39,8 +40,10 @@ export async function registrarRespuesta(id: number, correcta: boolean): Promise
 export async function seleccionarParaQuiz(
   cantidad: number,
   cursoId: number | null,
+  rango?: RangoPeriodoEstudio,
 ): Promise<PreguntaCurso[]> {
-  const todas = cursoId != null ? await preguntasDeCurso(cursoId) : await todasLasPreguntas();
+  const candidatas = cursoId != null ? await preguntasDeCurso(cursoId) : await todasLasPreguntas();
+  const todas = candidatas.filter((pregunta) => estaEnRango(pregunta, rango));
   if (todas.length <= cantidad) return mezclarPreguntas(todas);
 
   const nuncaVistas = todas.filter((p) => p.vecesVista === 0);
