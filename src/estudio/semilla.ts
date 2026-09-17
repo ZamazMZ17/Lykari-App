@@ -1,6 +1,8 @@
 import { cursosActivos } from "../db/cursos";
+import { db } from "../db/db";
 import { preguntasDeCurso, agregarPreguntas } from "./preguntas";
 import type { PreguntaCurso } from "./tipos";
+import { CONTENIDO_CICLO6, contenidoParaCurso, type ContenidoCurso } from "./contenidoCiclo6";
 
 type PreguntaSin = Omit<PreguntaCurso, "id" | "cursoId" | "vecesVista" | "vecesCorrecta">;
 
@@ -1232,54 +1234,60 @@ const REDES: PreguntaSin[] = [
 
 /* ── Sembrador ──────────────────────────────────────────────────────── */
 
-const PREGUNTAS_POR_CURSO: Record<string, PreguntaSin[]> = {
-  "Arquitectura de Negocio": ARQ_NEGOCIO,
-  "Cálculo II": CALCULO_II,
-  "Diseño de Experimentos en SI": DISENO_EXP,
-  "Fundamentos de Sistemas de Información": FUNDAMENTOS_SI,
-  "Redes y Comunicaciones de Datos": REDES,
-};
+// Se conserva temporalmente el banco de demostración en el historial del
+// archivo para facilitar la migración de instalaciones antiguas. No se usa
+// para sembrar: el único banco activo está en contenidoCiclo6.ts.
+void [ARQ_NEGOCIO, CALCULO_II, DISENO_EXP, FUNDAMENTOS_SI, REDES];
 
-function normalizar(nombre: string): string {
-  return nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
+/**
+ * El banco anterior era una demostración genérica. El actual se desprende de
+ * los PPT y PDF descargados en «Ciclo 6» y conserva la fuente de cada ítem.
+ * Si en una instalación antigua quedan preguntas sin fuente, se reemplazan
+ * una sola vez; las que ya son del material real y su progreso se respetan.
+ */
+async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Promise<void> {
+  const existentes = await preguntasDeCurso(cursoId);
+  const tieneMaterialReal = existentes.some((pregunta) => Boolean(pregunta.fuente));
 
-/** Los nombres del aula no siempre coinciden letra por letra con los del sílabo. */
-function preguntasParaCurso(nombre: string): PreguntaSin[] | undefined {
-  const n = normalizar(nombre);
-  if (n.includes("arquitectura") && n.includes("negocio")) return ARQ_NEGOCIO;
-  if (n.includes("calculo") && n.includes("ii")) return CALCULO_II;
-  if (n.includes("diseno") && n.includes("experimento")) return DISENO_EXP;
-  if (n.includes("fundamento") && n.includes("sistema") && n.includes("informacion")) return FUNDAMENTOS_SI;
-  if (n.includes("redes") && (n.includes("comunic") || n.includes("conexion")) && n.includes("dato")) return REDES;
-  return undefined;
+  if (!tieneMaterialReal) {
+    if (existentes.length > 0) {
+      await db.preguntasCurso.bulkDelete(existentes.flatMap((pregunta) => pregunta.id == null ? [] : [pregunta.id]));
+    }
+    await agregarPreguntas(contenido.preguntas.map((pregunta) => ({ ...pregunta, cursoId })));
+  }
+
+  const tarjetas = await db.tarjetasEstudio.where("cursoId").equals(cursoId).count();
+  if (tarjetas === 0) {
+    await db.tarjetasEstudio.bulkAdd(
+      contenido.tarjetas.map((tarjeta) => ({ ...tarjeta, cursoId, creada: Date.now() })),
+    );
+  }
 }
 
 /**
- * Siembra preguntas para cada curso activo sin depender de una coincidencia
- * literal de su nombre. Si todavía no hay cursos creados, deja un banco
- * general (cursoId 0) para que la puerta no quede vacía el primer día.
+ * Prepara preguntas y tarjetas para los cursos activos. Si todavía no se
+ * sincronizó el horario, hay un banco temporal de los cinco cursos para que
+ * Estudio jamás se vea vacío al abrir la app por primera vez.
  */
 export async function sembrarPreguntas(): Promise<void> {
   const cursos = await cursosActivos();
-  const porInsertar: Omit<PreguntaCurso, "id" | "vecesVista" | "vecesCorrecta">[] = [];
+  let encontroCurso = false;
 
   for (const curso of cursos) {
-    const preguntas = preguntasParaCurso(curso.nombre);
-    if (!preguntas || !curso.id) continue;
-    if ((await preguntasDeCurso(curso.id)).length > 0) continue;
-    for (const p of preguntas) {
-      porInsertar.push({ ...p, cursoId: curso.id });
-    }
+    if (curso.id == null) continue;
+    const contenido = contenidoParaCurso(curso.nombre);
+    if (!contenido) continue;
+    encontroCurso = true;
+    await sembrarContenido(curso.id, contenido);
   }
 
-  if (cursos.length === 0 && (await preguntasDeCurso(0)).length === 0) {
-    for (const preguntas of Object.values(PREGUNTAS_POR_CURSO)) {
-      for (const p of preguntas) porInsertar.push({ ...p, cursoId: 0 });
-    }
-  }
-
-  if (porInsertar.length > 0) {
-    await agregarPreguntas(porInsertar);
+  if (!encontroCurso) {
+    await sembrarContenido(0, {
+      nombre: "Banco temporal del Ciclo 6",
+      alias: /./,
+      preguntas: CONTENIDO_CICLO6.flatMap((contenido) => contenido.preguntas),
+      tarjetas: CONTENIDO_CICLO6.flatMap((contenido) => contenido.tarjetas),
+      conceptos: [],
+    });
   }
 }

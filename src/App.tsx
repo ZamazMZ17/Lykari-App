@@ -68,6 +68,7 @@ import { Ajustes } from "./pantallas/Ajustes";
 import { HojaMascota } from "./pantallas/HojaMascota";
 import { Zamly } from "./pantallas/Zamly";
 import { Quiz } from "./pantallas/Quiz";
+import { Estudio } from "./pantallas/Estudio";
 import { RecompensaEjercicio } from "./pantallas/RecompensaEjercicio";
 import { Burbuja } from "./ui/Burbuja";
 
@@ -136,6 +137,7 @@ export default function App() {
   const [aulaAbierta, setAulaAbierta] = useState(false);
   const [samAbierto, setSamAbierto] = useState(false);
   const [privadoAbierto, setPrivadoAbierto] = useState(false);
+  const [estudioAbierto, setEstudioAbierto] = useState(false);
   const [quizAbierto, setQuizAbierto] = useState(false);
   /** App concreta que inició la puerta; nunca se concede un crédito global. */
   const [quizDestino, setQuizDestino] = useState<string | undefined>();
@@ -250,6 +252,7 @@ export default function App() {
   useAtras(aulaAbierta, () => setAulaAbierta(false));
   useAtras(samAbierto, () => setSamAbierto(false));
   useAtras(privadoAbierto, () => setPrivadoAbierto(false));
+  useAtras(estudioAbierto, () => setEstudioAbierto(false));
   useAtras(quizAbierto, () => {
     setQuizAbierto(false);
     setQuizDestino(undefined);
@@ -268,6 +271,7 @@ export default function App() {
       setAulaAbierta(false);
       setSamAbierto(false);
       setPrivadoAbierto(false);
+      setEstudioAbierto(false);
       setQuizDestino(typeof detalle.paquete === "string" ? detalle.paquete : undefined);
       setQuizAbierto(true);
     };
@@ -411,13 +415,15 @@ export default function App() {
         onAjustes={() => setHoja({ t: "ajustes" })}
       />
     );
-  } else if (samAbierto) {
-    pantalla = <Sam onBack={() => setSamAbierto(false)} onAjustes={() => setHoja({ t: "ajustes" })} />;
   } else if (quizAbierto) {
     pantalla = <Quiz paqueteDestino={quizDestino} onBack={() => {
       setQuizAbierto(false);
       setQuizDestino(undefined);
     }} />;
+  } else if (estudioAbierto) {
+    pantalla = <Estudio onBack={() => setEstudioAbierto(false)} onQuiz={() => setQuizAbierto(true)} />;
+  } else if (samAbierto) {
+    pantalla = <Sam onBack={() => setSamAbierto(false)} onAjustes={() => setHoja({ t: "ajustes" })} />;
   } else if (privadoAbierto) {
     pantalla = <Zamly onBack={() => setPrivadoAbierto(false)} />;
   } else if (aulaAbierta) {
@@ -455,7 +461,7 @@ export default function App() {
         onSam={() => setSamAbierto(true)}
         onEstudiar={() => {
           setQuizDestino(undefined);
-          setQuizAbierto(true);
+          setEstudioAbierto(true);
         }}
         onDetalle={(a) => {
           const plan = planPorActividadId.get(a.id!);
@@ -474,6 +480,7 @@ export default function App() {
     setHorarioAbierto(false);
     setAulaAbierta(false);
     setSamAbierto(false);
+    setEstudioAbierto(false);
     setQuizAbierto(false);
     setQuizDestino(undefined);
   };
@@ -490,7 +497,7 @@ export default function App() {
   const inicioSwipe = useRef({ x: 0, y: 0, movido: false, permitido: false });
   const historialSwipe = useRef<{ x: number; t: number }[]>([]);
   const sinMovimientoSwipe = useReducedMotion();
-  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !samAbierto && !privadoAbierto && !quizAbierto && !amplia;
+  const puedeSwipe = !enSesion && !hoja && !horarioAbierto && !aulaAbierta && !samAbierto && !privadoAbierto && !estudioAbierto && !quizAbierto && !amplia;
 
   const alMoverSwipe = (e: PointerEvent) => {
     if (!inicioSwipe.current.permitido) return;

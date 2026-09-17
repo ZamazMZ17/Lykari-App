@@ -1,0 +1,192 @@
+import type { PreguntaCurso, TarjetaEstudio } from "./tipos";
+
+type PreguntaBase = Omit<PreguntaCurso, "id" | "cursoId" | "vecesVista" | "vecesCorrecta">;
+type TarjetaBase = Omit<TarjetaEstudio, "id" | "cursoId" | "creada">;
+
+export interface ConceptoCurso {
+  tema: string;
+  titulo: string;
+  explicacion: string;
+  fuente: string;
+}
+
+export interface ContenidoCurso {
+  nombre: string;
+  alias: RegExp;
+  preguntas: PreguntaBase[];
+  tarjetas: TarjetaBase[];
+  conceptos: ConceptoCurso[];
+}
+
+function q(tema: string, pregunta: string, correcta: string, incorrectas: string[], explicacion: string, fuente: string): PreguntaBase {
+  return { tema, pregunta, opciones: [correcta, ...incorrectas], respuestaCorrecta: 0, explicacion, fuente };
+}
+function t(tema: string, frente: string, reverso: string, fuente: string): TarjetaBase {
+  return { tema, frente, reverso, fuente };
+}
+
+const ARQUITECTURA: ContenidoCurso = {
+  nombre: "Arquitectura de Negocio",
+  alias: /arquitectura.*negocio/i,
+  preguntas: [
+    q("Modelo de negocio", "¿Qué describe un modelo de negocio según la presentación?", "Cómo una organización crea, proporciona y capta valor", ["Solo la estructura del organigrama", "El código fuente de sus aplicaciones", "Únicamente su presupuesto anual"], "El material vincula el modelo con crear, proporcionar y captar valor.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Modelo Canvas", "¿Cuál de estos es un bloque del lienzo de modelo de negocio?", "Propuesta de valor", ["Lenguaje de programación", "Diagrama de clases", "Servidor de respaldo"], "La propuesta de valor es uno de los nueve elementos del Canvas.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Modelo Canvas", "¿Qué bloque del Canvas identifica a los grupos a los que se dirige una empresa?", "Segmentos de mercado", ["Estructura de costes", "Recursos clave", "Actividades clave"], "Los segmentos de mercado representan personas o entidades objetivo.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Misión", "¿Qué debe aclarar una misión empresarial?", "Quién es la organización, qué hace y a quién sirve", ["El precio de todas sus acciones", "Solo su posición futura", "La tecnología que usa hoy"], "La misión comunica identidad, actividad y público al que sirve.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Visión", "¿Qué caracteriza a la visión de una empresa?", "Una representación de éxito y madurez en un escenario futuro", ["Una lista diaria de tareas", "Una auditoría de sistemas actuales", "Un registro contable"], "La visión describe el futuro deseado de la organización.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Objetivos", "¿Cómo se entienden los objetivos organizacionales en el material?", "Metas traducidas a elementos evaluables por costo, tiempo y desempeño", ["Ideas sin medida ni plazo", "Sinónimos de la visión", "Reglas solo para TI"], "Los objetivos permiten controlar el avance mediante criterios observables.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Estrategia", "¿Qué busca la estrategia empresarial según Porter?", "Una posición rentable y sostenible frente a la competencia", ["Eliminar toda competencia legalmente", "Aumentar documentos internos", "Reemplazar la misión"], "La estrategia crea y apropia valor superior sin exceder su costo de creación.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Patrones", "¿Qué patrón conecta dos o más grupos de clientes interdependientes?", "Plataforma multilateral", ["Larga cola", "Desagregación", "Integración síncrona"], "Visa y Google aparecen como ejemplos de plataformas multilaterales.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Integración", "¿Qué significa integración empresarial?", "Optimizar procesos fragmentados en un entorno integrado y adaptable", ["Instalar una única base de datos", "Cambiar el logo corporativo", "Comprar servidores nuevos"], "La integración abarca procesos, información y tecnología; no es solo una solución técnica.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Interoperabilidad", "¿Qué tres dimensiones de integración menciona el material?", "Operativa o de negocio, de información y técnica", ["Financiera, legal y publicitaria", "Local, nacional y global", "Manual, automática y visual"], "La interoperabilidad requiere colaboración de procesos, datos compartidos y conexión técnica.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Datos maestros", "¿Para qué sirve un registro dorado en C-MDM?", "Establecer un punto único de verdad para datos de clientes", ["Duplicar datos en cada área", "Eliminar toda base de datos", "Registrar contraseñas de usuarios"], "C-MDM reduce silos y busca consistencia semántica de los datos maestros.", "Unidad 1 · Semana 1 · Sesión 1"),
+    q("Tipos de integración", "¿Cuándo ocurre una integración asíncrona?", "Cuando el intercambio sucede a partir de un evento posterior al requerimiento", ["Siempre en el instante de la solicitud", "Solo sin conexión a internet", "Cuando se elimina un sistema"], "La síncrona responde al momento del requerimiento; la asíncrona se activa por eventos.", "Unidad 1 · Semana 1 · Sesión 1"),
+  ],
+  tarjetas: [
+    t("Modelo Canvas", "¿Qué son los recursos clave?", "Activos físicos, intelectuales, humanos o económicos fundamentales para que funcione el modelo.", "Unidad 1 · Semana 1 · Sesión 1"),
+    t("Modelo Canvas", "¿Qué son las asociaciones clave?", "La red de proveedores y socios externos que optimiza el modelo y reduce riesgos.", "Unidad 1 · Semana 1 · Sesión 1"),
+    t("Patrones", "Patrón de larga cola", "Vende una gran variedad de productos especializados con ventas individuales bajas.", "Unidad 1 · Semana 1 · Sesión 1"),
+    t("Patrones", "Modelo gratuito o freemium", "Al menos un segmento recibe una oferta gratuita de forma permanente; el ingreso llega por servicios premium u otro segmento.", "Unidad 1 · Semana 1 · Sesión 1"),
+    t("Integración", "EAI", "La integración de aplicaciones empresariales evita duplicar funciones y conecta componentes mediante flujos de trabajo.", "Unidad 1 · Semana 1 · Sesión 1"),
+    t("Integración", "Modelo operativo", "Define el nivel de integración y estandarización de procesos necesario para entregar bienes y servicios.", "Unidad 1 · Semana 1 · Sesión 1"),
+  ],
+  conceptos: [
+    { tema: "Modelo de negocio", titulo: "Canvas", explicacion: "Relaciona clientes, propuesta de valor, canales, relaciones, ingresos, recursos, actividades, asociaciones y costes. Úsalo para explicar cómo opera una empresa antes de proponer cambios.", fuente: "Unidad 1 · Semana 1 · Sesión 1" },
+    { tema: "Dirección empresarial", titulo: "Misión, visión, objetivos y estrategia", explicacion: "La misión explica identidad y servicio; la visión proyecta el futuro; los objetivos vuelven las metas medibles; la estrategia busca una posición sostenible.", fuente: "Unidad 1 · Semana 1 · Sesión 1" },
+    { tema: "Integración", titulo: "Procesos, datos y tecnología", explicacion: "Una integración sólida coordina procesos, comparte información con significado común y conecta recursos técnicos. El objetivo es reducir silos y responder al cambio.", fuente: "Unidad 1 · Semana 1 · Sesión 1" },
+  ],
+};
+
+const EXPERIMENTOS: ContenidoCurso = {
+  nombre: "Diseño de Experimentos en SI",
+  alias: /diseno.*experimento/i,
+  preguntas: [
+    q("Requerimientos", "¿Por qué la validación de requisitos es importante?", "Porque corregir un error de requisito después del desarrollo puede costar mucho más", ["Porque reemplaza las pruebas", "Porque elimina al cliente del proceso", "Porque evita planificar tareas"], "El material señala el alto costo de detectar tarde errores de requisitos.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Requerimientos", "¿Qué técnica ayuda a clarificar requisitos?", "El prototipado", ["La eliminación de usuarios", "El despliegue final", "La compresión de archivos"], "El prototipado permite contrastar el sistema esperado con lo que quiere el cliente.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Validación", "¿Qué criterio pregunta si las funciones solicitadas están incluidas?", "Completitud", ["Realismo", "Consistencia", "Disponibilidad"], "La completitud verifica que se incluyan todas las funciones requeridas.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Validación", "¿Qué criterio revisa conflictos entre requisitos?", "Consistencia", ["Completitud", "Usabilidad", "Portabilidad"], "La consistencia busca contradicciones entre requisitos.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Validación", "¿Qué criterio evalúa si los requisitos caben en la tecnología y presupuesto disponibles?", "Realismo", ["Trazabilidad", "Completitud", "Priorización"], "El realismo contrasta requisitos con restricciones técnicas y económicas.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Planificación", "¿Qué se debe identificar antes de iniciar una tarea dependiente?", "Las actividades predecesoras o dependencias", ["El color del diagrama", "El nombre del producto", "La versión del navegador"], "Las dependencias definen la secuencia lógica de ejecución.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Cronograma", "¿Qué permite visualizar un cronograma?", "Actividades, fechas, responsables, duración y dependencias en el tiempo", ["Solo costos del proyecto", "Únicamente código fuente", "La estructura de una base de datos"], "El cronograma muestra el plan temporal y sus relaciones.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Gantt", "¿Cómo representa un diagrama de Gantt cada actividad?", "Con una barra horizontal cuya longitud representa la duración", ["Con una tabla de direcciones IP", "Con un diagrama de clases", "Con una lista sin fechas"], "El Gantt permite ver duración y secuencia en un calendario.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    q("Scrum", "¿Qué es Scrum según la presentación?", "Un framework ágil para desarrollar proyectos", ["Un lenguaje de programación", "Un motor de base de datos", "Un formato de rúbrica"], "La sesión presenta Scrum como marco de trabajo ágil.", "Unidad 1 · S2 · Introducción a Scrum"),
+    q("Scrum", "¿Qué artefacto reúne el trabajo seleccionado para un sprint?", "Sprint Backlog", ["Diagrama de Gantt", "Registro ARP", "Modelo Canvas"], "El Sprint Backlog contiene el trabajo asumido para el sprint.", "Unidad 1 · S2 · Introducción a Scrum"),
+    q("Calidad", "¿Cuál es la secuencia correcta de los términos de calidad mostrada?", "Error humano, defecto en software y posible fallo en operación", ["Fallo, error y requisito", "Defecto, usuario y compilación", "Prueba, error y despliegue"], "Un error puede introducir un defecto que luego cause un fallo observable.", "Unidad 1 · S4 · Introducción a la Calidad"),
+    q("Calidad", "¿Qué debe considerar un proceso de calidad?", "La satisfacción de los requisitos del cliente durante la generación del producto", ["Solo la velocidad de codificación", "Solo el costo del servidor", "La cantidad de reuniones"], "La conclusión relaciona procesos de calidad con producto y requisitos del cliente.", "Unidad 1 · S4 · Introducción a la Calidad"),
+  ],
+  tarjetas: [
+    t("Requerimientos", "Validación", "Comprobar si el sistema provee funciones que soporten las necesidades del cliente.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    t("Requerimientos", "Revisión de requisitos", "Involucra cliente y contratista; puede ser formal o informal y busca resolver problemas temprano.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    t("Planificación", "Pasos de planificación", "Definir objetivo, identificar y ordenar tareas, asignar responsables, tiempos, recursos y dependencias; luego monitorear y ajustar.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+    t("Scrum", "Historia de usuario", "Forma breve de expresar una necesidad desde la perspectiva de quien obtiene valor; guía funcionalidades y prototipos.", "Unidad 1 · S2 · Introducción a Scrum"),
+    t("Calidad", "Error, defecto y fallo", "Una persona comete un error; el error puede crear un defecto en el software; el defecto puede causar un fallo durante la operación.", "Unidad 1 · S4 · Introducción a la Calidad"),
+    t("Calidad", "Factores de calidad", "Se usan para evaluar el grado en que un sistema satisface características esperadas; se debe sustentar cada valoración.", "Unidad 1 · S4 · Introducción a la Calidad"),
+  ],
+  conceptos: [
+    { tema: "Requerimientos", titulo: "Validar antes de construir", explicacion: "Los requisitos cambian y distintos usuarios priorizan cosas distintas. Validar, revisar y prototipar permite detectar conflictos antes de que el costo de corrección aumente.", fuente: "Unidad 1 · S1 · Modelos de Requerimientos" },
+    { tema: "Planificación", titulo: "Cronograma y dependencias", explicacion: "Un cronograma convierte las tareas en una secuencia con responsables, duración, fechas e hitos. El Gantt muestra la duración con barras, aunque simplifica relaciones complejas.", fuente: "Unidad 1 · S1 · Modelos de Requerimientos" },
+    { tema: "Calidad", titulo: "Prevenir y detectar", explicacion: "La calidad se relaciona con los requisitos del cliente. Un error humano puede introducir un defecto, y el defecto puede manifestarse como fallo en la operación.", fuente: "Unidad 1 · S4 · Introducción a la Calidad" },
+  ],
+};
+
+const FUNDAMENTOS: ContenidoCurso = {
+  nombre: "Fundamentos de Sistemas de Información",
+  alias: /fundamentos.*sistemas.*informacion/i,
+  preguntas: [
+    q("C#", "¿Qué caracteriza al tipado estático y fuerte de C#?", "La variable declara el tipo de dato que almacenará", ["Toda variable cambia de tipo sin reglas", "No existen tipos de datos", "Solo se pueden guardar textos"], "La presentación explica que el tipo se establece al crear la variable.", "Semana 1 · Introducción a Estructuras de Datos"),
+    q("C#", "¿Cuál es el rango de un byte en C#?", "De 0 a 255", ["De -128 a 127", "De 0 a 65 535", "De -32 768 a 32 767"], "byte es un entero sin signo de 8 bits.", "Semana 1 · Introducción a Estructuras de Datos"),
+    q("C#", "¿Qué palabra reservada declara una constante?", "const", ["static", "new", "using"], "Una constante se declara con const antes del tipo y recibe valor al declararse.", "Semana 1 · Introducción a Estructuras de Datos"),
+    q("POO", "¿Qué expresa el encapsulamiento?", "Agrupar datos y métodos dentro de una clase", ["Copiar una clase en otra aplicación", "Eliminar todos los atributos", "Crear solo variables globales"], "El encapsulamiento reúne estado y comportamiento.", "Semana 1 · Introducción a Estructuras de Datos"),
+    q("POO", "¿Qué es un objeto respecto de una clase?", "Una instancia creada a partir de la clase", ["Una lista de métodos estáticos", "Un comentario de código", "Una base de datos"], "La clase funciona como plantilla o molde; el objeto es una instancia.", "Semana 1 · Introducción a Estructuras de Datos"),
+    q("POO", "¿Qué permite la herencia?", "Que una clase adquiera propiedades de otra", ["Que un objeto no tenga estado", "Que una variable cambie de nombre", "Que un programa deje de compilar"], "La herencia reutiliza y especializa comportamiento entre clases.", "Semana 1 · Introducción a Estructuras de Datos"),
+    q("Estructuras", "¿Qué principio sigue una cola?", "FIFO: primero en entrar, primero en salir", ["LIFO: último en entrar, primero en salir", "Orden aleatorio", "Orden alfabético"], "Las colas se usan, por ejemplo, en atención al cliente e impresión.", "Semana 5 · Pilas y Colas"),
+    q("Estructuras", "¿Qué método agrega un elemento al final de una Queue?", "Enqueue", ["Dequeue", "Pop", "Peek"], "Enqueue encola un elemento; Dequeue retira el primero.", "Semana 5 · Pilas y Colas"),
+    q("Estructuras", "¿Qué principio sigue una pila?", "LIFO: último en entrar, primero en salir", ["FIFO: primero en entrar, primero en salir", "Round robin", "Orden por prioridad"], "Una pila extrae elementos en orden inverso al que se apilaron.", "Semana 5 · Pilas y Colas"),
+    q("Estructuras", "¿Qué hace Pop en una Stack?", "Remueve y devuelve el elemento superior", ["Agrega al final de una cola", "Muestra el primer elemento sin retirarlo", "Cuenta elementos"], "Pop desapila el elemento de la cima.", "Semana 5 · Pilas y Colas"),
+    q("Estructuras", "¿Qué devuelve Peek en una cola?", "El primer elemento sin retirarlo", ["El último elemento y lo elimina", "La cantidad de nodos", "La dirección de memoria"], "Peek consulta el primer elemento; Count indica cuántos hay.", "Semana 5 · Pilas y Colas"),
+    q("Control", "¿Cuál es una estructura repetitiva de C#?", "foreach", ["switch", "const", "class"], "for, foreach, while y do..while son estructuras repetitivas.", "Semana 1 · Introducción a Estructuras de Datos"),
+  ],
+  tarjetas: [
+    t("C#", "int", "Entero con signo de 32 bits.", "Semana 1 · Introducción a Estructuras de Datos"),
+    t("C#", "bool", "Tipo lógico cuyo valor es true o false.", "Semana 1 · Introducción a Estructuras de Datos"),
+    t("POO", "Abstracción", "Oculta detalles complejos y muestra la funcionalidad necesaria.", "Semana 1 · Introducción a Estructuras de Datos"),
+    t("POO", "Polimorfismo", "Permite que una misma acción tenga implementaciones diferentes.", "Semana 1 · Introducción a Estructuras de Datos"),
+    t("Colas", "Dequeue", "Retira el primer elemento de una cola.", "Semana 5 · Pilas y Colas"),
+    t("Pilas", "Peek", "Consulta el elemento superior de una pila sin retirarlo.", "Semana 5 · Pilas y Colas"),
+  ],
+  conceptos: [
+    { tema: "C#", titulo: "Tipos y declaraciones", explicacion: "C# usa tipado estático y fuerte. Antes de usar una variable se declara su tipo; las constantes usan const y reciben valor desde el inicio.", fuente: "Semana 1 · Introducción a Estructuras de Datos" },
+    { tema: "POO", titulo: "Clase y objeto", explicacion: "Una clase modela atributos y métodos. Un objeto es una instancia; encapsulamiento, herencia, polimorfismo y abstracción organizan el diseño.", fuente: "Semana 1 · Introducción a Estructuras de Datos" },
+    { tema: "Estructuras", titulo: "Pilas y colas", explicacion: "La cola sigue FIFO y la pila LIFO. En Queue se usan Enqueue, Dequeue y Peek; en Stack se usan Push, Pop y Peek.", fuente: "Semana 5 · Pilas y Colas" },
+  ],
+};
+
+const REDES: ContenidoCurso = {
+  nombre: "Redes y Comunicaciones de Datos",
+  alias: /redes.*(comunic|dato|conexion)/i,
+  preguntas: [
+    q("Ethernet", "¿En qué capas opera Ethernet según el material?", "Enlace de datos y física", ["Red y transporte", "Sesión y presentación", "Aplicación y transporte"], "Ethernet se apoya en capa 2 y capa 1.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    q("Ethernet", "¿Qué subcapa identifica el protocolo de capa 3 usado por una trama?", "LLC", ["MAC", "ARP", "VLAN"], "LLC coloca información para identificar el protocolo de capa 3.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    q("ARP", "¿Qué resuelve ARP en una red local?", "Una dirección IPv4 hacia la dirección MAC correspondiente", ["Un nombre DNS hacia IP", "Una MAC hacia contraseña", "Una VLAN hacia puerto físico"], "ARP mantiene asignaciones entre IPv4 y MAC.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    q("ARP", "Si la IP de destino está en una red remota, ¿qué MAC usa la trama?", "La MAC de la puerta de enlace predeterminada", ["La MAC del destino remoto directamente", "La MAC de cualquier switch", "No usa dirección MAC"], "Para una red remota, el host envía la trama a su gateway.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    q("Switching", "¿Qué registra un switch para construir su tabla MAC?", "La MAC de origen junto al puerto por el que recibió la trama", ["Solo la IP de destino", "Los nombres de usuario", "El FCS como dirección"], "El switch usa esa tabla para decidir la interfaz de salida.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    q("Switching", "¿Qué hace un switch con una difusión o una MAC unicast desconocida?", "Inunda todas las interfaces excepto el puerto de entrada", ["La envía solo al gateway", "La descarta siempre", "La convierte en multicast"], "El flooding permite localizar el destino cuando no hay entrada conocida.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    q("VLAN", "¿Qué es una VLAN?", "Una red conmutada segmentada lógicamente por organización, función o aplicación", ["Un cable físico exclusivo", "Una dirección MAC", "Un tipo de servidor DNS"], "La segmentación deja de depender solo de la ubicación física.", "Semana 5 · VLAN"),
+    q("VLAN", "¿Qué tráfico queda aislado dentro de una VLAN?", "Difusión, multidifusión y unidifusión de esa VLAN", ["Todo tráfico de Internet mundial", "Solo tráfico HTTPS", "Solo tráfico de voz"], "Cada VLAN crea dominios de difusión más pequeños.", "Semana 5 · VLAN"),
+    q("Trunking", "¿Qué permite un enlace troncal?", "Transportar más de una VLAN entre dispositivos de red", ["Crear una sola dirección IP", "Eliminar el etiquetado", "Evitar switches"], "El trunk punto a punto extiende VLANs y usa normalmente 802.1Q.", "Semana 5 · Trunking VLAN"),
+    q("802.1Q", "¿Qué VLAN suele ir sin etiqueta en un troncal 802.1Q?", "La VLAN nativa", ["La VLAN de voz", "Toda VLAN de datos", "La VLAN de administración"], "Las tramas 802.1Q se etiquetan salvo las de la VLAN nativa.", "Semana 5 · Trunking VLAN"),
+    q("Inter-VLAN", "¿Qué se requiere para que hosts de VLAN distintas se comuniquen?", "Un router o switch de capa 3 que enrute entre VLANs", ["Solo cambiar el nombre de la VLAN", "Un hub adicional", "Un cable de consola"], "Sin un dispositivo de capa 3 no hay comunicación entre VLANs.", "Semana 5 · Inter-VLAN Routing"),
+    q("Inter-VLAN", "¿Cuál es la opción más escalable para inter-VLAN en organizaciones medianas y grandes?", "Switch de capa 3 con SVI", ["Router heredado con una interfaz física por VLAN", "Router-on-a-stick sin límites", "Un hub con VLAN nativa"], "El switch L3 enruta por hardware y reduce latencia.", "Semana 5 · Switch multicapa"),
+  ],
+  tarjetas: [
+    t("Ethernet", "MAC", "Subcapa que encapsula datos, controla el acceso al medio y aporta direccionamiento de enlace.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    t("ARP", "Tabla ARP", "Caché temporal de asignaciones IPv4 a MAC; sus entradas caducan.", "Semana 5 · Ethernet, VLAN e Inter-VLAN"),
+    t("VLAN", "VLAN 1", "VLAN predeterminada para puertos de acceso sin asignación; no se puede eliminar ni renombrar.", "Semana 5 · VLAN"),
+    t("VLAN", "VLAN de administración", "Lleva tráfico de administración SSH/Telnet y se separa del tráfico de usuarios.", "Semana 5 · VLAN"),
+    t("802.1Q", "VID", "Campo de 12 bits que identifica la VLAN y permite hasta 4096 VLAN.", "Semana 5 · Trunking VLAN"),
+    t("Inter-VLAN", "SVI", "Interfaz virtual conmutada que aporta procesamiento de capa 3 y puede ser gateway de una VLAN.", "Semana 5 · Switch multicapa"),
+  ],
+  conceptos: [
+    { tema: "Ethernet y ARP", titulo: "De IP a trama", explicacion: "Ethernet usa LLC y MAC. Si el destino está en la misma red, ARP busca su MAC; si está remoto, usa la MAC de la puerta de enlace predeterminada.", fuente: "Semana 5 · Ethernet, VLAN e Inter-VLAN" },
+    { tema: "VLAN", titulo: "Segmentación lógica", explicacion: "Las VLAN agrupan dispositivos por función y limitan los dominios de difusión. Dispositivos de VLAN diferentes necesitan enrutamiento de capa 3 para comunicarse.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+    { tema: "Troncales", titulo: "802.1Q", explicacion: "Un trunk transporta múltiples VLAN. 802.1Q inserta una etiqueta en las tramas, excepto en la VLAN nativa, que debe coincidir en ambos extremos.", fuente: "Semana 5 · Trunking VLAN" },
+  ],
+};
+
+const CALCULO: ContenidoCurso = {
+  nombre: "Cálculo II",
+  alias: /calculo.*ii/i,
+  preguntas: [
+    q("Derivadas parciales", "¿Qué representa fₓ(a,b) geométricamente?", "La pendiente de la tangente a la sección de la superficie con y=b", ["El área bajo la superficie", "La masa de una lámina", "La ecuación de una recta vertical"], "fₓ mide el cambio al variar x y mantener y fija.", "Semana 3 · Sesión 4.1"),
+    q("Derivadas parciales", "¿Qué variable se mantiene fija al calcular fᵧ?", "x", ["y", "Las dos variables cambian", "Ninguna variable"], "fᵧ deriva respecto de y conservando x constante.", "Semana 3 · Sesión 4.1"),
+    q("Derivadas parciales", "¿Qué afirma el teorema de Clairaut bajo continuidad de derivadas mixtas?", "fₓᵧ = fᵧₓ", ["fₓ = fᵧ siempre", "El gradiente es cero", "Toda función es lineal"], "Las derivadas mixtas coinciden si son continuas en la región.", "Semana 3 · Sesión 4.1"),
+    q("Direccional", "¿Qué condición debe cumplir el vector de dirección u en la definición presentada?", "Ser unitario", ["Ser paralelo al eje x", "Tener coordenadas enteras", "Ser nulo"], "La derivada direccional se define en dirección de un vector unitario.", "Semana 3 · Sesión 4.1"),
+    q("Direccional", "¿Cómo se calcula Dᵤf para f derivable?", "Como el producto escalar ∇f · u", ["Como fₓ + fᵧ sin dirección", "Como una integral doble", "Como el determinante de u"], "La fórmula combina las parciales con las componentes del vector unitario.", "Semana 3 · Sesión 4.1"),
+    q("Gradiente", "¿Qué componentes forman ∇f(x,y)?", "fₓ(x,y) y fᵧ(x,y)", ["x e y únicamente", "La función y su integral", "El radio y el ángulo"], "El gradiente reúne las derivadas parciales.", "Semana 3 · Sesión 4.1"),
+    q("Gradiente", "¿En qué dirección es máxima la derivada direccional?", "En la misma dirección del gradiente", ["En la dirección opuesta al gradiente", "Siempre hacia el eje y", "En cualquier dirección"], "El máximo ocurre cuando el coseno del ángulo es 1.", "Semana 3 · Sesión 4.1"),
+    q("Gradiente", "¿En qué dirección es mínima la derivada direccional?", "En la dirección opuesta al gradiente", ["En la del gradiente", "En la dirección de i", "En la dirección de j"], "La dirección opuesta produce coseno -1.", "Semana 3 · Sesión 4.1"),
+    q("Polares", "¿Cuál es la relación correcta entre coordenadas polares y cartesianas?", "x=r cos θ, y=r sen θ", ["x=r sen θ, y=r cos θ siempre", "x=θ cos r, y=θ sen r", "x=r+θ, y=r-θ"], "La transformación polar expresa la posición con radio y ángulo.", "Semana 6 · Sesión 6.1"),
+    q("Polares", "¿Qué factor Jacobiano no se debe olvidar en una integral doble polar?", "r", ["θ", "x", "1/r"], "El diferencial de área es r dr dθ o r dθ dr.", "Semana 6 · Sesión 6.1"),
+    q("Integrales dobles", "¿Cómo se calcula la masa de una lámina de densidad δ(x,y)?", "m=∬ᴰ δ(x,y)dA", ["m=∇δ", "m=δ/r", "m=∫ δ dx sin región"], "La masa integra la densidad sobre la región ocupada por la lámina.", "Semana 6 · Sesión 6.1"),
+    q("Centro de masa", "¿Qué integra la coordenada x del centro de masa?", "x·δ(x,y) sobre D y se divide entre la masa", ["Solo x sobre un punto", "La derivada fₓ", "El radio sin densidad"], "El centro de masa usa momentos ponderados por la densidad.", "Semana 6 · Sesión 6.1"),
+  ],
+  tarjetas: [
+    t("Derivadas", "fₓ", "Derivada parcial respecto de x: mantiene y constante.", "Semana 3 · Sesión 4.1"),
+    t("Derivadas", "fᵧ", "Derivada parcial respecto de y: mantiene x constante.", "Semana 3 · Sesión 4.1"),
+    t("Gradiente", "∇f", "Vector formado por las derivadas parciales; apunta hacia el ascenso máximo.", "Semana 3 · Sesión 4.1"),
+    t("Direccional", "Dᵤf", "Razón de cambio de f en la dirección del vector unitario u; Dᵤf=∇f·u.", "Semana 3 · Sesión 4.1"),
+    t("Polares", "Diferencial de área", "En polares: dA=r dr dθ. El factor r es el Jacobiano.", "Semana 6 · Sesión 6.1"),
+    t("Integrales", "Centro de masa", "(x̄,ȳ)=(1/m ∬ᴰxδdA, 1/m ∬ᴰyδdA).", "Semana 6 · Sesión 6.1"),
+  ],
+  conceptos: [
+    { tema: "Derivadas", titulo: "Cambio en varias variables", explicacion: "Las parciales observan el cambio sobre ejes concretos. La derivada direccional generaliza esa idea a cualquier vector unitario.", fuente: "Semana 3 · Sesión 4.1" },
+    { tema: "Gradiente", titulo: "Máximo ascenso", explicacion: "El gradiente reúne las parciales. Su dirección indica el ascenso más pronunciado; la opuesta indica el descenso más pronunciado.", fuente: "Semana 3 · Sesión 4.1" },
+    { tema: "Polares", titulo: "Integrales en regiones circulares", explicacion: "Convierte x e y mediante r y θ. Al cambiar de coordenadas, el área incorpora el Jacobiano r; omitirlo cambia el resultado.", fuente: "Semana 6 · Sesión 6.1" },
+  ],
+};
+
+export const CONTENIDO_CICLO6: ContenidoCurso[] = [ARQUITECTURA, EXPERIMENTOS, FUNDAMENTOS, REDES, CALCULO];
+export function contenidoParaCurso(nombre: string): ContenidoCurso | undefined {
+  const normalizado = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return CONTENIDO_CICLO6.find((c) => c.alias.test(normalizado));
+}

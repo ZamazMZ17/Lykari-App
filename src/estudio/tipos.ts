@@ -9,8 +9,20 @@ export interface PreguntaCurso {
   /** Índice en `opciones` de la respuesta correcta. */
   respuestaCorrecta: number;
   explicacion?: string;
+  /** Archivo y sección de clase de donde salió; nunca una rúbrica o fecha. */
+  fuente?: string;
   vecesVista: number;
   vecesCorrecta: number;
+}
+
+export interface TarjetaEstudio {
+  id?: number;
+  cursoId: number;
+  tema: string;
+  frente: string;
+  reverso: string;
+  fuente: string;
+  creada: number;
 }
 
 export interface SesionEstudio {

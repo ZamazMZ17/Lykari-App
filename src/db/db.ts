@@ -1,7 +1,7 @@
 import Dexie, { type Table } from "dexie";
 import type { DiaISO } from "../lib/fecha";
 import type { MotivoBloqueo, ReglasControl } from "../control/tipos";
-import type { PreguntaCurso, SesionEstudio } from "../estudio/tipos";
+import type { PreguntaCurso, SesionEstudio, TarjetaEstudio } from "../estudio/tipos";
 
 /**
  * `siempre` — indefinida, sin fecha de fin (Ejercicio, GymFace: CLAUDE.md
@@ -350,6 +350,7 @@ class BaseLykari extends Dexie {
   controlIntentos!: Table<ControlIntento, number>;
   preguntasCurso!: Table<PreguntaCurso, number>;
   sesionesEstudio!: Table<SesionEstudio, number>;
+  tarjetasEstudio!: Table<TarjetaEstudio, number>;
 
   constructor() {
     super("lykari");
@@ -396,6 +397,9 @@ class BaseLykari extends Dexie {
     this.version(9).stores({
       preguntasCurso: "++id, cursoId, tema",
       sesionesEstudio: "++id, fecha, cursoId",
+    });
+    this.version(10).stores({
+      tarjetasEstudio: "++id, cursoId, tema",
     });
   }
 }
