@@ -4,7 +4,9 @@ import type {
   EstadoPermisos,
   ExtensionControl,
   IntentoBloqueado,
+  OrigenCreditoEstudio,
   ReglasControl,
+  ResultadoCreditoEstudio,
   TipoPermiso,
   UsoApp,
   UsoDia,
@@ -38,6 +40,18 @@ export interface ControlPlugin {
 
   extensiones(opciones?: { desde?: number }): Promise<{ extensiones: ExtensionControl[] }>;
   intentos(opciones?: { desde?: number }): Promise<{ intentos: IntentoBloqueado[] }>;
+
+  /** El Android nativo fija 15 min y un máximo de dos créditos diarios. */
+  registrarDesbloqueoEstudio(opciones: {
+    paquete: string;
+    origen: OrigenCreditoEstudio;
+    sesionId?: number;
+  }): Promise<ResultadoCreditoEstudio>;
+  desbloqueoEstudioVigente(opciones: { paquete: string }): Promise<{
+    vigente: boolean;
+    hastaMs: number;
+    restantesHoy: number;
+  }>;
 }
 
 export const Control = registerPlugin<ControlPlugin>("Control");

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Smartphone, Globe, Clock3, ShieldCheck, History, LockKeyhole, KeyRound } from "lucide-react";
+import { LayoutDashboard, Smartphone, Globe, Clock3, ShieldCheck, History, LockKeyhole, KeyRound, BookOpen } from "lucide-react";
 import { esNativo } from "../../lib/plataforma";
 import { guardarReglas, leerReglas, useReglas } from "../../control/almacen";
 import { prepararMock } from "../../control/mock";
@@ -14,12 +14,13 @@ import { Historial } from "./Historial";
 import { Proteccion } from "./Proteccion";
 import { Permisos } from "./Permisos";
 import { Resumen } from "./Resumen";
+import { PuertaEstudio } from "./PuertaEstudio";
 import { Aviso, useConsulta, Vacio } from "./comun";
 import "./control.css";
 
 const secciones = [
   ["Resumen", LayoutDashboard], ["Apps", Smartphone], ["Webs", Globe], ["Modos", Clock3],
-  ["+18", ShieldCheck], ["Historial", History], ["Protección", LockKeyhole], ["Permisos", KeyRound],
+  ["Estudio", BookOpen], ["+18", ShieldCheck], ["Historial", History], ["Protección", LockKeyhole], ["Permisos", KeyRound],
 ] as const;
 type Seccion = typeof secciones[number][0];
 
@@ -96,6 +97,7 @@ function ContenidoControl({ permisos, recargarPermisos }: { permisos: EstadoPerm
     {seccion === "Apps" && <Apps reglas={reglas} />}
     {seccion === "Webs" && <Webs reglas={reglas} />}
     {seccion === "Modos" && <Modos reglas={reglas} />}
+    {seccion === "Estudio" && <PuertaEstudio reglas={reglas} />}
     {seccion === "+18" && <FiltroAdulto reglas={reglas} />}
     {seccion === "Historial" && <Historial />}
     {seccion === "Protección" && <Proteccion reglas={reglas} />}

@@ -246,6 +246,42 @@ public class ControlPlugin extends Plugin {
         call.resolve(r);
     }
 
+    /* ── Desbloqueo por estudio ─────────────────────────────────────── */
+
+    @PluginMethod
+    public void registrarDesbloqueoEstudio(PluginCall call) {
+        String paquete = call.getString("paquete");
+        String origen = call.getString("origen", "quiz");
+        if (paquete == null || paquete.trim().isEmpty()) {
+            call.reject("Falta la app que se quiere desbloquear.");
+            return;
+        }
+        Long sesionId = call.getLong("sesionId");
+        JSONObject resultado = ReglasStore.de(getContext())
+                .registrarDesbloqueoEstudio(paquete, origen, sesionId);
+        JSObject r = new JSObject();
+        r.put("concedido", resultado.optBoolean("concedido", false));
+        r.put("hastaMs", resultado.optLong("hastaMs", 0));
+        r.put("restantesHoy", resultado.optInt("restantesHoy", 0));
+        if (resultado.has("motivo")) r.put("motivo", resultado.optString("motivo"));
+        call.resolve(r);
+    }
+
+    @PluginMethod
+    public void desbloqueoEstudioVigente(PluginCall call) {
+        String paquete = call.getString("paquete");
+        if (paquete == null || paquete.trim().isEmpty()) {
+            call.reject("Falta la app que se quiere consultar.");
+            return;
+        }
+        ReglasStore store = ReglasStore.de(getContext());
+        JSObject r = new JSObject();
+        r.put("vigente", store.desbloqueoEstudioVigente(paquete));
+        r.put("hastaMs", store.desbloqueoEstudioHastaMs(paquete));
+        r.put("restantesHoy", store.creditosRestantesEstudioHoy());
+        call.resolve(r);
+    }
+
     /* ── Interno ──────────────────────────────────────────────────────── */
 
     private void sincronizarFiltroDns(ReglasStore store) {

@@ -17,6 +17,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.net.Uri;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -124,6 +125,22 @@ public class PantallaBloqueo extends Activity {
         inicio.setOnClickListener(v -> irAlInicio());
         tarjeta.addView(inicio, botonLp());
 
+        if ("estudio".equals(motivo)) {
+            Button estudiar = new Button(this);
+            estudiar.setAllCaps(false);
+            estudiar.setText("Estudiar para desbloquear");
+            estudiar.setTextColor(Color.WHITE);
+            estudiar.setBackground(fondoRedondeado(PINO, PINO, dp(14)));
+            estudiar.setOnClickListener(v -> {
+                Intent quiz = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("lykari://quiz?paquete=" + Uri.encode(origen == null ? "" : origen)));
+                quiz.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(quiz);
+                finish();
+            });
+            tarjeta.addView(estudiar, botonLp());
+        }
+
         if (extensible && ReglasStore.de(this).usaPatron() && ReglasStore.de(this).puedeUsarExtensionHoy()) {
             Button extender = new Button(this);
             extender.setAllCaps(false);
@@ -201,6 +218,7 @@ public class PantallaBloqueo extends Activity {
             case "web": return "Sitio con límite";
             case "aperturas": return "Aperturas de hoy";
             case "proteccion": return "Protegido";
+            case "estudio": return "Puerta de estudio";
             default: return "Tiempo de hoy";
         }
     }

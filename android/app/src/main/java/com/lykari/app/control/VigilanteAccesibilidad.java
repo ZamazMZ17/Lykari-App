@@ -2,6 +2,8 @@ package com.lykari.app.control;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -52,6 +54,11 @@ public class VigilanteAccesibilidad extends AccessibilityService {
     private String ultimoPaquete = "";
     private long ultimaAccion = 0;
     private long ultimoDnd = 0;
+    /** Vuelve a revisar aunque el usuario no cambie de ventana al vencer los 15 min. */
+    private final Handler relojEstudio = new Handler(Looper.getMainLooper());
+    private Runnable revisionEstudio;
+    private String paqueteConCredito = "";
+    private long venceCreditoProgramado = 0;
 
     @Override
     protected void onServiceConnected() {
@@ -103,6 +110,19 @@ public class VigilanteAccesibilidad extends AccessibilityService {
                 }
             }
 
+            // La puerta se revisa también cuando cambia el contenido: así un
+            // crédito que vence con la app abierta no depende de cambiar de app.
+            JSONObject pe = store.reglas().optJSONObject("puertaEstudio");
+            if (pe != null && pe.optBoolean("activa", false)
+                    && contiene(pe.optJSONArray("apps"), paquete)) {
+                if (!store.desbloqueoEstudioVigente(paquete)) {
+                    registrarYbloquear(store, "estudio", paquete, tituloApp(paquete),
+                            "Completa un quiz para abrir esta app durante 15 min.", false);
+                    return;
+                }
+                programarFinCredito(store, paquete, store.desbloqueoEstudioHastaMs(paquete));
+            }
+
             // A partir de acá, solo en cambio de app (no en cada scroll).
             if (tipo != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return;
 
@@ -152,7 +172,25 @@ public class VigilanteAccesibilidad extends AccessibilityService {
     }
 
     @Override
-    public void onInterrupt() {}
+    public void onInterrupt() {
+        relojEstudio.removeCallbacksAndMessages(null);
+    }
+
+    private void programarFinCredito(ReglasStore store, String paquete, long hasta) {
+        if (hasta <= System.currentTimeMillis()) return;
+        if (paquete.equals(paqueteConCredito) && hasta == venceCreditoProgramado) return;
+        if (revisionEstudio != null) relojEstudio.removeCallbacks(revisionEstudio);
+        paqueteConCredito = paquete;
+        venceCreditoProgramado = hasta;
+        revisionEstudio = () -> {
+            // No tapa otra app si ya se salió; la puerta la revisará al volver.
+            if (paquete.equals(ultimoPaquete) && !store.desbloqueoEstudioVigente(paquete)) {
+                registrarYbloquear(store, "estudio", paquete, tituloApp(paquete),
+                        "Tus 15 min terminaron.", false);
+            }
+        };
+        relojEstudio.postDelayed(revisionEstudio, Math.max(0, hasta - System.currentTimeMillis()));
+    }
 
     /* ── +18 ──────────────────────────────────────────────────────────── */
 

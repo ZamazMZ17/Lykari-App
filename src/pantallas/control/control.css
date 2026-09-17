@@ -51,4 +51,7 @@
 .ct-tabla th, .ct-tabla td { padding: 10px 5px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 .ct-tabla th:first-child { width: 43%; }
 .ct-demo { max-width: 560px; padding: 24px 20px; margin: 0 auto; }
+.ct-campo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.ct-campo span { flex: 1; }
+.ct-campo input[type=number] { width: 80px; text-align: center; flex: none; }
 @media (max-width: 360px) { .ct-total { font-size: 25px; } .ct-editor { padding-inline: 14px; } }

@@ -34,6 +34,8 @@ public final class Motor {
         "com.android.emergency",
         "com.android.launcher",
         "com.android.launcher3",
+        "com.whatsapp",
+        "com.whatsapp.w4b",
     };
 
     /**

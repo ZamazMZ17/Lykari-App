@@ -74,4 +74,8 @@ export const controlMock: ControlPlugin = {
     ];
     return { intentos: intentos.filter((i) => i.fecha >= (opciones?.desde ?? 0)) };
   },
+  async registrarDesbloqueoEstudio() {
+    return { concedido: true, hastaMs: Date.now() + 15 * 60_000, restantesHoy: 1 };
+  },
+  async desbloqueoEstudioVigente() { return { vigente: false, hastaMs: 0, restantesHoy: 2 }; },
 };

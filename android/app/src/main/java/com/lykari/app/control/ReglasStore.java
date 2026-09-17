@@ -31,9 +31,13 @@ public final class ReglasStore {
     private static final String CLAVE_EXTENSIONES = "extensiones";
     private static final String CLAVE_INTENTOS = "intentos";
     private static final String CLAVE_GRACIA = "graciaProteccionHasta";
+    private static final String CLAVE_CREDITOS_ESTUDIO = "creditos_estudio";
 
     private static final int MAX_EXTENSIONES = 300;
     private static final int MAX_INTENTOS = 1000;
+    private static final int MAX_CREDITOS_ESTUDIO = 300;
+    private static final int MINUTOS_CREDITO_ESTUDIO = 15;
+    private static final int MAX_CREDITOS_ESTUDIO_DIA = 2;
 
     private static ReglasStore instancia;
 
@@ -191,6 +195,115 @@ public final class ReglasStore {
             if (e != null && paquete.equals(e.optString("paquete"))) total += e.optInt("minutos", 0);
         }
         return total;
+    }
+
+    /* ── Desbloqueo por estudio ─────────────────────────────────────── */
+
+    /**
+     * Crea un crédito de una única app. La WebView nunca elige minutos ni
+     * puede saltarse el tope: esta es la autoridad incluso con JS manipulado.
+     */
+    public synchronized JSONObject registrarDesbloqueoEstudio(String paquete, String origen, Long sesionId) {
+        long ahora = System.currentTimeMillis();
+        JSONObject resultado = new JSONObject();
+        JSONArray creditos = parsearLista(prefs.getString(CLAVE_CREDITOS_ESTUDIO, null));
+        int usadosHoy = creditosDeHoy(creditos, inicioDeHoy());
+        try {
+            resultado.put("concedido", false);
+            resultado.put("hastaMs", desbloqueoEstudioHastaMs(paquete));
+            resultado.put("restantesHoy", Math.max(0, MAX_CREDITOS_ESTUDIO_DIA - usadosHoy));
+            JSONObject puerta = reglas.optJSONObject("puertaEstudio");
+            if (puerta == null || !puerta.optBoolean("activa", false)) {
+                resultado.put("motivo", "puerta_inactiva");
+                return resultado;
+            }
+            if ("com.whatsapp".equals(paquete) || "com.whatsapp.w4b".equals(paquete)) {
+                resultado.put("motivo", "whatsapp_libre");
+                return resultado;
+            }
+            if (!contiene(puerta.optJSONArray("apps"), paquete)) {
+                resultado.put("motivo", "app_no_elegida");
+                return resultado;
+            }
+            if (desbloqueoEstudioVigente(paquete)) {
+                resultado.put("motivo", "credito_vigente");
+                return resultado;
+            }
+            if (usadosHoy >= MAX_CREDITOS_ESTUDIO_DIA) {
+                resultado.put("motivo", "tope_diario");
+                return resultado;
+            }
+            if ("ejercicio".equals(origen) && creditoDeEjercicioHoy(creditos, inicioDeHoy())) {
+                resultado.put("motivo", "ejercicio_ya_usado");
+                return resultado;
+            }
+            if (!"quiz".equals(origen) && !"ejercicio".equals(origen)) {
+                resultado.put("motivo", "app_no_elegida");
+                return resultado;
+            }
+
+            long hasta = ahora + MINUTOS_CREDITO_ESTUDIO * 60_000L;
+            JSONObject credito = new JSONObject();
+            credito.put("paquete", paquete);
+            credito.put("origen", origen);
+            credito.put("inicio", ahora);
+            credito.put("hasta", hasta);
+            if (sesionId != null) credito.put("sesionId", sesionId.longValue());
+            creditos.put(credito);
+            prefs.edit().putString(CLAVE_CREDITOS_ESTUDIO,
+                    recortar(creditos, MAX_CREDITOS_ESTUDIO).toString()).apply();
+            resultado.put("concedido", true);
+            resultado.put("hastaMs", hasta);
+            resultado.put("restantesHoy", MAX_CREDITOS_ESTUDIO_DIA - usadosHoy - 1);
+            return resultado;
+        } catch (JSONException e) {
+            return resultado;
+        }
+    }
+
+    public synchronized boolean desbloqueoEstudioVigente(String paquete) {
+        return desbloqueoEstudioHastaMs(paquete) > System.currentTimeMillis();
+    }
+
+    public synchronized long desbloqueoEstudioHastaMs(String paquete) {
+        JSONArray creditos = parsearLista(prefs.getString(CLAVE_CREDITOS_ESTUDIO, null));
+        long hasta = 0;
+        for (int i = 0; i < creditos.length(); i++) {
+            JSONObject c = creditos.optJSONObject(i);
+            if (c != null && paquete.equals(c.optString("paquete"))) {
+                hasta = Math.max(hasta, c.optLong("hasta", 0));
+            }
+        }
+        return hasta;
+    }
+
+    public synchronized int creditosRestantesEstudioHoy() {
+        JSONArray creditos = parsearLista(prefs.getString(CLAVE_CREDITOS_ESTUDIO, null));
+        return Math.max(0, MAX_CREDITOS_ESTUDIO_DIA - creditosDeHoy(creditos, inicioDeHoy()));
+    }
+
+    private static int creditosDeHoy(JSONArray creditos, long inicioHoy) {
+        int total = 0;
+        for (int i = 0; i < creditos.length(); i++) {
+            JSONObject c = creditos.optJSONObject(i);
+            if (c != null && c.optLong("inicio", 0) >= inicioHoy) total++;
+        }
+        return total;
+    }
+
+    private static boolean creditoDeEjercicioHoy(JSONArray creditos, long inicioHoy) {
+        for (int i = 0; i < creditos.length(); i++) {
+            JSONObject c = creditos.optJSONObject(i);
+            if (c != null && c.optLong("inicio", 0) >= inicioHoy
+                    && "ejercicio".equals(c.optString("origen"))) return true;
+        }
+        return false;
+    }
+
+    private static boolean contiene(JSONArray lista, String valor) {
+        if (lista == null) return false;
+        for (int i = 0; i < lista.length(); i++) if (valor.equals(lista.optString(i))) return true;
+        return false;
     }
 
     /* ── Intentos bloqueados ──────────────────────────────────────────── */

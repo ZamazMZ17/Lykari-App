@@ -1,8 +1,10 @@
 package com.lykari.app;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -51,6 +53,33 @@ public class MainActivity extends BridgeActivity {
         responderPermisosDeLaWebView();
         pedirPermisosQueFalten();
         excluirGestoDeAtrasEnLosBordes();
+
+        if (esDeepLinkQuiz(getIntent())) {
+            getBridge().getWebView().postDelayed(
+                    () -> despacharDeepLink(getIntent()), 2000);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        despacharDeepLink(intent);
+    }
+
+    private void despacharDeepLink(Intent intent) {
+        if (!esDeepLinkQuiz(intent)) return;
+        String paquete = intent.getData().getQueryParameter("paquete");
+        if (paquete == null) paquete = "";
+        String seguro = paquete.replace("\\", "\\\\").replace("'", "\\'");
+        getBridge().getWebView().evaluateJavascript(
+                "window.dispatchEvent(new CustomEvent('lykari:deeplink',{detail:{ruta:'quiz',paquete:'" + seguro + "'}}))",
+                null);
+    }
+
+    private static boolean esDeepLinkQuiz(Intent intent) {
+        if (intent == null || intent.getData() == null) return false;
+        Uri uri = intent.getData();
+        return "lykari".equals(uri.getScheme()) && "quiz".equals(uri.getHost());
     }
 
     /**

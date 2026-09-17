@@ -116,6 +116,23 @@ export interface Proteccion {
   desde: number | null;
 }
 
+export interface PuertaEstudio {
+  activa: boolean;
+  /** Paquetes que requieren estudiar antes de poder abrirlos. */
+  apps: string[];
+}
+
+/** Un crédito es de una sola app; el motor nativo decide su duración y tope. */
+export type OrigenCreditoEstudio = "quiz" | "ejercicio";
+
+export interface ResultadoCreditoEstudio {
+  concedido: boolean;
+  hastaMs: number;
+  /** Cuántos créditos de 15 min quedan hoy entre todas las apps elegidas. */
+  restantesHoy: number;
+  motivo?: "puerta_inactiva" | "app_no_elegida" | "whatsapp_libre" | "credito_vigente" | "tope_diario" | "ejercicio_ya_usado";
+}
+
 export interface ReglasControl {
   version: 1;
   limites: LimiteApp[];
@@ -123,6 +140,7 @@ export interface ReglasControl {
   modos: ModoControl[];
   filtroAdulto: FiltroAdulto;
   proteccion: Proteccion;
+  puertaEstudio: PuertaEstudio;
   actualizado: number;
 }
 
@@ -139,7 +157,7 @@ export interface EstadoPermisos {
 
 export type TipoPermiso = keyof EstadoPermisos;
 
-export type MotivoBloqueo = "limite" | "aperturas" | "modo" | "web" | "adulto" | "proteccion" | "vpn";
+export type MotivoBloqueo = "limite" | "aperturas" | "modo" | "web" | "adulto" | "proteccion" | "vpn" | "estudio";
 
 /** Extensión pedida desde la pantalla de bloqueo, con contraseña. */
 export interface ExtensionControl {
@@ -193,6 +211,10 @@ export function reglasVacias(ahora = Date.now()): ReglasControl {
       apagadoPedidoEn: null,
     },
     proteccion: { activa: false, desde: null },
+    puertaEstudio: {
+      activa: false,
+      apps: [],
+    },
     actualizado: ahora,
   };
 }
