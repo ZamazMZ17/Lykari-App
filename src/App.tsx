@@ -31,7 +31,8 @@ import { sembrarRutinasPermanentes } from "./db/planes";
 import { sembrarEstudioDeCursos } from "./db/estudioCursos";
 import { sembrarActividadesPersonales } from "./db/actividadesPersonales";
 import { sembrarPreguntas } from "./estudio/semilla";
-import { evaluarEjercicioParaDesbloqueo } from "./estudio/ejercicio";
+import { QUIZ_PUERTA, type ConfiguracionQuiz } from "./estudio/configuracionQuiz";
+import { prepararPuertaEstudioInicial } from "./control/almacen";
 import { actualizarAulaUPC } from "./sync/aula";
 import {
   capturasDe,
@@ -69,7 +70,6 @@ import { HojaMascota } from "./pantallas/HojaMascota";
 import { Zamly } from "./pantallas/Zamly";
 import { Quiz } from "./pantallas/Quiz";
 import { Estudio } from "./pantallas/Estudio";
-import { RecompensaEjercicio } from "./pantallas/RecompensaEjercicio";
 import { Burbuja } from "./ui/Burbuja";
 
 type Tab = "hoy" | "capturar" | "camino";
@@ -81,7 +81,6 @@ type HojaAbierta =
   | { t: "plan"; act: Actividad; plan: Plan }
   | { t: "conflicto"; act: Actividad }
   | { t: "autocierre"; nombres: string[] }
-  | { t: "recompensaEjercicio"; sesionId: number }
   | { t: "ajustes" }
   | { t: "mascota" }
   | { t: "nuevoCurso" }
@@ -141,6 +140,8 @@ export default function App() {
   const [quizAbierto, setQuizAbierto] = useState(false);
   /** App concreta que inició la puerta; nunca se concede un crédito global. */
   const [quizDestino, setQuizDestino] = useState<string | undefined>();
+  const [quizCursoId, setQuizCursoId] = useState<number | null>(null);
+  const [quizConfiguracion, setQuizConfiguracion] = useState<ConfiguracionQuiz>(QUIZ_PUERTA);
   const [enSesion, setEnSesion] = useState(false);
   const [seccion, setSeccion] = useState<Seccion | null>(null);
   const [hoja, setHoja] = useState<HojaAbierta>(null);
@@ -219,6 +220,7 @@ export default function App() {
       await sembrarEstudioDeCursos();
       await sembrarActividadesPersonales();
       await sembrarPreguntas();
+      await prepararPuertaEstudioInicial();
       // La laptop puede estar apagada: conservar la copia local es el comportamiento normal.
       await actualizarAulaUPC().catch(() => {});
     })();
@@ -256,6 +258,8 @@ export default function App() {
   useAtras(quizAbierto, () => {
     setQuizAbierto(false);
     setQuizDestino(undefined);
+    setQuizCursoId(null);
+    setQuizConfiguracion(QUIZ_PUERTA);
   });
 
   // El bloqueo nativo abre lykari://quiz?paquete=…; no usamos la ruta web
@@ -273,6 +277,8 @@ export default function App() {
       setPrivadoAbierto(false);
       setEstudioAbierto(false);
       setQuizDestino(typeof detalle.paquete === "string" ? detalle.paquete : undefined);
+      setQuizCursoId(null);
+      setQuizConfiguracion(QUIZ_PUERTA);
       setQuizAbierto(true);
     };
     window.addEventListener("lykari:deeplink", abrirQuiz);
@@ -323,8 +329,6 @@ export default function App() {
     await finalizarSesion(id, o);
     setHoja(null);
     setEnSesion(false);
-    const recompensa = await evaluarEjercicioParaDesbloqueo(id);
-    if (recompensa.elegible) setHoja({ t: "recompensaEjercicio", sesionId: id });
     // El audio ya quedó a salvo en la sesión. Que la transcripción falle no
     // puede perderlo: procesarSesion deja el error escrito y se reintenta al
     // volver a abrir la app (procesarSesionesPendientes).
@@ -416,12 +420,18 @@ export default function App() {
       />
     );
   } else if (quizAbierto) {
-    pantalla = <Quiz paqueteDestino={quizDestino} onBack={() => {
+    pantalla = <Quiz configuracion={quizConfiguracion} cursoIdInicial={quizCursoId} paqueteDestino={quizDestino} onBack={() => {
       setQuizAbierto(false);
       setQuizDestino(undefined);
+      setQuizCursoId(null);
+      setQuizConfiguracion(QUIZ_PUERTA);
     }} />;
   } else if (estudioAbierto) {
-    pantalla = <Estudio onBack={() => setEstudioAbierto(false)} onQuiz={() => setQuizAbierto(true)} />;
+    pantalla = <Estudio onBack={() => setEstudioAbierto(false)} onQuiz={(cursoId, configuracion) => {
+      setQuizCursoId(cursoId);
+      setQuizConfiguracion(configuracion);
+      setQuizAbierto(true);
+    }} />;
   } else if (samAbierto) {
     pantalla = <Sam onBack={() => setSamAbierto(false)} onAjustes={() => setHoja({ t: "ajustes" })} />;
   } else if (privadoAbierto) {
@@ -860,10 +870,6 @@ export default function App() {
             onGuardar={guardarCierre}
             onClose={() => setHoja(null)}
           />
-        )}
-
-        {hoja?.t === "recompensaEjercicio" && (
-          <RecompensaEjercicio sesionId={hoja.sesionId} onClose={() => setHoja(null)} />
         )}
 
         {hoja?.t === "detalle" && (

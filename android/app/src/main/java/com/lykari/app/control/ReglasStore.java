@@ -37,7 +37,6 @@ public final class ReglasStore {
     private static final int MAX_INTENTOS = 1000;
     private static final int MAX_CREDITOS_ESTUDIO = 300;
     private static final int MINUTOS_CREDITO_ESTUDIO = 15;
-    private static final int MAX_CREDITOS_ESTUDIO_DIA = 2;
 
     private static ReglasStore instancia;
 
@@ -201,17 +200,17 @@ public final class ReglasStore {
 
     /**
      * Crea un crédito de una única app. La WebView nunca elige minutos ni
-     * puede saltarse el tope: esta es la autoridad incluso con JS manipulado.
+     * puede alterar ni la duración ni el origen: esta es la autoridad incluso
+     * con JS manipulado. No hay tope diario: cada nuevo crédito exige otro quiz.
      */
     public synchronized JSONObject registrarDesbloqueoEstudio(String paquete, String origen, Long sesionId) {
         long ahora = System.currentTimeMillis();
         JSONObject resultado = new JSONObject();
         JSONArray creditos = parsearLista(prefs.getString(CLAVE_CREDITOS_ESTUDIO, null));
-        int usadosHoy = creditosDeHoy(creditos, inicioDeHoy());
         try {
             resultado.put("concedido", false);
             resultado.put("hastaMs", desbloqueoEstudioHastaMs(paquete));
-            resultado.put("restantesHoy", Math.max(0, MAX_CREDITOS_ESTUDIO_DIA - usadosHoy));
+            resultado.put("restantesHoy", -1);
             JSONObject puerta = reglas.optJSONObject("puertaEstudio");
             if (puerta == null || !puerta.optBoolean("activa", false)) {
                 resultado.put("motivo", "puerta_inactiva");
@@ -229,15 +228,8 @@ public final class ReglasStore {
                 resultado.put("motivo", "credito_vigente");
                 return resultado;
             }
-            if (usadosHoy >= MAX_CREDITOS_ESTUDIO_DIA) {
-                resultado.put("motivo", "tope_diario");
-                return resultado;
-            }
-            if ("ejercicio".equals(origen) && creditoDeEjercicioHoy(creditos, inicioDeHoy())) {
-                resultado.put("motivo", "ejercicio_ya_usado");
-                return resultado;
-            }
-            if (!"quiz".equals(origen) && !"ejercicio".equals(origen)) {
+            // El único camino que concede uso de una distracción es aprobar un quiz.
+            if (!"quiz".equals(origen)) {
                 resultado.put("motivo", "app_no_elegida");
                 return resultado;
             }
@@ -254,7 +246,7 @@ public final class ReglasStore {
                     recortar(creditos, MAX_CREDITOS_ESTUDIO).toString()).apply();
             resultado.put("concedido", true);
             resultado.put("hastaMs", hasta);
-            resultado.put("restantesHoy", MAX_CREDITOS_ESTUDIO_DIA - usadosHoy - 1);
+            resultado.put("restantesHoy", -1);
             return resultado;
         } catch (JSONException e) {
             return resultado;
@@ -278,26 +270,7 @@ public final class ReglasStore {
     }
 
     public synchronized int creditosRestantesEstudioHoy() {
-        JSONArray creditos = parsearLista(prefs.getString(CLAVE_CREDITOS_ESTUDIO, null));
-        return Math.max(0, MAX_CREDITOS_ESTUDIO_DIA - creditosDeHoy(creditos, inicioDeHoy()));
-    }
-
-    private static int creditosDeHoy(JSONArray creditos, long inicioHoy) {
-        int total = 0;
-        for (int i = 0; i < creditos.length(); i++) {
-            JSONObject c = creditos.optJSONObject(i);
-            if (c != null && c.optLong("inicio", 0) >= inicioHoy) total++;
-        }
-        return total;
-    }
-
-    private static boolean creditoDeEjercicioHoy(JSONArray creditos, long inicioHoy) {
-        for (int i = 0; i < creditos.length(); i++) {
-            JSONObject c = creditos.optJSONObject(i);
-            if (c != null && c.optLong("inicio", 0) >= inicioHoy
-                    && "ejercicio".equals(c.optString("origen"))) return true;
-        }
-        return false;
+        return -1;
     }
 
     private static boolean contiene(JSONArray lista, String valor) {

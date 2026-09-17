@@ -185,12 +185,16 @@ const CALCULO: ContenidoCurso = {
   ],
 };
 
-type Memoria = { tema: string; frente: string; reverso: string; fuente: string };
+export type Memoria = { tema: string; frente: string; reverso: string; fuente: string };
+
+function comoSituacion(definicion: string): string {
+  return `Cuando se necesita ${definicion.charAt(0).toLowerCase()}${definicion.slice(1)}`;
+}
 
 /**
- * Cada idea comprobada en un archivo de clase crea dos preguntas: una para
- * recuperar la definición y otra para reconocer el concepto desde su
- * descripción. Así el cuestionario no queda limitado a doce ítems fijos.
+ * Cada idea comprobada en un archivo de clase crea tres preguntas: recuperar
+ * la definición, reconocer el concepto y elegirlo en una situación de uso.
+ * Así el cuestionario practica términos y aplicación, no solo memoria literal.
  */
 function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso {
   const preguntas = memorias.flatMap((memoria, indice) => {
@@ -198,6 +202,7 @@ function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso
     return [
       q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), `Repasa la definición de ${memoria.frente}.`, memoria.fuente),
       q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `La descripción corresponde a ${memoria.frente}.`, memoria.fuente),
+      q(memoria.tema, `¿En cuál situación corresponde usar ${memoria.frente}?`, comoSituacion(memoria.reverso), alternativas.map((otra) => comoSituacion(otra.reverso)), `La situación correcta aplica la definición de ${memoria.frente}.`, memoria.fuente),
     ];
   });
   return {
@@ -257,7 +262,68 @@ const FUNDAMENTOS_AMPLIADO = ampliar(FUNDAMENTOS, [
   { tema: "LINQ", frente: "Consulta", reverso: "Expresión que selecciona, filtra, ordena o transforma datos sin modificar el origen por sí misma.", fuente: "Semana 11 · Entity Framework, SQL y LINQ" },
 ]);
 
+/** Material explícito de las presentaciones de Redes, semanas 1 a 5.
+ * Cada entrada produce recuperación, reconocimiento y aplicación para que un
+ * término no se practique una sola vez ni se reduzca a una tarjeta literal. */
+const REDES_SEMANAS_1_A_5: Memoria[] = [
+  { tema: "S1 · Componentes", frente: "Host", reverso: "Dispositivo final donde se origina o recibe un mensaje y por el que los datos entran o salen de la red.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Componentes", frente: "Servidor", reverso: "Computadora que proporciona información o servicios de correo, web o archivos a dispositivos cliente.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Componentes", frente: "Cliente", reverso: "Equipo que solicita a un servidor información o un servicio, como una página web o correo electrónico.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Componentes", frente: "Dispositivo intermediario", reverso: "Equipo que interconecta dispositivos finales y administra el flujo de datos, como switch, router, punto de acceso o firewall.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Componentes", frente: "NIC", reverso: "Tarjeta de interfaz de red que permite conectar un dispositivo a una red mediante un puerto o interfaz.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Medios", frente: "Medio de cobre", reverso: "Medio de transmisión que lleva comunicación mediante impulsos eléctricos por alambres metálicos.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Medios", frente: "Fibra óptica", reverso: "Medio formado por fibras de vidrio o plástico que transporta datos mediante pulsos de luz.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Tipos de red", frente: "LAN", reverso: "Infraestructura que conecta dispositivos en un área limitada y suele ser administrada por una organización.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Tipos de red", frente: "WAN", reverso: "Infraestructura que interconecta LAN a través de áreas geográficas extensas y generalmente depende de proveedores de servicio.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Tipos de red", frente: "WLAN", reverso: "Red de área local que brinda conectividad inalámbrica, por ejemplo mediante Wi-Fi.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Internet", frente: "ISP", reverso: "Empresa que proporciona acceso a Internet a personas u organizaciones y puede ofrecer servicios complementarios.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Internet", frente: "FTTH", reverso: "Acceso de fibra óptica hasta el hogar que ofrece un ancho de banda muy alto.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Internet", frente: "HFC", reverso: "Acceso de alto ancho de banda de proveedores de televisión por cable mediante una red híbrida de fibra y coaxial.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Arquitectura", frente: "Red convergente", reverso: "Infraestructura única que transporta datos, voz y video usando el mismo conjunto de reglas y estándares.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Arquitectura", frente: "Tolerancia a fallas", reverso: "Capacidad de limitar el impacto de una falla mediante redundancia y rutas alternativas para los paquetes.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Arquitectura", frente: "Escalabilidad", reverso: "Capacidad de una red de crecer para admitir usuarios y aplicaciones sin afectar el servicio de los usuarios actuales.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Arquitectura", frente: "QoS", reverso: "Mecanismo que clasifica y administra tráfico para entregar de forma confiable voz y video sensibles al retardo.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Seguridad", frente: "Confidencialidad", reverso: "Objetivo de seguridad que asegura que solo los destinatarios autorizados puedan leer los datos.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Seguridad", frente: "Integridad", reverso: "Objetivo de seguridad que asegura que los datos no hayan sido alterados durante su transmisión.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Tecnologías", frente: "Hipervisor tipo 1", reverso: "Hipervisor instalado directamente sobre hardware físico, también llamado bare metal.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S2 · Protocolos", frente: "Protocolo de red", reverso: "Conjunto de reglas que define cómo se codifican, formatean, temporizan y entregan mensajes entre dispositivos.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Protocolos", frente: "Secuenciación", reverso: "Función que identifica el orden de los datos para que el destino pueda reconstruir el mensaje correctamente.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Protocolos", frente: "Control de flujo", reverso: "Función que regula la velocidad de envío para que el receptor pueda procesar los datos.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Comunicación", frente: "Unicast", reverso: "Comunicación en la que un origen envía un mensaje a un único destino.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Comunicación", frente: "Multicast", reverso: "Comunicación en la que un origen envía un mensaje a un grupo específico de receptores.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Modelos", frente: "Encapsulación", reverso: "Proceso por el que cada capa agrega su información de control al preparar datos para transmitirlos.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Modelos", frente: "PDU de transporte", reverso: "Unidad de datos de la capa de transporte llamada segmento cuando se usa TCP.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Modelos", frente: "PDU de enlace", reverso: "Unidad de datos de la capa de enlace de datos llamada trama.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Transporte", frente: "Puerto 443", reverso: "Número de puerto asociado habitualmente al servicio HTTPS.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Transporte", frente: "Puerto 53", reverso: "Número de puerto asociado habitualmente al servicio DNS.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Rendimiento", frente: "Ancho de banda", reverso: "Capacidad de un medio para transportar datos durante una cantidad determinada de tiempo.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Rendimiento", frente: "Latencia", reverso: "Tiempo que tarda un dato en recorrer la red desde el origen hasta el destino.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Rendimiento", frente: "Goodput", reverso: "Tasa de datos útiles entregados a la aplicación, sin contar sobrecarga ni retransmisiones.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Medios", frente: "Diafonía", reverso: "Interferencia que se produce cuando la señal de un par de hilos de cobre afecta a otro par cercano.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Medios", frente: "Auto-MDIX", reverso: "Función Ethernet que detecta y ajusta automáticamente los pares de transmisión y recepción.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Medios", frente: "Fibra monomodo", reverso: "Fibra óptica diseñada para enlaces de larga distancia con un único modo de propagación de luz.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S3 · IP", frente: "Mejor esfuerzo", reverso: "Característica de IP: intenta entregar paquetes sin garantizar entrega, orden ni recuperación ante pérdida.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IP", frente: "MTU", reverso: "Tamaño máximo de una unidad de datos que puede transportar un medio sin requerir fragmentación.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IP", frente: "TTL", reverso: "Campo IPv4 que se reduce en cada router y causa el descarte del paquete cuando llega a cero.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IP", frente: "NAT", reverso: "Proceso que traduce direcciones IP privadas a públicas o viceversa en el borde de una red.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IPv4", frente: "Rango privado 10.0.0.0/8", reverso: "Bloque RFC 1918 de direcciones privadas desde 10.0.0.0 hasta 10.255.255.255.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IPv4", frente: "Loopback IPv4", reverso: "Rango 127.0.0.0/8 reservado para comprobar la pila TCP/IP local del propio host.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IPv4", frente: "APIPA", reverso: "Rango 169.254.0.0/16 que un host puede autoconfigurarse cuando no obtiene una dirección IPv4 de DHCP.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · Subredes", frente: "Operación AND", reverso: "Operación binaria entre una dirección IPv4 y su máscara para obtener la dirección de red.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · Subredes", frente: "Prefijo /30", reverso: "Prefijo IPv4 con dos direcciones de host utilizables, habitual en enlaces punto a punto.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S4 · VLSM", frente: "Asignación de mayor a menor", reverso: "Regla VLSM que asigna primero la subred con mayor necesidad de hosts y continúa hacia la menor.", fuente: "Semana 4 · VLSM" },
+  { tema: "S4 · Diseño", frente: "Dirección estática", reverso: "Dirección IP predecible que se asigna a servidores y periféricos que deben ser localizables de forma estable.", fuente: "Semana 4 · VLSM" },
+  { tema: "S4 · Diseño", frente: "DMZ", reverso: "Zona donde se ubican servidores accesibles desde Internet con direcciones públicas y separación del entorno interno.", fuente: "Semana 4 · VLSM" },
+  { tema: "S5 · Ethernet", frente: "Almacenamiento y reenvío", reverso: "Método de switching que recibe la trama completa, verifica FCS y descarta la trama si detecta un error.", fuente: "Semana 5 · Ethernet, VLAN e Inter-VLAN" },
+  { tema: "S5 · Ethernet", frente: "Conmutación de corte", reverso: "Método de switching que reenvía una trama antes de recibirla por completo para reducir latencia, sin comprobar FCS.", fuente: "Semana 5 · Ethernet, VLAN e Inter-VLAN" },
+  { tema: "S5 · Ethernet", frente: "Dúplex completo", reverso: "Modo Ethernet que transmite y recibe simultáneamente, eliminando dominios de colisión.", fuente: "Semana 5 · Ethernet, VLAN e Inter-VLAN" },
+  { tema: "S5 · VLAN", frente: "VLAN de voz", reverso: "VLAN separada para telefonía IP que requiere ancho de banda asegurado, prioridad QoS y baja latencia.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+  { tema: "S5 · Inter-VLAN", frente: "Router-on-a-stick", reverso: "Método entre VLAN que usa una interfaz física de router dividida en subinterfaces y un enlace troncal.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+  { tema: "S5 · Inter-VLAN", frente: "ip routing", reverso: "Comando de configuración global que habilita el enrutamiento IPv4 entre SVIs en un switch de capa 3.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+];
+
 const REDES_AMPLIADO = ampliar(REDES, [
+  ...REDES_SEMANAS_1_A_5,
   { tema: "Redes", frente: "Red de computadoras", reverso: "Conjunto de dispositivos interconectados que comparten datos y recursos mediante medios y protocolos.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "Modelos", frente: "Modelo OSI", reverso: "Marco de siete capas que organiza funciones de comunicación de red.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "Modelos", frente: "Capa de red", reverso: "Capa responsable del direccionamiento lógico y del encaminamiento de paquetes entre redes.", fuente: "Semana 2 · Protocolos de Redes" },

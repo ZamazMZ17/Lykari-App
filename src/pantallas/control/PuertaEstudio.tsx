@@ -26,6 +26,7 @@ export function PuertaEstudio({ reglas }: PropsReglas) {
       // WhatsApp queda siempre fuera de la puerta, incluso si una configuración
       // vieja lo hubiera guardado por accidente.
       apps: apps.filter((p) => p !== "com.whatsapp" && p !== "com.whatsapp.w4b"),
+      configurada: true,
     };
     await guardarReglas({ ...reglas, puertaEstudio: nueva, actualizado: Date.now() });
   };
@@ -39,7 +40,7 @@ export function PuertaEstudio({ reglas }: PropsReglas) {
     >
       <Titulo
         titulo="Puerta de estudio"
-        detalle="Cada acceso requiere 12 preguntas y 10 aciertos. Un aprobado abre solo una app por 15 min; el máximo diario es 30 min."
+        detalle="Cada acceso requiere 12 preguntas y 10 aciertos. Un aprobado abre solo la app elegida durante 15 min; al terminar, se requiere otro cuestionario."
       />
 
       <Interruptor titulo="Activar puerta de estudio" valor={activa} onChange={setActiva} />

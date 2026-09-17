@@ -32,8 +32,9 @@ export async function registrarRespuesta(id: number, correcta: boolean): Promise
 }
 
 /**
- * Selecciona preguntas para un quiz. Prioriza las que el usuario más falla
- * (spaced repetition básico). Si `cursoId` es null, mezcla de todos los cursos.
+ * Selecciona preguntas para un quiz. Prioriza las nunca vistas, luego las que
+ * el usuario más falla (spaced repetition), y entre las bien aprendidas elige
+ * las menos repetidas para dar variedad.
  */
 export async function seleccionarParaQuiz(
   cantidad: number,
@@ -42,17 +43,28 @@ export async function seleccionarParaQuiz(
   const todas = cursoId != null ? await preguntasDeCurso(cursoId) : await todasLasPreguntas();
   if (todas.length <= cantidad) return mezclarPreguntas(todas);
 
-  // Prioridad: menos veces correcta / más veces vista (peor ratio) primero,
-  // luego las nunca vistas, luego las bien aprendidas.
-  const ordenadas = [...todas].sort((a, b) => {
-    const ratioA = a.vecesVista === 0 ? 0.5 : a.vecesCorrecta / a.vecesVista;
-    const ratioB = b.vecesVista === 0 ? 0.5 : b.vecesCorrecta / b.vecesVista;
-    return ratioA - ratioB;
+  const nuncaVistas = todas.filter((p) => p.vecesVista === 0);
+  const vistas = todas.filter((p) => p.vecesVista > 0);
+
+  vistas.sort((a, b) => {
+    const ratioA = a.vecesCorrecta / a.vecesVista;
+    const ratioB = b.vecesCorrecta / b.vecesVista;
+    if (Math.abs(ratioA - ratioB) > 0.1) return ratioA - ratioB;
+    return a.vecesVista - b.vecesVista;
   });
 
-  // Tomar las peores con algo de variación
-  const pool = ordenadas.slice(0, Math.min(cantidad * 3, todas.length));
-  return mezclar(pool).slice(0, cantidad).map(mezclarPregunta);
+  const seleccion: PreguntaCurso[] = [];
+  const nuncaMezcladas = mezclar(nuncaVistas);
+  for (const p of nuncaMezcladas) {
+    if (seleccion.length >= cantidad) break;
+    seleccion.push(p);
+  }
+  for (const p of vistas) {
+    if (seleccion.length >= cantidad) break;
+    seleccion.push(p);
+  }
+
+  return mezclar(seleccion).map(mezclarPregunta);
 }
 
 function mezclar<T>(arr: T[]): T[] {

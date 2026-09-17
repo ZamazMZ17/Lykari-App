@@ -120,7 +120,18 @@ export interface PuertaEstudio {
   activa: boolean;
   /** Paquetes que requieren estudiar antes de poder abrirlos. */
   apps: string[];
+  /** Evita volver a aplicar la selección inicial después de que Zamly la edite. */
+  configurada: boolean;
 }
+
+/** Distracciones que se bloquean desde la primera actualización de la puerta. */
+export const APPS_PUERTA_ESTUDIO_INICIAL: string[] = [
+  "com.zhiliaoapp.musically", // TikTok
+  "com.instagram.android",
+  "com.supercell.clashroyale",
+  "com.dts.freefireth",
+  "com.dts.freefiremax",
+];
 
 /** Un crédito es de una sola app; el motor nativo decide su duración y tope. */
 export type OrigenCreditoEstudio = "quiz" | "ejercicio";
@@ -128,7 +139,7 @@ export type OrigenCreditoEstudio = "quiz" | "ejercicio";
 export interface ResultadoCreditoEstudio {
   concedido: boolean;
   hastaMs: number;
-  /** Cuántos créditos de 15 min quedan hoy entre todas las apps elegidas. */
+  /** -1 cuando no hay tope diario de créditos. */
   restantesHoy: number;
   motivo?: "puerta_inactiva" | "app_no_elegida" | "whatsapp_libre" | "credito_vigente" | "tope_diario" | "ejercicio_ya_usado";
 }
@@ -212,8 +223,9 @@ export function reglasVacias(ahora = Date.now()): ReglasControl {
     },
     proteccion: { activa: false, desde: null },
     puertaEstudio: {
-      activa: false,
-      apps: [],
+      activa: true,
+      apps: APPS_PUERTA_ESTUDIO_INICIAL,
+      configurada: false,
     },
     actualizado: ahora,
   };

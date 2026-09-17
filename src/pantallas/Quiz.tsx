@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -15,12 +15,21 @@ import { iniciarQuiz, responder, siguiente, aprobo, finalizarQuiz } from "../est
 import { sembrarPreguntas } from "../estudio/semilla";
 import type { EstadoQuiz } from "../estudio/tipos";
 import type { Curso } from "../db/db";
+import { QUIZ_PUERTA, type ConfiguracionQuiz } from "../estudio/configuracionQuiz";
 
-const PREGUNTAS_NECESARIAS = 12;
-const UMBRAL_APROBACION = 10;
 const MINUTOS_DESBLOQUEADOS = 15;
 
-export function Quiz({ onBack, paqueteDestino }: { onBack: () => void; paqueteDestino?: string }) {
+export function Quiz({
+  onBack,
+  paqueteDestino,
+  cursoIdInicial,
+  configuracion = QUIZ_PUERTA,
+}: {
+  onBack: () => void;
+  paqueteDestino?: string;
+  cursoIdInicial?: number | null;
+  configuracion?: ConfiguracionQuiz;
+}) {
   const [quiz, setQuiz] = useState<EstadoQuiz | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
@@ -28,15 +37,16 @@ export function Quiz({ onBack, paqueteDestino }: { onBack: () => void; paqueteDe
   const cursos = useLiveQuery(cursosActivos, [], []);
   const totalPreguntas = useLiveQuery(contarPreguntas, [], 0);
 
-  // La puerta puede abrirse antes de que Hoy termine su inicialización.
-  // Sembrar es idempotente y así el primer intento nunca llega a un quiz vacío.
   useEffect(() => { void sembrarPreguntas().catch(() => setError("No se pudieron preparar las preguntas.")); }, []);
 
   const empezar = useCallback(async (cursoId: number | null) => {
     setCargando(true);
     setError("");
     try {
-      const q = await iniciarQuiz(PREGUNTAS_NECESARIAS, cursoId);
+      // El curso puede abrirse antes de que el efecto inicial termine de
+      // sembrar IndexedDB; esta operación es idempotente y evita un quiz vacío.
+      await sembrarPreguntas();
+      const q = await iniciarQuiz(configuracion.cantidad, cursoId);
       if (!q) {
         setError("No hay preguntas disponibles para este curso.");
         return;
@@ -47,9 +57,29 @@ export function Quiz({ onBack, paqueteDestino }: { onBack: () => void; paqueteDe
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [configuracion.cantidad]);
+
+  // Si viene de Estudio con un curso elegido, arrancar directo.
+  const autoIniciado = useRef(false);
+  useEffect(() => {
+    if (cursoIdInicial != null && !autoIniciado.current && !quiz) {
+      autoIniciado.current = true;
+      void empezar(cursoIdInicial);
+    }
+  }, [cursoIdInicial, empezar, quiz]);
 
   if (!quiz || quiz.fase === "selector") {
+    // Al venir desde la ficha de un curso no debe existir una segunda elección,
+    // ni siquiera durante el primer render mientras se consulta IndexedDB.
+    if (cursoIdInicial != null) {
+      return (
+        <div className="qz" style={{ justifyContent: "center", alignItems: "center" }}>
+          <p style={{ color: "var(--ink2)", fontSize: 14 }}>
+            {error || (cargando ? "Preparando preguntas..." : "Abriendo cuestionario...")}
+          </p>
+        </div>
+      );
+    }
     return (
       <Selector
         cursos={cursos}
@@ -59,6 +89,7 @@ export function Quiz({ onBack, paqueteDestino }: { onBack: () => void; paqueteDe
         onEmpezar={empezar}
         onBack={onBack}
         paqueteDestino={paqueteDestino}
+        configuracion={configuracion}
       />
     );
   }
@@ -67,7 +98,16 @@ export function Quiz({ onBack, paqueteDestino }: { onBack: () => void; paqueteDe
     return (
       <Resultado
         quiz={quiz}
-        onReintentar={() => setQuiz(null)}
+        configuracion={configuracion}
+        onReintentar={() => {
+          if (cursoIdInicial != null) {
+            setQuiz(null);
+            autoIniciado.current = false;
+            void empezar(cursoIdInicial);
+          } else {
+            setQuiz(null);
+          }
+        }}
         onSalir={onBack}
         paqueteDestino={paqueteDestino}
       />
@@ -94,6 +134,7 @@ function Selector({
   onEmpezar,
   onBack,
   paqueteDestino,
+  configuracion,
 }: {
   cursos: Curso[];
   totalPreguntas: number;
@@ -102,6 +143,7 @@ function Selector({
   onEmpezar: (cursoId: number | null) => void;
   onBack: () => void;
   paqueteDestino?: string;
+  configuracion: ConfiguracionQuiz;
 }) {
   const [conteos, setConteos] = useState<Map<number, number>>(new Map());
 
@@ -128,14 +170,16 @@ function Selector({
           <ArrowLeft size={20} />
         </button>
         <div>
-          <span className="eyebrow">Puerta de estudio</span>
+          <span className="eyebrow">{configuracion.tipo === "puerta" ? "Puerta de estudio" : "Simulacro de práctica"}</span>
           <h1 className="disp" style={{ fontSize: 22 }}>Elige un curso</h1>
         </div>
       </header>
 
       <div className="qz-body">
         <p className="qz-intro">
-          Responde {PREGUNTAS_NECESARIAS} preguntas. Con {UMBRAL_APROBACION} aciertos ganas {MINUTOS_DESBLOQUEADOS} minutos{paqueteDestino ? " para la app que intentaste abrir" : " de repaso"}.
+          {configuracion.tipo === "puerta"
+            ? <>Responde {configuracion.cantidad} preguntas. Con {configuracion.umbral} aciertos ganas {MINUTOS_DESBLOQUEADOS} minutos{paqueteDestino ? " para la app que intentaste abrir" : " de repaso"}.</>
+            : <>Responde {configuracion.cantidad} preguntas. Cada respuesta correcta vale {configuracion.puntosPorRespuesta} puntos.</>}
         </p>
 
         <div className="qz-cursos">
@@ -192,6 +236,20 @@ function Pregunta({
   const enFeedback = quiz.fase === "feedback";
   const respuestaUsuario = quiz.respuestas[quiz.indice];
   const esCorrecta = respuestaUsuario === p.respuestaCorrecta;
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const cuerpoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (enFeedback && feedbackRef.current) {
+      feedbackRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [enFeedback]);
+
+  // El feedback puede llevar la vista hacia abajo. Cada pregunta siguiente
+  // siempre empieza desde su enunciado, sin obligar a retroceder manualmente.
+  useLayoutEffect(() => {
+    if (!enFeedback) cuerpoRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [quiz.indice, enFeedback]);
 
   return (
     <div className="qz">
@@ -213,7 +271,7 @@ function Pregunta({
         </span>
       </header>
 
-      <div className="qz-body">
+      <div className="qz-body" ref={cuerpoRef}>
         <h2 className="qz-pregunta">{p.pregunta}</h2>
 
         <div className="qz-opciones">
@@ -240,7 +298,7 @@ function Pregunta({
         </div>
 
         {enFeedback && (
-          <div className="qz-feedback">
+          <div className="qz-feedback" ref={feedbackRef}>
             <p className={esCorrecta ? "qz-feedback-ok" : "qz-feedback-mal"}>
               {esCorrecta ? "Correcto" : "Incorrecto"}
             </p>
@@ -260,16 +318,19 @@ function Pregunta({
 
 function Resultado({
   quiz,
+  configuracion,
   onReintentar,
   onSalir,
   paqueteDestino,
 }: {
   quiz: EstadoQuiz;
+  configuracion: ConfiguracionQuiz;
   onReintentar: () => void;
   onSalir: () => void;
   paqueteDestino?: string;
 }) {
-  const paso = aprobo(quiz, UMBRAL_APROBACION);
+  const esPuerta = configuracion.tipo === "puerta";
+  const paso = esPuerta && aprobo(quiz, configuracion.umbral ?? 10);
   const [guardado, setGuardado] = useState(false);
   const [credito, setCredito] = useState<"pendiente" | "concedido" | "denegado" | "sin_destino">("pendiente");
   const terminado = useRef(false);
@@ -290,6 +351,8 @@ function Resultado({
   }, [quiz, paso, paqueteDestino]);
 
   const porcentaje = Math.round((quiz.correctas / quiz.preguntas.length) * 100);
+  const puntaje = quiz.correctas * (configuracion.puntosPorRespuesta ?? 0);
+  const puntajeMaximo = quiz.preguntas.length * (configuracion.puntosPorRespuesta ?? 0);
 
   return (
     <div className="qz">
@@ -300,7 +363,7 @@ function Resultado({
         <div>
           <span className="eyebrow">Resultado</span>
           <h1 className="disp" style={{ fontSize: 22 }}>
-            {paso ? "Aprobado" : "No aprobado"}
+            {!esPuerta ? "Simulacro terminado" : paso ? "Aprobado" : "No aprobado"}
           </h1>
         </div>
       </header>
@@ -308,10 +371,14 @@ function Resultado({
       <div className="qz-body qz-resultado">
         <div className="qz-score">
           <span className="qz-score-num">{quiz.correctas}/{quiz.preguntas.length}</span>
-          <span className="qz-score-pct">{porcentaje}%</span>
+          <span className="qz-score-pct">
+            {esPuerta ? `${porcentaje}%` : `${puntaje.toFixed(1)} / ${puntajeMaximo.toFixed(1)} puntos · ${porcentaje}%`}
+          </span>
         </div>
 
-        {paso && paqueteDestino ? (
+        {!esPuerta ? (
+          <p className="qz-no-paso">Revisa las explicaciones y vuelve a intentarlo con otro grupo de preguntas.</p>
+        ) : paso && paqueteDestino ? (
           <div className="qz-desbloqueado">
             <Unlock size={24} />
             <p>
@@ -319,22 +386,22 @@ function Resultado({
                 ? "Registrando desbloqueo…"
                 : credito === "concedido"
                 ? `${MINUTOS_DESBLOQUEADOS} minutos desbloqueados`
-                : "El límite diario ya está usado o esta app no está habilitada."}
+                : "No se pudo registrar el acceso para esta app."}
             </p>
           </div>
         ) : paso ? (
           <p className="qz-no-paso">Repaso registrado. Abre el quiz desde una app bloqueada para ganar acceso.</p>
         ) : (
           <p className="qz-no-paso">
-            Necesitas al menos {UMBRAL_APROBACION} respuestas correctas.
+            Necesitas al menos {configuracion.umbral} respuestas correctas.
           </p>
         )}
 
         <div className="qz-resultado-acciones">
-          {!paso && (
+          {(!esPuerta || !paso) && (
             <button className="qz-btn-primario" onClick={onReintentar}>
               <RefreshCw size={18} />
-              Intentar de nuevo
+              {!esPuerta ? "Nuevo simulacro" : "Intentar de nuevo"}
             </button>
           )}
           <button className="qz-btn-secundario" onClick={onSalir}>

@@ -513,16 +513,16 @@ textarea:focus-visible {
 
 .qz-pregunta {
   font-family: "Instrument Sans", sans-serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 20px;
+  line-height: 1.35;
+  margin-bottom: 14px;
 }
 
 .qz-opciones {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .qz-opcion {
@@ -532,13 +532,13 @@ textarea:focus-visible {
   background: var(--paper);
   border: 2px solid var(--line);
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   color: var(--ink);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.4;
 }
 .qz-opcion:hover:not(:disabled) {
@@ -577,8 +577,8 @@ textarea:focus-visible {
 /* ── Feedback ───────────────────────────────────────────────────────── */
 
 .qz-feedback {
-  margin-top: 20px;
-  padding: 16px;
+  margin-top: 14px;
+  padding: 14px 16px;
   background: var(--paper);
   border-radius: 12px;
   border: 1px solid var(--line);

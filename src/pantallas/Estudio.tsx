@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, FileText, Layers, RotateCcw } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Layers, RotateCcw } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { cursosActivos } from "../db/cursos";
 import { CONTENIDO_CICLO6, contenidoParaCurso, type ContenidoCurso } from "../estudio/contenidoCiclo6";
 import { sembrarPreguntas } from "../estudio/semilla";
+import { QUIZ_PUERTA, SIMULACRO_PRACTICA, type ConfiguracionQuiz } from "../estudio/configuracionQuiz";
 
 type OpcionCurso = { id: number; nombre: string; contenido: ContenidoCurso };
 type Modo = "inicio" | "tarjetas" | "conceptos";
 
-export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: () => void }) {
+export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (cursoId: number, configuracion: ConfiguracionQuiz) => void }) {
   const cursos = useLiveQuery(cursosActivos, [], []);
   const [cursoId, setCursoId] = useState<number | null>(null);
   const [modo, setModo] = useState<Modo>("inicio");
@@ -69,7 +70,13 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: () => 
             </div>
           </>
         ) : modo === "inicio" ? (
-          <Modos contenido={elegida.contenido} onQuiz={onQuiz} onTarjetas={() => setModo("tarjetas")} onConceptos={() => setModo("conceptos")} />
+          <Modos
+            contenido={elegida.contenido}
+            onQuiz={() => onQuiz(elegida.id, QUIZ_PUERTA)}
+            onSimulacro={() => onQuiz(elegida.id, SIMULACRO_PRACTICA)}
+            onTarjetas={() => setModo("tarjetas")}
+            onConceptos={() => setModo("conceptos")}
+          />
         ) : modo === "tarjetas" ? (
           <Tarjetas
             contenido={elegida.contenido}
@@ -86,9 +93,10 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: () => 
   );
 }
 
-function Modos({ contenido, onQuiz, onTarjetas, onConceptos }: { contenido: ContenidoCurso; onQuiz: () => void; onTarjetas: () => void; onConceptos: () => void }) {
+function Modos({ contenido, onQuiz, onSimulacro, onTarjetas, onConceptos }: { contenido: ContenidoCurso; onQuiz: () => void; onSimulacro: () => void; onTarjetas: () => void; onConceptos: () => void }) {
   const opciones = [
-    { icono: BookOpen, titulo: "Cuestionario", texto: `Responde ${contenido.preguntas.length} preguntas y mira la explicación al instante.`, accion: onQuiz },
+    { icono: BookOpen, titulo: "Cuestionario", texto: "12 preguntas · necesitas 10 correctas para aprobar.", accion: onQuiz },
+    { icono: ClipboardCheck, titulo: "Simulacro de práctica", texto: "30 preguntas · 0.5 puntos por respuesta correcta.", accion: onSimulacro },
     { icono: Layers, titulo: "Flashcards", texto: `${contenido.tarjetas.length} tarjetas para recuperar conceptos de memoria.`, accion: onTarjetas },
     { icono: FileText, titulo: "Lectura activa", texto: `${contenido.conceptos.length} síntesis breves para leer y luego explicarte el tema.`, accion: onConceptos },
   ];

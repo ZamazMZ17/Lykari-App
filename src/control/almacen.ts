@@ -1,13 +1,37 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
-import { ESPERA_APAGAR_ADULTO_MS, reglasVacias, type ReglasControl } from "./tipos";
+import { APPS_PUERTA_ESTUDIO_INICIAL, ESPERA_APAGAR_ADULTO_MS, reglasVacias, type ReglasControl } from "./tipos";
 import { motorControl, usaMock } from "./servicio";
 import { tablasMock } from "./mock";
 
 export function tablasControl() { return usaMock() ? tablasMock : db; }
 
 export async function leerReglas(): Promise<ReglasControl> {
-  return (await tablasControl().controlReglas.get(1))?.reglas ?? reglasVacias();
+  const guardadas = (await tablasControl().controlReglas.get(1))?.reglas;
+  if (!guardadas) return reglasVacias();
+  return {
+    ...guardadas,
+    puertaEstudio: {
+      ...reglasVacias(guardadas.actualizado).puertaEstudio,
+      ...guardadas.puertaEstudio,
+      configurada: guardadas.puertaEstudio?.configurada ?? false,
+    },
+  };
+}
+
+/** Aplica una sola vez la puerta acordada para las instalaciones anteriores. */
+export async function prepararPuertaEstudioInicial(): Promise<void> {
+  const reglas = await leerReglas();
+  if (reglas.puertaEstudio.configurada) return;
+  await guardarReglas({
+    ...reglas,
+    puertaEstudio: {
+      activa: true,
+      apps: APPS_PUERTA_ESTUDIO_INICIAL,
+      configurada: true,
+    },
+    actualizado: reglas.actualizado,
+  });
 }
 
 /** La UI no puede acortar la espera ni debilitar las capas de un filtro encendido. */
