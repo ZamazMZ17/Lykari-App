@@ -1255,8 +1255,23 @@ async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Pro
     }
     await agregarPreguntas(contenido.preguntas.map((pregunta) => ({ ...pregunta, cursoId })));
   } else {
-    // En cada ampliación se agregan solo los ítems nuevos. Conserva las
-    // estadísticas de respuesta de lo que el usuario ya practicó.
+    // En cada ampliación se agregan ítems nuevos y se mejora la explicación
+    // de los ya vistos. Las estadísticas personales nunca se tocan.
+    const actualizaciones = contenido.preguntas.flatMap((pregunta) => {
+      const existente = existentes.find((item) => item.pregunta === pregunta.pregunta && item.fuente === pregunta.fuente);
+      if (existente?.id == null) return [];
+      const cambio = existente.tema !== pregunta.tema
+        || existente.explicacion !== pregunta.explicacion
+        || existente.respuestaCorrecta !== pregunta.respuestaCorrecta
+        || JSON.stringify(existente.opciones) !== JSON.stringify(pregunta.opciones);
+      return cambio ? [{ id: existente.id, cambios: {
+        tema: pregunta.tema,
+        opciones: pregunta.opciones,
+        respuestaCorrecta: pregunta.respuestaCorrecta,
+        explicacion: pregunta.explicacion,
+      } }] : [];
+    });
+    await Promise.all(actualizaciones.map(({ id, cambios }) => db.preguntasCurso.update(id, cambios)));
     const nuevas = contenido.preguntas.filter(
       (pregunta) => !existentes.some((existente) => existente.pregunta === pregunta.pregunta && existente.fuente === pregunta.fuente),
     );

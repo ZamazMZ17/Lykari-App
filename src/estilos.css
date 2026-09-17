@@ -583,6 +583,25 @@ textarea:focus-visible {
   border-radius: 12px;
   border: 1px solid var(--line);
 }
+
+.qz-respuesta-clave {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.qz-respuesta-clave span {
+  color: var(--ink2);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
 .qz-feedback-ok {
   font-weight: 700;
   color: var(--pino);

@@ -200,9 +200,9 @@ function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso
   const preguntas = memorias.flatMap((memoria, indice) => {
     const alternativas = memorias.filter((_, otra) => otra !== indice).slice(0, 3);
     return [
-      q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), `Repasa la definición de ${memoria.frente}.`, memoria.fuente),
-      q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `La descripción corresponde a ${memoria.frente}.`, memoria.fuente),
-      q(memoria.tema, `¿En cuál situación corresponde usar ${memoria.frente}?`, comoSituacion(memoria.reverso), alternativas.map((otra) => comoSituacion(otra.reverso)), `La situación correcta aplica la definición de ${memoria.frente}.`, memoria.fuente),
+      q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), `${memoria.frente}: ${memoria.reverso}`, memoria.fuente),
+      q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `El concepto es ${memoria.frente}. ${memoria.reverso}`, memoria.fuente),
+      q(memoria.tema, `¿En cuál situación corresponde usar ${memoria.frente}?`, comoSituacion(memoria.reverso), alternativas.map((otra) => comoSituacion(otra.reverso)), `Corresponde usar ${memoria.frente} porque ${memoria.reverso.charAt(0).toLowerCase()}${memoria.reverso.slice(1)}`, memoria.fuente),
     ];
   });
   return {

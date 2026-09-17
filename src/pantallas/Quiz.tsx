@@ -302,6 +302,10 @@ function Pregunta({
             <p className={esCorrecta ? "qz-feedback-ok" : "qz-feedback-mal"}>
               {esCorrecta ? "Correcto" : "Incorrecto"}
             </p>
+            <p className="qz-respuesta-clave">
+              <span>Respuesta clave</span>
+              {p.opciones[p.respuestaCorrecta]}
+            </p>
             {p.explicacion && <p className="qz-explicacion">{p.explicacion}</p>}
             <button className="qz-btn-siguiente" onClick={onSiguiente}>
               {quiz.indice + 1 < quiz.preguntas.length ? "Siguiente" : "Ver resultado"}
