@@ -1248,6 +1248,15 @@ void [ARQ_NEGOCIO, CALCULO_II, DISENO_EXP, FUNDAMENTOS_SI, REDES];
 async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Promise<void> {
   const existentes = await preguntasDeCurso(cursoId);
   const tieneMaterialReal = existentes.some((pregunta) => Boolean(pregunta.fuente));
+  const coincide = (pregunta: PreguntaSin, existente: PreguntaCurso): boolean => {
+    if (existente.fuente !== pregunta.fuente) return false;
+    if (existente.pregunta === pregunta.pregunta) return true;
+    // La primera versión de las preguntas de aplicación ponía la definición
+    // como alternativa. Se reconoce para reemplazarla sin perder aciertos.
+    const clave = pregunta.opciones[pregunta.respuestaCorrecta];
+    return pregunta.pregunta.startsWith("Una situación requiere lo siguiente:")
+      && existente.pregunta === `¿En cuál situación corresponde usar ${clave}?`;
+  };
 
   if (!tieneMaterialReal) {
     if (existentes.length > 0) {
@@ -1258,14 +1267,16 @@ async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Pro
     // En cada ampliación se agregan ítems nuevos y se mejora la explicación
     // de los ya vistos. Las estadísticas personales nunca se tocan.
     const actualizaciones = contenido.preguntas.flatMap((pregunta) => {
-      const existente = existentes.find((item) => item.pregunta === pregunta.pregunta && item.fuente === pregunta.fuente);
+      const existente = existentes.find((item) => coincide(pregunta, item));
       if (existente?.id == null) return [];
       const cambio = existente.tema !== pregunta.tema
+        || existente.pregunta !== pregunta.pregunta
         || existente.explicacion !== pregunta.explicacion
         || existente.respuestaCorrecta !== pregunta.respuestaCorrecta
         || JSON.stringify(existente.opciones) !== JSON.stringify(pregunta.opciones);
       return cambio ? [{ id: existente.id, cambios: {
         tema: pregunta.tema,
+        pregunta: pregunta.pregunta,
         opciones: pregunta.opciones,
         respuestaCorrecta: pregunta.respuestaCorrecta,
         explicacion: pregunta.explicacion,
@@ -1273,7 +1284,7 @@ async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Pro
     });
     await Promise.all(actualizaciones.map(({ id, cambios }) => db.preguntasCurso.update(id, cambios)));
     const nuevas = contenido.preguntas.filter(
-      (pregunta) => !existentes.some((existente) => existente.pregunta === pregunta.pregunta && existente.fuente === pregunta.fuente),
+      (pregunta) => !existentes.some((existente) => coincide(pregunta, existente)),
     );
     if (nuevas.length > 0) await agregarPreguntas(nuevas.map((pregunta) => ({ ...pregunta, cursoId })));
   }

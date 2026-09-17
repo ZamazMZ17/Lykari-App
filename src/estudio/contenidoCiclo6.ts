@@ -187,10 +187,6 @@ const CALCULO: ContenidoCurso = {
 
 export type Memoria = { tema: string; frente: string; reverso: string; fuente: string };
 
-function comoSituacion(definicion: string): string {
-  return `Cuando se necesita ${definicion.charAt(0).toLowerCase()}${definicion.slice(1)}`;
-}
-
 /**
  * Cada idea comprobada en un archivo de clase crea tres preguntas: recuperar
  * la definición, reconocer el concepto y elegirlo en una situación de uso.
@@ -202,7 +198,7 @@ function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso
     return [
       q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), `${memoria.frente}: ${memoria.reverso}`, memoria.fuente),
       q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `El concepto es ${memoria.frente}. ${memoria.reverso}`, memoria.fuente),
-      q(memoria.tema, `¿En cuál situación corresponde usar ${memoria.frente}?`, comoSituacion(memoria.reverso), alternativas.map((otra) => comoSituacion(otra.reverso)), `Corresponde usar ${memoria.frente} porque ${memoria.reverso.charAt(0).toLowerCase()}${memoria.reverso.slice(1)}`, memoria.fuente),
+      q(memoria.tema, `Una situación requiere lo siguiente: ${memoria.reverso} ¿Qué concepto se aplica?`, memoria.frente, alternativas.map((otra) => otra.frente), `${memoria.frente}: ${memoria.reverso}`, memoria.fuente),
     ];
   });
   return {
