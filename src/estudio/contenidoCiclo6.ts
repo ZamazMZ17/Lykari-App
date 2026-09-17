@@ -185,7 +185,123 @@ const CALCULO: ContenidoCurso = {
   ],
 };
 
-export const CONTENIDO_CICLO6: ContenidoCurso[] = [ARQUITECTURA, EXPERIMENTOS, FUNDAMENTOS, REDES, CALCULO];
+type Memoria = { tema: string; frente: string; reverso: string; fuente: string };
+
+/**
+ * Cada idea comprobada en un archivo de clase crea dos preguntas: una para
+ * recuperar la definición y otra para reconocer el concepto desde su
+ * descripción. Así el cuestionario no queda limitado a doce ítems fijos.
+ */
+function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso {
+  const preguntas = memorias.flatMap((memoria, indice) => {
+    const alternativas = memorias.filter((_, otra) => otra !== indice).slice(0, 3);
+    return [
+      q(memoria.tema, `¿Qué describe ${memoria.frente}?`, memoria.reverso, alternativas.map((otra) => otra.reverso), `Repasa la definición de ${memoria.frente}.`, memoria.fuente),
+      q(memoria.tema, `¿Qué concepto corresponde a esta descripción? ${memoria.reverso}`, memoria.frente, alternativas.map((otra) => otra.frente), `La descripción corresponde a ${memoria.frente}.`, memoria.fuente),
+    ];
+  });
+  return {
+    ...contenido,
+    preguntas: [...contenido.preguntas, ...preguntas],
+    tarjetas: [...contenido.tarjetas, ...memorias.map((memoria) => t(memoria.tema, memoria.frente, memoria.reverso, memoria.fuente))],
+  };
+}
+
+const ARQUITECTURA_AMPLIADA = ampliar(ARQUITECTURA, [
+  { tema: "Modelo de negocio", frente: "Canales", reverso: "Medios por los que la empresa comunica, distribuye y vende su propuesta de valor.", fuente: "Unidad 1 · Semana 1 · Sesión 1" },
+  { tema: "Modelo de negocio", frente: "Relaciones con clientes", reverso: "Vínculos que una empresa establece y mantiene con cada segmento de mercado.", fuente: "Unidad 1 · Semana 1 · Sesión 1" },
+  { tema: "Modelo de negocio", frente: "Fuentes de ingresos", reverso: "Formas en que una empresa obtiene dinero de cada segmento de mercado.", fuente: "Unidad 1 · Semana 1 · Sesión 1" },
+  { tema: "Patrones", frente: "Desagregación", reverso: "Separar negocios con lógicas económicas, competitivas y culturales diferentes para gestionarlos por separado.", fuente: "Unidad 1 · Semana 1 · Sesión 2" },
+  { tema: "Patrones", frente: "Plataforma multilateral", reverso: "Modelo que crea valor al facilitar la interacción entre dos o más grupos de clientes interdependientes.", fuente: "Unidad 1 · Semana 1 · Sesión 2" },
+  { tema: "Integración", frente: "EAI", reverso: "Integración de aplicaciones empresariales para conectar funciones y datos mediante flujos de trabajo.", fuente: "Unidad 1 · Semana 2 · Sesión 1" },
+  { tema: "Integración", frente: "Gobierno de datos", reverso: "Conjunto de decisiones, responsabilidades y controles para que los datos sean consistentes y útiles.", fuente: "Unidad 1 · Semana 2 · Sesión 1" },
+  { tema: "Problemas", frente: "5W2H", reverso: "Método que estructura un problema preguntando qué, por qué, dónde, quién, cuándo, cómo y cuánto.", fuente: "Unidad 1 · Semana 2 · Sesión 2" },
+  { tema: "Problemas", frente: "Diagrama de Ishikawa", reverso: "Herramienta de causa y efecto que organiza causas posibles para encontrar la causa raíz de un problema.", fuente: "Unidad 1 · Semana 2 · Sesión 2" },
+  { tema: "Problemas", frente: "Seis M", reverso: "Categorías de Ishikawa: mano de obra, métodos, máquinas, materiales, mediciones y medio ambiente.", fuente: "Unidad 1 · Semana 2 · Sesión 2" },
+  { tema: "Métodos sistémicos", frente: "SSM", reverso: "Metodología de sistemas blandos que busca aprendizaje y consenso cuando el problema es ambiguo y hay perspectivas distintas.", fuente: "Unidad 1 · Semana 3 · Sesión 1" },
+  { tema: "Métodos sistémicos", frente: "CATWOE", reverso: "Elementos de una definición raíz: clientes, actores, transformación, visión del mundo, dueños y entorno.", fuente: "Unidad 1 · Semana 3 · Sesión 1" },
+  { tema: "Métodos sistémicos", frente: "CSP", reverso: "Práctica de sistemas críticos que elige métodos según complejidad, conflicto y relaciones de poder.", fuente: "Unidad 1 · Semana 3 · Sesión 1" },
+]);
+
+const EXPERIMENTOS_AMPLIADO = ampliar(EXPERIMENTOS, [
+  { tema: "Requerimientos", frente: "Validez", reverso: "Criterio que verifica que las funciones requeridas soporten las necesidades reales del cliente.", fuente: "Unidad 1 · S1 · Modelos de Requerimientos" },
+  { tema: "Requerimientos", frente: "Prototipo", reverso: "Representación temprana del sistema que ayuda a aclarar, comunicar y validar requisitos.", fuente: "Unidad 1 · S1 · Modelos de Requerimientos" },
+  { tema: "Planificación", frente: "Hito", reverso: "Punto significativo del cronograma que marca un logro o evento importante sin duración propia.", fuente: "Unidad 1 · S1 · Modelos de Requerimientos" },
+  { tema: "Scrum", frente: "Product Backlog", reverso: "Lista ordenada de necesidades, funcionalidades y trabajo pendiente del producto.", fuente: "Unidad 1 · S2 · Introducción a Scrum" },
+  { tema: "Scrum", frente: "Sprint", reverso: "Periodo de duración fija en el que el equipo crea un incremento del producto.", fuente: "Unidad 1 · S2 · Introducción a Scrum" },
+  { tema: "Scrum", frente: "Incremento", reverso: "Resultado utilizable que cumple la definición de terminado al final de un sprint.", fuente: "Unidad 1 · S2 · Introducción a Scrum" },
+  { tema: "Scrum", frente: "Daily Scrum", reverso: "Evento breve diario para inspeccionar el avance hacia el objetivo del sprint y ajustar el plan.", fuente: "Unidad 1 · S2 · Introducción a Scrum" },
+  { tema: "Mantis", frente: "Gestor de incidencias", reverso: "Herramienta para registrar, asignar, seguir y cerrar defectos o problemas de un producto.", fuente: "Unidad 1 · S3 · Mantis BT" },
+  { tema: "Pruebas", frente: "Caso de prueba", reverso: "Conjunto de precondiciones, pasos, datos y resultado esperado para verificar un comportamiento.", fuente: "Unidad 1 · S3 · Mantis BT" },
+  { tema: "Calidad", frente: "Aseguramiento de calidad", reverso: "Actividades planificadas que buscan dar confianza de que el proceso y producto cumplirán requisitos.", fuente: "Unidad 1 · S4 · Introducción a la Calidad" },
+  { tema: "Experimentos", frente: "Variable independiente", reverso: "Factor que el investigador manipula o selecciona para observar su efecto.", fuente: "Unidad 2 · Lectura 1 · Diseño de Experimentos" },
+  { tema: "Experimentos", frente: "Variable dependiente", reverso: "Resultado que se mide para observar el efecto de una variable independiente.", fuente: "Unidad 2 · Lectura 1 · Diseño de Experimentos" },
+  { tema: "Experimentos", frente: "Hipótesis", reverso: "Proposición comprobable que plantea una relación esperada entre variables.", fuente: "Unidad 2 · Lectura 1 · Diseño de Experimentos" },
+  { tema: "Experimentos", frente: "Grupo de control", reverso: "Grupo de comparación que no recibe el tratamiento experimental o recibe la condición base.", fuente: "Unidad 3 · Lectura 2 · Diseño de Experimentos" },
+]);
+
+const FUNDAMENTOS_AMPLIADO = ampliar(FUNDAMENTOS, [
+  { tema: "Arreglos", frente: "Arreglo", reverso: "Estructura que almacena elementos del mismo tipo y se accede mediante un índice.", fuente: "Semana 2 · FUSIIN · Arreglos" },
+  { tema: "Arreglos", frente: "Índice", reverso: "Posición numérica con la que se accede a un elemento de un arreglo.", fuente: "Semana 2 · FUSIIN · Arreglos" },
+  { tema: "Listas", frente: "List<T>", reverso: "Colección genérica de tamaño dinámico que permite agregar, buscar y eliminar elementos.", fuente: "Semana 3 · Ejercicio de Listas en C#" },
+  { tema: "Listas", frente: "Multilista", reverso: "Estructura que organiza elementos relacionados usando más de una lista o enlace de acceso.", fuente: "Semana 4 · Ejercicios de Multilistas" },
+  { tema: "Estructuras", frente: "Push", reverso: "Operación que agrega un elemento en la parte superior de una pila.", fuente: "Semana 5 · Pilas y Colas" },
+  { tema: "Estructuras", frente: "Count", reverso: "Propiedad que indica cuántos elementos contiene una colección.", fuente: "Semana 5 · Pilas y Colas" },
+  { tema: "Arquitectura", frente: "Proyecto por capas", reverso: "Organización que separa presentación, lógica de negocio y acceso a datos para reducir acoplamiento.", fuente: "Semana 9 · Pasos para crear un proyecto por capas" },
+  { tema: "Base de datos", frente: "Tabla", reverso: "Estructura que almacena registros de una entidad en filas y atributos en columnas.", fuente: "Semana 10 · Base de Datos" },
+  { tema: "Base de datos", frente: "Clave primaria", reverso: "Campo o conjunto de campos que identifica de forma única cada registro de una tabla.", fuente: "Semana 10 · Base de Datos" },
+  { tema: "SQL", frente: "SELECT", reverso: "Instrucción SQL que consulta datos de una o más tablas.", fuente: "Semana 10 · SQL Server" },
+  { tema: "SQL", frente: "WHERE", reverso: "Cláusula SQL que filtra filas según una condición.", fuente: "Semana 10 · SQL Server" },
+  { tema: "Entity Framework", frente: "ORM", reverso: "Mapeo objeto-relacional que conecta clases del programa con tablas de una base de datos.", fuente: "Semana 11 · Entity Framework, SQL y LINQ" },
+  { tema: "LINQ", frente: "LINQ", reverso: "Conjunto de consultas integradas en C# para trabajar con colecciones y orígenes de datos.", fuente: "Semana 11 · Entity Framework, SQL y LINQ" },
+  { tema: "LINQ", frente: "Consulta", reverso: "Expresión que selecciona, filtra, ordena o transforma datos sin modificar el origen por sí misma.", fuente: "Semana 11 · Entity Framework, SQL y LINQ" },
+]);
+
+const REDES_AMPLIADO = ampliar(REDES, [
+  { tema: "Redes", frente: "Red de computadoras", reverso: "Conjunto de dispositivos interconectados que comparten datos y recursos mediante medios y protocolos.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "Modelos", frente: "Modelo OSI", reverso: "Marco de siete capas que organiza funciones de comunicación de red.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "Modelos", frente: "Capa de red", reverso: "Capa responsable del direccionamiento lógico y del encaminamiento de paquetes entre redes.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "Protocolos", frente: "TCP", reverso: "Protocolo orientado a conexión que ofrece entrega confiable, control de flujo y orden de datos.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "Protocolos", frente: "UDP", reverso: "Protocolo sin conexión que prioriza baja sobrecarga y no garantiza entrega ni orden.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "IPv4", frente: "Dirección IPv4", reverso: "Identificador lógico de 32 bits usado para localizar una interfaz dentro de una red IP.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "IPv4", frente: "Máscara de subred", reverso: "Valor que separa la porción de red y la porción de host de una dirección IPv4.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "IPv4", frente: "Puerta de enlace predeterminada", reverso: "Router al que un host envía tráfico destinado a redes remotas.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "IPv4", frente: "Dirección de red", reverso: "Dirección que identifica una subred y no se asigna a un host individual.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "IPv4", frente: "Dirección de broadcast", reverso: "Dirección que envía un paquete a todos los hosts de una subred IPv4.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "VLSM", frente: "VLSM", reverso: "Técnica que divide una red en subredes de tamaños diferentes según la cantidad de hosts requerida.", fuente: "Semana 4 · VLSM" },
+  { tema: "VLSM", frente: "Prefijo CIDR", reverso: "Notación /n que indica cuántos bits pertenecen a la parte de red de una dirección IP.", fuente: "Semana 4 · VLSM" },
+  { tema: "VLAN", frente: "VLAN", reverso: "Segmentación lógica de una red de capa 2 que crea dominios de broadcast separados.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+  { tema: "VLAN", frente: "Trunk", reverso: "Enlace que transporta tráfico de varias VLAN entre dispositivos de red.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+  { tema: "VLAN", frente: "802.1Q", reverso: "Estándar que etiqueta tramas Ethernet para identificar la VLAN a la que pertenecen.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+  { tema: "Inter-VLAN", frente: "SVI", reverso: "Interfaz virtual de un switch de capa 3 que permite enrutar entre VLAN.", fuente: "Semana 5 · VLAN e Inter-VLAN" },
+]);
+
+const CALCULO_AMPLIADO = ampliar(CALCULO, [
+  { tema: "Geometría", frente: "Plano coordenado", reverso: "Plano determinado por dos ejes coordenados que mantiene una coordenada constante.", fuente: "Semana 1 · Planos y superficies cuádricas" },
+  { tema: "Geometría", frente: "Superficie cuádrica", reverso: "Superficie definida por una ecuación de segundo grado en tres variables.", fuente: "Semana 1 · Planos y superficies cuádricas" },
+  { tema: "Regiones", frente: "Región tipo I", reverso: "Región plana descrita con límites verticales, donde y varía entre dos funciones de x.", fuente: "Semana 2 · Construcción y descripción de regiones" },
+  { tema: "Regiones", frente: "Región tipo II", reverso: "Región plana descrita con límites horizontales, donde x varía entre dos funciones de y.", fuente: "Semana 2 · Construcción y descripción de regiones" },
+  { tema: "Derivadas", frente: "Derivada parcial", reverso: "Derivada de una función de varias variables respecto de una variable, manteniendo las demás constantes.", fuente: "Semana 3 · Derivadas parciales, direccionales y gradiente" },
+  { tema: "Derivadas", frente: "Vector gradiente", reverso: "Vector formado por las derivadas parciales que apunta hacia el crecimiento máximo de una función.", fuente: "Semana 3 · Derivadas parciales, direccionales y gradiente" },
+  { tema: "Derivadas", frente: "Derivada direccional", reverso: "Tasa de cambio de una función en la dirección de un vector unitario.", fuente: "Semana 3 · Derivadas parciales, direccionales y gradiente" },
+  { tema: "Optimización", frente: "Extremo relativo", reverso: "Máximo o mínimo de una función comparado con valores de un entorno cercano.", fuente: "Semana 4 · Extremos relativos" },
+  { tema: "Integrales dobles", frente: "Integral doble", reverso: "Límite de sumas que acumula una función sobre una región bidimensional.", fuente: "Semana 5 · Integrales dobles" },
+  { tema: "Integrales dobles", frente: "Coordenadas polares", reverso: "Sistema que representa un punto plano por radio r y ángulo theta.", fuente: "Semana 6 · Integrales dobles en coordenadas polares" },
+  { tema: "Integrales dobles", frente: "Jacobiano polar", reverso: "Factor r que aparece al transformar una integral doble de coordenadas cartesianas a polares.", fuente: "Semana 6 · Integrales dobles en coordenadas polares" },
+  { tema: "Integrales triples", frente: "Coordenadas cilíndricas", reverso: "Sistema tridimensional que usa r, theta y z para describir puntos alrededor del eje z.", fuente: "Semana 7 · Integrales triples en coordenadas cilíndricas" },
+  { tema: "Integrales triples", frente: "Coordenadas esféricas", reverso: "Sistema tridimensional que usa distancia al origen y dos ángulos para describir un punto.", fuente: "Semana 9 · Integrales triples en coordenadas esféricas" },
+  { tema: "Campos", frente: "Campo escalar", reverso: "Función que asigna un número a cada punto de una región.", fuente: "Semana 11 · Campos escalares y vectoriales" },
+  { tema: "Campos", frente: "Campo vectorial", reverso: "Función que asigna un vector a cada punto de una región.", fuente: "Semana 11 · Campos escalares y vectoriales" },
+  { tema: "Curvas", frente: "Función vectorial", reverso: "Función que asigna a un parámetro un vector de posición y puede describir una curva.", fuente: "Semana 9 · Funciones vectoriales" },
+  { tema: "Integrales de línea", frente: "Integral de línea escalar", reverso: "Acumulación de un campo escalar a lo largo de una curva, ponderada por longitud de arco.", fuente: "Semana 12 · Integral curvilínea de campo escalar" },
+  { tema: "Integrales de línea", frente: "Integral de línea vectorial", reverso: "Acumulación de un campo vectorial a lo largo de una curva mediante el producto punto con el desplazamiento.", fuente: "Semana 12 · Integral curvilínea de campo vectorial" },
+  { tema: "Teoremas", frente: "Teorema de Green", reverso: "Relaciona una integral de línea cerrada en el plano con una integral doble sobre la región interior.", fuente: "Semana 12 · Teorema de Green" },
+  { tema: "Superficies", frente: "Integral de superficie", reverso: "Acumulación de un campo escalar o flujo de un campo vectorial sobre una superficie.", fuente: "Semana 13 · Integral de superficie" },
+  { tema: "Teoremas", frente: "Teorema de la divergencia", reverso: "Relaciona el flujo saliente de un campo a través de una superficie cerrada con una integral triple de su divergencia.", fuente: "Semana 14 · Teoremas de divergencia y Stokes" },
+  { tema: "Teoremas", frente: "Teorema de Stokes", reverso: "Relaciona una integral de línea sobre una curva cerrada con el flujo del rotacional sobre una superficie que la bordea.", fuente: "Semana 14 · Teoremas de divergencia y Stokes" },
+]);
+
+export const CONTENIDO_CICLO6: ContenidoCurso[] = [ARQUITECTURA_AMPLIADA, EXPERIMENTOS_AMPLIADO, FUNDAMENTOS_AMPLIADO, REDES_AMPLIADO, CALCULO_AMPLIADO];
 export function contenidoParaCurso(nombre: string): ContenidoCurso | undefined {
   const normalizado = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return CONTENIDO_CICLO6.find((c) => c.alias.test(normalizado));

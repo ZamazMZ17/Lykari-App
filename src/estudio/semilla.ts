@@ -1254,13 +1254,21 @@ async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Pro
       await db.preguntasCurso.bulkDelete(existentes.flatMap((pregunta) => pregunta.id == null ? [] : [pregunta.id]));
     }
     await agregarPreguntas(contenido.preguntas.map((pregunta) => ({ ...pregunta, cursoId })));
+  } else {
+    // En cada ampliación se agregan solo los ítems nuevos. Conserva las
+    // estadísticas de respuesta de lo que el usuario ya practicó.
+    const nuevas = contenido.preguntas.filter(
+      (pregunta) => !existentes.some((existente) => existente.pregunta === pregunta.pregunta && existente.fuente === pregunta.fuente),
+    );
+    if (nuevas.length > 0) await agregarPreguntas(nuevas.map((pregunta) => ({ ...pregunta, cursoId })));
   }
 
-  const tarjetas = await db.tarjetasEstudio.where("cursoId").equals(cursoId).count();
-  if (tarjetas === 0) {
-    await db.tarjetasEstudio.bulkAdd(
-      contenido.tarjetas.map((tarjeta) => ({ ...tarjeta, cursoId, creada: Date.now() })),
-    );
+  const tarjetas = await db.tarjetasEstudio.where("cursoId").equals(cursoId).toArray();
+  const nuevasTarjetas = contenido.tarjetas.filter(
+    (tarjeta) => !tarjetas.some((existente) => existente.frente === tarjeta.frente && existente.fuente === tarjeta.fuente),
+  );
+  if (nuevasTarjetas.length > 0) {
+    await db.tarjetasEstudio.bulkAdd(nuevasTarjetas.map((tarjeta) => ({ ...tarjeta, cursoId, creada: Date.now() })));
   }
 }
 
