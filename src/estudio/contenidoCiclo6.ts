@@ -188,13 +188,17 @@ const CALCULO: ContenidoCurso = {
 export type Memoria = { tema: string; frente: string; reverso: string; fuente: string };
 
 /**
- * Cada idea comprobada en un archivo de clase crea tres preguntas: recuperar
- * la definición, reconocer el concepto y elegirlo en una situación de uso.
- * Así el cuestionario practica términos y aplicación, no solo memoria literal.
+ * Cada idea comprobada en un archivo de clase crea tres preguntas solo cuando
+ * existen al menos tres distractores del mismo tema. Así nunca se compara un
+ * puerto con un cliente o un host: las alternativas deben exigir distinguir
+ * conceptos cercanos, no descartar opciones absurdas.
  */
 function ampliar(contenido: ContenidoCurso, memorias: Memoria[]): ContenidoCurso {
-  const preguntas = memorias.flatMap((memoria, indice) => {
-    const alternativas = memorias.filter((_, otra) => otra !== indice).slice(0, 3);
+  const preguntas = memorias.flatMap((memoria) => {
+    const alternativas = memorias
+      .filter((otra) => otra !== memoria && otra.tema === memoria.tema)
+      .slice(0, 3);
+    if (alternativas.length < 3) return [];
     return [
       // La definición ya aparece completa como alternativa: repetirla abajo
       // no añade estudio, solo alarga la pantalla.
@@ -271,12 +275,16 @@ const REDES_SEMANAS_1_A_5: Memoria[] = [
   { tema: "S1 · Componentes", frente: "NIC", reverso: "Tarjeta de interfaz de red que permite conectar un dispositivo a una red mediante un puerto o interfaz.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Medios", frente: "Medio de cobre", reverso: "Medio de transmisión que lleva comunicación mediante impulsos eléctricos por alambres metálicos.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Medios", frente: "Fibra óptica", reverso: "Medio formado por fibras de vidrio o plástico que transporta datos mediante pulsos de luz.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Medios", frente: "Medio inalámbrico", reverso: "Medio de transmisión que propaga datos mediante ondas electromagnéticas, sin un conductor físico entre los extremos.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Medios", frente: "Cable coaxial", reverso: "Medio de cobre con conductor central y blindaje, usado entre otros contextos en redes HFC de televisión por cable.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Tipos de red", frente: "LAN", reverso: "Infraestructura que conecta dispositivos en un área limitada y suele ser administrada por una organización.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Tipos de red", frente: "WAN", reverso: "Infraestructura que interconecta LAN a través de áreas geográficas extensas y generalmente depende de proveedores de servicio.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Tipos de red", frente: "WLAN", reverso: "Red de área local que brinda conectividad inalámbrica, por ejemplo mediante Wi-Fi.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Tipos de red", frente: "PAN", reverso: "Red de área personal de alcance muy corto que interconecta dispositivos cercanos de una misma persona.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Internet", frente: "ISP", reverso: "Empresa que proporciona acceso a Internet a personas u organizaciones y puede ofrecer servicios complementarios.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Internet", frente: "FTTH", reverso: "Acceso de fibra óptica hasta el hogar que ofrece un ancho de banda muy alto.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Internet", frente: "HFC", reverso: "Acceso de alto ancho de banda de proveedores de televisión por cable mediante una red híbrida de fibra y coaxial.", fuente: "Semana 1 · Presentación de Redes" },
+  { tema: "S1 · Internet", frente: "DSL", reverso: "Tecnología de acceso a Internet que usa líneas telefónicas de cobre y suele estar disponible donde existe infraestructura telefónica.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Arquitectura", frente: "Red convergente", reverso: "Infraestructura única que transporta datos, voz y video usando el mismo conjunto de reglas y estándares.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Arquitectura", frente: "Tolerancia a fallas", reverso: "Capacidad de limitar el impacto de una falla mediante redundancia y rutas alternativas para los paquetes.", fuente: "Semana 1 · Presentación de Redes" },
   { tema: "S1 · Arquitectura", frente: "Escalabilidad", reverso: "Capacidad de una red de crecer para admitir usuarios y aplicaciones sin afectar el servicio de los usuarios actuales.", fuente: "Semana 1 · Presentación de Redes" },
@@ -287,16 +295,24 @@ const REDES_SEMANAS_1_A_5: Memoria[] = [
   { tema: "S2 · Protocolos", frente: "Protocolo de red", reverso: "Conjunto de reglas que define cómo se codifican, formatean, temporizan y entregan mensajes entre dispositivos.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Protocolos", frente: "Secuenciación", reverso: "Función que identifica el orden de los datos para que el destino pueda reconstruir el mensaje correctamente.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Protocolos", frente: "Control de flujo", reverso: "Función que regula la velocidad de envío para que el receptor pueda procesar los datos.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Protocolos", frente: "Confiabilidad", reverso: "Función que confirma la recepción y permite detectar o recuperar información perdida durante la comunicación.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Comunicación", frente: "Unicast", reverso: "Comunicación en la que un origen envía un mensaje a un único destino.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Comunicación", frente: "Multicast", reverso: "Comunicación en la que un origen envía un mensaje a un grupo específico de receptores.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Comunicación", frente: "Broadcast", reverso: "Comunicación en la que un origen envía un mensaje a todos los dispositivos de su dominio de broadcast.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Comunicación", frente: "Anycast", reverso: "Comunicación en la que un origen se dirige a uno de varios destinos equivalentes, normalmente al más cercano según el enrutamiento.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Modelos", frente: "Encapsulación", reverso: "Proceso por el que cada capa agrega su información de control al preparar datos para transmitirlos.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Modelos", frente: "PDU de transporte", reverso: "Unidad de datos de la capa de transporte llamada segmento cuando se usa TCP.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Modelos", frente: "PDU de enlace", reverso: "Unidad de datos de la capa de enlace de datos llamada trama.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Modelos", frente: "PDU de red", reverso: "Unidad de datos de la capa de red llamada paquete, que incluye direccionamiento lógico IPv4 o IPv6.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Transporte", frente: "Puerto 443", reverso: "Número de puerto asociado habitualmente al servicio HTTPS.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Transporte", frente: "Puerto 53", reverso: "Número de puerto asociado habitualmente al servicio DNS.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Transporte", frente: "Puerto 80", reverso: "Número de puerto asociado habitualmente al servicio HTTP.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Transporte", frente: "Puerto 22", reverso: "Número de puerto asociado habitualmente al acceso remoto seguro SSH.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Transporte", frente: "Puerto 3306", reverso: "Número de puerto asociado habitualmente al servicio MySQL.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Rendimiento", frente: "Ancho de banda", reverso: "Capacidad de un medio para transportar datos durante una cantidad determinada de tiempo.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Rendimiento", frente: "Latencia", reverso: "Tiempo que tarda un dato en recorrer la red desde el origen hasta el destino.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Rendimiento", frente: "Goodput", reverso: "Tasa de datos útiles entregados a la aplicación, sin contar sobrecarga ni retransmisiones.", fuente: "Semana 2 · Protocolos de Redes" },
+  { tema: "S2 · Rendimiento", frente: "Throughput", reverso: "Tasa real de bits transferidos a través del medio durante un intervalo, incluyendo la sobrecarga de la comunicación.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Medios", frente: "Diafonía", reverso: "Interferencia que se produce cuando la señal de un par de hilos de cobre afecta a otro par cercano.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Medios", frente: "Auto-MDIX", reverso: "Función Ethernet que detecta y ajusta automáticamente los pares de transmisión y recepción.", fuente: "Semana 2 · Protocolos de Redes" },
   { tema: "S2 · Medios", frente: "Fibra monomodo", reverso: "Fibra óptica diseñada para enlaces de larga distancia con un único modo de propagación de luz.", fuente: "Semana 2 · Protocolos de Redes" },
@@ -305,10 +321,14 @@ const REDES_SEMANAS_1_A_5: Memoria[] = [
   { tema: "S3 · IP", frente: "TTL", reverso: "Campo IPv4 que se reduce en cada router y causa el descarte del paquete cuando llega a cero.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S3 · IP", frente: "NAT", reverso: "Proceso que traduce direcciones IP privadas a públicas o viceversa en el borde de una red.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S3 · IPv4", frente: "Rango privado 10.0.0.0/8", reverso: "Bloque RFC 1918 de direcciones privadas desde 10.0.0.0 hasta 10.255.255.255.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IPv4", frente: "Rango privado 172.16.0.0/12", reverso: "Bloque RFC 1918 de direcciones privadas desde 172.16.0.0 hasta 172.31.255.255.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · IPv4", frente: "Rango privado 192.168.0.0/16", reverso: "Bloque RFC 1918 de direcciones privadas desde 192.168.0.0 hasta 192.168.255.255.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S3 · IPv4", frente: "Loopback IPv4", reverso: "Rango 127.0.0.0/8 reservado para comprobar la pila TCP/IP local del propio host.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S3 · IPv4", frente: "APIPA", reverso: "Rango 169.254.0.0/16 que un host puede autoconfigurarse cuando no obtiene una dirección IPv4 de DHCP.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S3 · Subredes", frente: "Operación AND", reverso: "Operación binaria entre una dirección IPv4 y su máscara para obtener la dirección de red.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S3 · Subredes", frente: "Prefijo /30", reverso: "Prefijo IPv4 con dos direcciones de host utilizables, habitual en enlaces punto a punto.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · Subredes", frente: "Prefijo /24", reverso: "Prefijo IPv4 con 254 direcciones de host utilizables y máscara 255.255.255.0.", fuente: "Semana 3 · Direccionamiento IPv4" },
+  { tema: "S3 · Subredes", frente: "Dominio de broadcast", reverso: "Conjunto de dispositivos que reciben una trama de broadcast de capa 2; un router delimita ese dominio.", fuente: "Semana 3 · Direccionamiento IPv4" },
   { tema: "S4 · VLSM", frente: "Asignación de mayor a menor", reverso: "Regla VLSM que asigna primero la subred con mayor necesidad de hosts y continúa hacia la menor.", fuente: "Semana 4 · VLSM" },
   { tema: "S4 · Diseño", frente: "Dirección estática", reverso: "Dirección IP predecible que se asigna a servidores y periféricos que deben ser localizables de forma estable.", fuente: "Semana 4 · VLSM" },
   { tema: "S4 · Diseño", frente: "DMZ", reverso: "Zona donde se ubican servidores accesibles desde Internet con direcciones públicas y separación del entorno interno.", fuente: "Semana 4 · VLSM" },
@@ -386,6 +406,17 @@ const FUNDAMENTOS_PREPARADO = conCasosDePreparacion(FUNDAMENTOS_AMPLIADO, [
 ], [t("POO", "Composición vs. agregación", "Usa composición cuando la parte depende del ciclo de vida del todo; usa agregación cuando puede existir de forma independiente.", "Semana 1 · Introducción a Estructuras de Datos")]);
 
 const REDES_PREPARADAS = conCasosDePreparacion(REDES_AMPLIADO, [
+  q("Servicios", "Una política de firewall permite navegación web cifrada hacia servidores externos, pero debe bloquear HTTP sin cifrado. ¿Qué puerto TCP debe permanecer permitido?", "443", ["80", "53", "22"], "HTTPS utiliza habitualmente TCP 443. El 80 corresponde a HTTP, 53 a DNS y 22 a SSH.", "Semana 2 · Protocolos de Redes"),
+  q("Transporte", "Un sistema debe enviar un archivo de configuración completo y en el mismo orden en que fue producido. Si hay pérdida, debe detectarse y recuperarse. ¿Qué protocolo satisface directamente esos requisitos?", "TCP", ["UDP", "IP", "ARP"], "TCP es orientado a conexión y aporta entrega confiable, control de flujo y secuenciación. UDP prioriza menor sobrecarga sin garantizar entrega u orden.", "Semana 2 · Protocolos de Redes"),
+  q("PDU", "En una captura, un router elimina la cabecera de enlace recibida y toma una decisión con la dirección IPv4 de destino antes de crear una nueva cabecera de enlace. ¿Qué PDU está procesando para enrutar?", "Paquete", ["Trama", "Segmento TCP", "Bits"], "El router toma la decisión de capa 3 sobre el paquete IP. La trama solo sirve en el enlace local y cambia en cada salto.", "Semana 2 · Protocolos de Redes"),
+  q("Encapsulación", "Un equipo entrega datos de aplicación a TCP, luego IPv4 y finalmente Ethernet. ¿Cuál es la secuencia correcta de PDU al salir por el medio?", "Datos → segmento → paquete → trama → bits", ["Datos → paquete → segmento → trama → bits", "Datos → trama → paquete → segmento → bits", "Datos → segmento → trama → paquete → bits"], "Al descender por las capas se forma primero el segmento de transporte, luego el paquete IP y después la trama Ethernet; el medio transmite bits.", "Semana 2 · Protocolos de Redes"),
+  q("IPv4", "Un host configurado para DHCP termina con la dirección 169.254.23.8 y no puede alcanzar otras redes. ¿Qué diagnóstico encaja mejor?", "No obtuvo una concesión DHCP y se autoconfiguró con APIPA", ["Recibió una dirección privada RFC 1918 válida para salir a Internet", "Está usando la dirección loopback para probar la pila local", "El router le tradujo una IP pública mediante NAT"], "El bloque 169.254.0.0/16 es APIPA: aparece cuando un host no obtiene una dirección IPv4 de DHCP.", "Semana 3 · Direccionamiento IPv4"),
+  q("IPv4", "Una estación con IP privada 192.168.20.15 necesita acceder a un servidor de Internet. ¿Qué función en el borde permite que su dirección privada no se anuncie como ruta pública?", "NAT", ["TTL", "MTU", "APIPA"], "NAT traduce direcciones privadas a públicas o viceversa en el borde. TTL limita saltos, MTU limita tamaño y APIPA es autoconfiguración local.", "Semana 3 · Direccionamiento IPv4"),
+  q("IPv4", "Un paquete IPv4 llega a un router con TTL igual a 1. El router debe reenviarlo a otra red. ¿Qué ocurre?", "Reduce el TTL a 0 y descarta el paquete", ["Lo reenvía sin cambiar el TTL", "Lo fragmenta para restaurar el TTL", "Le asigna una dirección APIPA y lo reenvía"], "Cada router reduce el TTL. Cuando llega a cero, el paquete se descarta para impedir bucles de enrutamiento.", "Semana 3 · Direccionamiento IPv4"),
+  q("IPv4", "Un datagrama IPv4 de 1 600 bytes debe cruzar un enlace con MTU de 1 500 bytes y no se permite reducir su carga útil. ¿Cuál es la consecuencia esperada en IPv4?", "Debe fragmentarse antes de cruzar el enlace, si la fragmentación está permitida", ["Se convierte automáticamente en una trama más corta sin cambios", "Aumenta su TTL para compensar el tamaño", "El router cambia su dirección privada por una pública"], "La MTU es el tamaño máximo que un medio transporta sin fragmentación. Si IPv4 debe cruzar una MTU menor, puede requerir fragmentación.", "Semana 3 · Direccionamiento IPv4"),
+  q("Subnetting", "Un host usa 192.168.69.151/26. Un técnico propone como gateway 192.168.69.193. ¿Qué evaluación es correcta?", "No pertenece a la misma subred: 192.168.69.151 está en 192.168.69.128/26", ["Es válido porque ambas direcciones comparten los tres primeros octetos", "Es inválido porque .151 es dirección de broadcast", "Es válido solo si se activa NAT"], "Con /26 los bloques del último octeto son 0, 64, 128 y 192. La IP .151 está en 128–191; .193 pertenece al siguiente bloque.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
+  q("Subnetting", "En 192.168.100.248/30 se asignaron .249 y .250 a dos routers. ¿Qué par identifica correctamente red y broadcast?", "Red .248 y broadcast .251", ["Red .249 y broadcast .250", "Red .250 y broadcast .251", "Red .248 y broadcast .250"], "Un /30 contiene cuatro direcciones consecutivas: red .248, hosts .249 y .250, y broadcast .251.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
+  q("Conmutación", "Una PC envía una trama Ethernet de broadcast para descubrir un servicio. ¿Cuál es el límite que impide que esa misma trama se propague a otra red IP?", "El router, porque delimita el dominio de broadcast", ["El switch, porque nunca reenvía broadcasts", "El servidor DNS, porque resuelve nombres", "La NIC, porque elimina toda trama de broadcast"], "Un switch puede inundar una trama de broadcast dentro de su dominio. El router no reenvía broadcasts de capa 2 hacia otra red.", "Semana 3 · Direccionamiento IPv4"),
   q("VLSM", "Debes subdividir 172.25.0.0/22 para LAN de 400, 200, 100 y 20 hosts, más dos enlaces punto a punto. ¿Cuál es el orden correcto de prefijos mínimos?", "/23, /24, /25, /27 y dos /30", ["/24, /25, /26, /28 y dos /30", "/22, /23, /24, /27 y dos /31", "/23, /25, /26, /28 y dos /29"], "Se asigna de mayor a menor: 400 hosts necesita /23 (510 utilizables), 200 /24, 100 /25, 20 /27 y cada enlace punto a punto /30.", "Semana 4 · VLSM · práctica PC1"),
   q("Subnetting", "Un host tiene 192.168.69.151/26. Durante una revisión de Packet Tracer, ¿qué dirección de red debe tener su segmento?", "192.168.69.128/26", ["192.168.69.0/26", "192.168.69.151/26", "192.168.69.192/26"], "Con /26 los bloques avanzan de 64: 0, 64, 128 y 192. La dirección 151 pertenece al bloque 128–191.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
   q("Subnetting", "En el enlace 192.168.100.248/30 se configuró la IP 192.168.100.250. ¿Qué dirección es el broadcast y por qué no puede asignarse a un router?", "192.168.100.251, porque es la última dirección del bloque /30", ["192.168.100.248, porque es la red", "192.168.100.250, porque es la segunda IP", "192.168.100.252, porque inicia el siguiente bloque"], "Un /30 tiene cuatro direcciones: red .248, hosts .249 y .250, broadcast .251.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),

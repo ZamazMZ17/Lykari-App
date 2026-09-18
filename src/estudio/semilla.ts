@@ -1248,6 +1248,14 @@ void [ARQ_NEGOCIO, CALCULO_II, DISENO_EXP, FUNDAMENTOS_SI, REDES];
 async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Promise<void> {
   const existentes = await preguntasDeCurso(cursoId);
   const tieneMaterialReal = existentes.some((pregunta) => Boolean(pregunta.fuente));
+  const esPreguntaGenerada = (pregunta: Pick<PreguntaCurso, "pregunta">): boolean => (
+    pregunta.pregunta.startsWith("¿Qué describe ")
+    || pregunta.pregunta.startsWith("¿Qué concepto corresponde a esta descripción?")
+    || pregunta.pregunta.startsWith("Una situación requiere lo siguiente:")
+  );
+  const clave = (pregunta: Pick<PreguntaCurso, "fuente" | "pregunta">): string => (
+    `${pregunta.fuente ?? ""}::${pregunta.pregunta}`
+  );
   const coincide = (pregunta: PreguntaSin, existente: PreguntaCurso): boolean => {
     if (existente.fuente !== pregunta.fuente) return false;
     if (existente.pregunta === pregunta.pregunta) return true;
@@ -1264,10 +1272,23 @@ async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Pro
     }
     await agregarPreguntas(contenido.preguntas.map((pregunta) => ({ ...pregunta, cursoId })));
   } else {
+    // Las preguntas automáticas antiguas podían mezclar conceptos no
+    // relacionados como distractores. Se retiran solo esas variantes débiles;
+    // el avance se conserva en toda pregunta que todavía es válida.
+    const generadasVigentes = new Set(
+      contenido.preguntas.filter(esPreguntaGenerada).map(clave),
+    );
+    const obsoletas = existentes.filter((pregunta) => (
+      esPreguntaGenerada(pregunta) && !generadasVigentes.has(clave(pregunta))
+    ));
+    const idsObsoletos = obsoletas.flatMap((pregunta) => pregunta.id == null ? [] : [pregunta.id]);
+    if (idsObsoletos.length > 0) await db.preguntasCurso.bulkDelete(idsObsoletos);
+    const vigentes = existentes.filter((pregunta) => !obsoletas.includes(pregunta));
+
     // En cada ampliación se agregan ítems nuevos y se mejora la explicación
     // de los ya vistos. Las estadísticas personales nunca se tocan.
     const actualizaciones = contenido.preguntas.flatMap((pregunta) => {
-      const existente = existentes.find((item) => coincide(pregunta, item));
+      const existente = vigentes.find((item) => coincide(pregunta, item));
       if (existente?.id == null) return [];
       const cambio = existente.tema !== pregunta.tema
         || existente.pregunta !== pregunta.pregunta
@@ -1284,7 +1305,7 @@ async function sembrarContenido(cursoId: number, contenido: ContenidoCurso): Pro
     });
     await Promise.all(actualizaciones.map(({ id, cambios }) => db.preguntasCurso.update(id, cambios)));
     const nuevas = contenido.preguntas.filter(
-      (pregunta) => !existentes.some((existente) => coincide(pregunta, existente)),
+      (pregunta) => !vigentes.some((existente) => coincide(pregunta, existente)),
     );
     if (nuevas.length > 0) await agregarPreguntas(nuevas.map((pregunta) => ({ ...pregunta, cursoId })));
   }
