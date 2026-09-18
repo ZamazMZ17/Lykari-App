@@ -22,12 +22,17 @@ export async function leerReglas(): Promise<ReglasControl> {
 /** Aplica una sola vez la puerta acordada para las instalaciones anteriores. */
 export async function prepararPuertaEstudioInicial(): Promise<void> {
   const reglas = await leerReglas();
-  if (reglas.puertaEstudio.configurada) return;
+  // Facebook se suma a instalaciones ya configuradas sin restaurar otras apps
+  // que la persona hubiese retirado deliberadamente de su puerta de estudio.
+  const facebook = "com.facebook.katana";
+  if (reglas.puertaEstudio.configurada && reglas.puertaEstudio.apps.includes(facebook)) return;
   await guardarReglas({
     ...reglas,
     puertaEstudio: {
       activa: true,
-      apps: APPS_PUERTA_ESTUDIO_INICIAL,
+      apps: reglas.puertaEstudio.configurada
+        ? [...reglas.puertaEstudio.apps, facebook]
+        : APPS_PUERTA_ESTUDIO_INICIAL,
       configurada: true,
     },
     actualizado: reglas.actualizado,

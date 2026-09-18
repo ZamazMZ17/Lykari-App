@@ -17,6 +17,7 @@ export function Hoy({
   actividades,
   msPorActividad,
   msTotal,
+  msEstudio,
   sesionesHoy,
   abierta,
   amplia,
@@ -36,6 +37,8 @@ export function Hoy({
   actividades: Actividad[];
   msPorActividad: Map<number, number>;
   msTotal: number;
+  /** Tiempo registrado dentro de estudio; no forma parte de las sesiones manuales. */
+  msEstudio: number;
   sesionesHoy: number;
   abierta: Sesion | undefined;
   /** En tablet las actividades se reparten en columnas. */
@@ -61,6 +64,7 @@ export function Hoy({
     ["min registrados", enMinutos(msTotal)],
     ["sesiones", sesionesHoy],
     ["actividades", actividades.length],
+    ["estudio", enMinutos(msEstudio)],
   ];
 
   return (
@@ -134,7 +138,7 @@ export function Hoy({
         <BookOpen size={18} color="var(--pino)" />
         <div style={{ flex: 1 }}>
           <div className="eyebrow" style={{ marginBottom: 2 }}>Estudio</div>
-          <div style={{ fontSize: 13.5 }}>Repasar con preguntas de tus cursos</div>
+          <div style={{ fontSize: 13.5 }}>{msEstudio > 0 ? `${enMinutos(msEstudio)} de estudio hoy · preguntas y tarjetas` : "Repasar con preguntas de tus cursos"}</div>
         </div>
         <ChevronRight size={16} color="var(--ink2)" />
       </button>

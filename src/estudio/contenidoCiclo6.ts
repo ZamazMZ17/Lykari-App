@@ -365,7 +365,42 @@ const CALCULO_AMPLIADO = ampliar(CALCULO, [
   { tema: "Teoremas", frente: "Teorema de Stokes", reverso: "Relaciona una integral de línea sobre una curva cerrada con el flujo del rotacional sobre una superficie que la bordea.", fuente: "Semana 14 · Teoremas de divergencia y Stokes" },
 ]);
 
-export const CONTENIDO_CICLO6: ContenidoCurso[] = [ARQUITECTURA_AMPLIADA, EXPERIMENTOS_AMPLIADO, FUNDAMENTOS_AMPLIADO, REDES_AMPLIADO, CALCULO_AMPLIADO];
+function conCasosDePreparacion(contenido: ContenidoCurso, preguntas: PreguntaBase[], tarjetas: TarjetaBase[]): ContenidoCurso {
+  return { ...contenido, preguntas: [...contenido.preguntas, ...preguntas], tarjetas: [...contenido.tarjetas, ...tarjetas] };
+}
+
+/** Casos de decisión: obligan a aplicar el material, no solo a reconocer términos. */
+const ARQUITECTURA_PREPARADA = conCasosDePreparacion(ARQUITECTURA_AMPLIADA, [
+  q("AS-IS y TO-BE", "Una empresa conoce sus procesos actuales, define la arquitectura objetivo y compara ambas para priorizar cambios. ¿Qué producto de ese contraste guía la transformación?", "El análisis de brechas entre AS-IS y TO-BE", ["Un nuevo organigrama", "Un catálogo de aplicaciones sin relaciones", "La fase de implementación sin diagnóstico"], "La brecha identifica qué capacidades, procesos o recursos deben cambiar para pasar del estado actual al objetivo.", "Unidad 1 · Arquitectura de Negocio"),
+  q("TOGAF", "El equipo ya acordó la visión y ahora modela procesos, capacidades y organización antes de diseñar aplicaciones y datos. ¿Qué fase del ADM está trabajando?", "Arquitectura de Negocio (Fase B)", ["Visión de Arquitectura (Fase A)", "Arquitectura Tecnológica (Fase D)", "Gobierno de Implementación (Fase G)"], "La Fase B define la arquitectura de negocio; aplicaciones y datos se tratan después en la Fase C.", "Unidad 1 · Arquitectura de Negocio"),
+], [t("AS-IS y TO-BE", "Brecha arquitectónica", "Diferencia verificable entre la situación actual y la arquitectura objetivo; sirve para justificar y priorizar iniciativas.", "Unidad 1 · Arquitectura de Negocio")]);
+
+const EXPERIMENTOS_PREPARADO = conCasosDePreparacion(EXPERIMENTOS_AMPLIADO, [
+  q("Validación", "Un requisito exige generar una boleta y otro indica que el sistema nunca debe almacenar datos de pago. Antes de construir, ¿qué criterio de validación detecta el problema?", "Consistencia", ["Completitud", "Realismo", "Trazabilidad"], "Los requisitos se contradicen: el pago exige información que la otra regla prohíbe conservar. La revisión debe resolverlo con los interesados.", "Unidad 1 · S1 · Modelos de Requerimientos"),
+  q("Diseño experimental", "Para evaluar si una nueva interfaz reduce el tiempo de registro, ¿cuál es la variable dependiente más adecuada?", "El tiempo de registro medido para cada participante", ["La versión de interfaz asignada", "El color elegido por el diseñador", "El nombre del proyecto"], "La interfaz es el tratamiento o variable independiente; el resultado observado es el tiempo de registro.", "Unidad 2 · Lectura 1 · Diseño de Experimentos"),
+], [t("Validación", "Conflicto de requisitos", "Dos requisitos incompatibles no se resuelven implementando ambos: se revisan con los interesados, se priorizan y se deja una decisión trazable.", "Unidad 1 · S1 · Modelos de Requerimientos")]);
+
+const FUNDAMENTOS_PREPARADO = conCasosDePreparacion(FUNDAMENTOS_AMPLIADO, [
+  q("POO", "Un pedido no debe existir sin su detalle: al eliminar el pedido, sus detalles también desaparecen. ¿Qué relación UML representa mejor esa regla?", "Composición", ["Agregación", "Herencia", "Asociación sin relación de ciclo de vida"], "En composición el todo controla el ciclo de vida de las partes; por eso los detalles no sobreviven al pedido.", "Semana 1 · Introducción a Estructuras de Datos"),
+  q("Estructuras", "Un historial de deshacer debe recuperar primero la última acción realizada. ¿Qué estructura y operación corresponden?", "Una pila con Pop", ["Una cola con Dequeue", "Una lista con Count", "Un arreglo con foreach"], "El comportamiento requerido es LIFO: la última acción ingresada es la primera que se revierte.", "Semana 5 · Pilas y Colas"),
+], [t("POO", "Composición vs. agregación", "Usa composición cuando la parte depende del ciclo de vida del todo; usa agregación cuando puede existir de forma independiente.", "Semana 1 · Introducción a Estructuras de Datos")]);
+
+const REDES_PREPARADAS = conCasosDePreparacion(REDES_AMPLIADO, [
+  q("VLSM", "Debes subdividir 172.25.0.0/22 para LAN de 400, 200, 100 y 20 hosts, más dos enlaces punto a punto. ¿Cuál es el orden correcto de prefijos mínimos?", "/23, /24, /25, /27 y dos /30", ["/24, /25, /26, /28 y dos /30", "/22, /23, /24, /27 y dos /31", "/23, /25, /26, /28 y dos /29"], "Se asigna de mayor a menor: 400 hosts necesita /23 (510 utilizables), 200 /24, 100 /25, 20 /27 y cada enlace punto a punto /30.", "Semana 4 · VLSM · práctica PC1"),
+  q("Subnetting", "Un host tiene 192.168.69.151/26. Durante una revisión de Packet Tracer, ¿qué dirección de red debe tener su segmento?", "192.168.69.128/26", ["192.168.69.0/26", "192.168.69.151/26", "192.168.69.192/26"], "Con /26 los bloques avanzan de 64: 0, 64, 128 y 192. La dirección 151 pertenece al bloque 128–191.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
+  q("Subnetting", "En el enlace 192.168.100.248/30 se configuró la IP 192.168.100.250. ¿Qué dirección es el broadcast y por qué no puede asignarse a un router?", "192.168.100.251, porque es la última dirección del bloque /30", ["192.168.100.248, porque es la red", "192.168.100.250, porque es la segunda IP", "192.168.100.252, porque inicia el siguiente bloque"], "Un /30 tiene cuatro direcciones: red .248, hosts .249 y .250, broadcast .251.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
+  q("Enrutamiento", "PC-A tiene 172.16.4.100/16 y necesita alcanzar un host de la misma red. ¿Cuál de estas IP puede ser destino sin enviar la trama al gateway?", "172.16.5.254", ["172.17.4.100", "172.16.4.0", "172.16.255.255"], "Con /16 pertenecen a la misma red todas las direcciones 172.16.x.x; la dirección de red y broadcast no se asignan a hosts.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
+], [
+  t("VLSM", "Diseño VLSM", "Ordena necesidades de mayor a menor, elige el prefijo mínimo que cubra hosts utilizables y recién después asigna los bloques consecutivos.", "Semana 4 · VLSM · práctica PC1"),
+  t("Packet Tracer", "Comprobación de un enlace /30", "Identifica red, dos hosts utilizables y broadcast. Si un router usa red o broadcast, el enlace no podrá enrutar correctamente.", "Semana 3 · Direccionamiento IPv4 · práctica PC1"),
+]);
+
+const CALCULO_PREPARADO = conCasosDePreparacion(CALCULO_AMPLIADO, [
+  q("Gradiente", "Para f(x,y)=x²+3y², ¿qué vector apunta hacia el crecimiento más rápido en el punto (1,2)?", "∇f(1,2) = (2,12)", ["(1,2)", "(2,6)", "(-2,-12)"], "El gradiente se obtiene con las parciales: fₓ=2x y fᵧ=6y. En (1,2) resulta (2,12).", "Semana 3 · Derivadas parciales, direccionales y gradiente"),
+  q("Integrales dobles", "Al transformar una región circular a coordenadas polares, un estudiante integra dr dθ y obtiene un área demasiado pequeña. ¿Qué factor omitió?", "El Jacobiano r", ["La derivada parcial fₓ", "El vector gradiente", "Un factor 1/r"], "El elemento de área cambia a r dr dθ; el factor r no es opcional y representa el escalamiento geométrico.", "Semana 6 · Integrales dobles en coordenadas polares"),
+], [t("Gradiente", "Procedimiento de gradiente", "Deriva respecto de cada variable, evalúa el punto y usa el vector resultante para la dirección de máximo incremento.", "Semana 3 · Derivadas parciales, direccionales y gradiente")]);
+
+export const CONTENIDO_CICLO6: ContenidoCurso[] = [ARQUITECTURA_PREPARADA, EXPERIMENTOS_PREPARADO, FUNDAMENTOS_PREPARADO, REDES_PREPARADAS, CALCULO_PREPARADO];
 export function contenidoParaCurso(nombre: string): ContenidoCurso | undefined {
   const normalizado = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return CONTENIDO_CICLO6.find((c) => c.alias.test(normalizado));

@@ -31,6 +31,7 @@ import { sembrarRutinasPermanentes } from "./db/planes";
 import { sembrarEstudioDeCursos } from "./db/estudioCursos";
 import { sembrarActividadesPersonales } from "./db/actividadesPersonales";
 import { sembrarPreguntas } from "./estudio/semilla";
+import { resumirEstudio } from "./estudio/sesiones";
 import { QUIZ_PUERTA, type ConfiguracionQuiz } from "./estudio/configuracionQuiz";
 import { prepararPuertaEstudioInicial } from "./control/almacen";
 import { actualizarAulaUPC } from "./sync/aula";
@@ -176,6 +177,7 @@ export default function App() {
   const aulaItems = useLiveQuery(() => db.aulaItems.toArray(), [], []);
   const proxima = useLiveQuery(() => proximaEvaluacion(dia), [dia]);
   const planes = useLiveQuery(() => db.planes.toArray(), [], []);
+  const sesionesEstudio = useLiveQuery(() => db.sesionesEstudio.where("fecha").equals(dia).toArray(), [dia], []);
   const planPorActividadId = useMemo(
     () => new Map(planes.map((p) => [p.actividadId, p])),
     [planes],
@@ -189,6 +191,15 @@ export default function App() {
     () => resumirDia(sesiones ?? [], ahora),
     [sesiones, ahora],
   );
+  const msEstudioHoy = useMemo(() => resumirEstudio(sesionesEstudio).msTotal, [sesionesEstudio]);
+
+  const cerrarQuiz = useCallback(() => {
+    window.dispatchEvent(new Event("lykari:quiz-cerrar"));
+    setQuizAbierto(false);
+    setQuizDestino(undefined);
+    setQuizCursoId(null);
+    setQuizConfiguracion(QUIZ_PUERTA);
+  }, []);
 
   /* ── reconciliación: no hay cron, se revisa al abrir y al volver ── */
   const revisar = useCallback(async () => {
@@ -255,12 +266,7 @@ export default function App() {
   useAtras(samAbierto, () => setSamAbierto(false));
   useAtras(privadoAbierto, () => setPrivadoAbierto(false));
   useAtras(estudioAbierto, () => setEstudioAbierto(false));
-  useAtras(quizAbierto, () => {
-    setQuizAbierto(false);
-    setQuizDestino(undefined);
-    setQuizCursoId(null);
-    setQuizConfiguracion(QUIZ_PUERTA);
-  });
+  useAtras(quizAbierto, cerrarQuiz);
 
   // El bloqueo nativo abre lykari://quiz?paquete=…; no usamos la ruta web
   // como autoridad: Android vuelve a validar que el paquete sea elegible.
@@ -420,12 +426,7 @@ export default function App() {
       />
     );
   } else if (quizAbierto) {
-    pantalla = <Quiz configuracion={quizConfiguracion} cursoIdInicial={quizCursoId} paqueteDestino={quizDestino} onBack={() => {
-      setQuizAbierto(false);
-      setQuizDestino(undefined);
-      setQuizCursoId(null);
-      setQuizConfiguracion(QUIZ_PUERTA);
-    }} />;
+    pantalla = <Quiz configuracion={quizConfiguracion} cursoIdInicial={quizCursoId} paqueteDestino={quizDestino} onBack={cerrarQuiz} />;
   } else if (estudioAbierto) {
     pantalla = <Estudio onBack={() => setEstudioAbierto(false)} onQuiz={(cursoId, configuracion) => {
       setQuizCursoId(cursoId);
@@ -458,6 +459,7 @@ export default function App() {
         actividades={actividades ?? []}
         msPorActividad={resumen.msPorActividad}
         msTotal={resumen.msTotal}
+        msEstudio={msEstudioHoy}
         sesionesHoy={resumen.sesiones}
         abierta={abierta}
         amplia={amplia}
@@ -484,6 +486,7 @@ export default function App() {
   }
 
   const irA = (k: Tab) => {
+    if (quizAbierto) window.dispatchEvent(new Event("lykari:quiz-cerrar"));
     setTab(k);
     setEnSesion(false);
     setSeccion(null);

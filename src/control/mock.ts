@@ -15,6 +15,7 @@ export const tablasMock = {
 const apps = [
   { paquete: "com.zhiliaoapp.musically", nombre: "TikTok", categoria: "social", esSistema: false },
   { paquete: "com.instagram.android", nombre: "Instagram", categoria: "social", esSistema: false },
+  { paquete: "com.facebook.katana", nombre: "Facebook", categoria: "social", esSistema: false },
   { paquete: "org.telegram.messenger", nombre: "Telegram", categoria: "social", esSistema: false },
   { paquete: "com.supercell.clashroyale", nombre: "Clash Royale", categoria: "juego", esSistema: false },
   { paquete: "com.android.chrome", nombre: "Chrome", categoria: "navegador", esSistema: false },

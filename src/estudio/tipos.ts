@@ -33,8 +33,12 @@ export interface SesionEstudio {
   correctas: number;
   duracionMs: number;
   minutosGanados: number;
+  /** Actividad que originó el tiempo. Las sesiones antiguas son cuestionarios. */
+  tipoActividad?: TipoActividadEstudio;
   creada: number;
 }
+
+export type TipoActividadEstudio = "cuestionario" | "flashcards" | "lectura";
 
 export interface EstadoQuiz {
   fase: "selector" | "pregunta" | "feedback" | "resultado";

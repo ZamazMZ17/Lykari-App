@@ -401,6 +401,9 @@ class BaseLykari extends Dexie {
     this.version(10).stores({
       tarjetasEstudio: "++id, cursoId, tema",
     });
+    this.version(11).stores({
+      sesionesEstudio: "++id, fecha, cursoId, tipoActividad, [fecha+cursoId]",
+    });
   }
 }
 

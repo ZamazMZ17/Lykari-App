@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Layers, RotateCcw } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { cursosActivos } from "../db/cursos";
@@ -6,6 +6,10 @@ import { CONTENIDO_CICLO6, contenidoParaCurso, type ContenidoCurso } from "../es
 import { sembrarPreguntas } from "../estudio/semilla";
 import { QUIZ_PUERTA, SIMULACRO_PRACTICA, type ConfiguracionQuiz } from "../estudio/configuracionQuiz";
 import { periodosDisponibles, tipoPeriodoCurso, type RangoPeriodoEstudio } from "../estudio/periodos";
+import { db } from "../db/db";
+import { hoyISO } from "../lib/fecha";
+import { registrarTiempoEstudio, resumirEstudio, type ResumenEstudio } from "../estudio/sesiones";
+import type { TipoActividadEstudio } from "../estudio/tipos";
 
 type OpcionCurso = { id: number; nombre: string; contenido: ContenidoCurso };
 type Modo = "inicio" | "tarjetas" | "conceptos";
@@ -17,6 +21,9 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
   const [tarjeta, setTarjeta] = useState(0);
   const [girada, setGirada] = useState(false);
   const [rango, setRango] = useState<RangoPeriodoEstudio | undefined>();
+  const sesiones = useLiveQuery(() => db.sesionesEstudio.toArray(), [], []);
+  const resumen = useMemo(() => resumirEstudio(sesiones), [sesiones]);
+  const resumenHoy = useMemo(() => resumirEstudio(sesiones.filter((sesion) => sesion.fecha === hoyISO())), [sesiones]);
 
   useEffect(() => { void sembrarPreguntas(); }, []);
 
@@ -71,7 +78,7 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
               {opciones.map((opcion) => (
                 <button key={opcion.id} className="qz-curso" onClick={() => setCursoId(opcion.id)}>
                   <span className="qz-curso-icono"><BookOpen size={20} /></span>
-                  <span className="qz-curso-info"><strong>{opcion.nombre}</strong><small>{opcion.contenido.preguntas.length} preguntas · {opcion.contenido.tarjetas.length} tarjetas</small></span>
+                  <span className="qz-curso-info"><strong>{opcion.nombre}</strong><small>{opcion.contenido.preguntas.length} preguntas · {opcion.contenido.tarjetas.length} tarjetas · {minutos(resumen.porCurso.get(opcion.id) ?? 0)} estudiados</small></span>
                   <ChevronRight size={18} />
                 </button>
               ))}
@@ -80,7 +87,10 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
         ) : modo === "inicio" ? (
           <Modos
             contenido={elegida.contenido}
+            cursoId={elegida.id}
             rango={rango}
+            resumen={resumen}
+            resumenHoy={resumenHoy}
             onRango={setRango}
             onQuiz={() => onQuiz(elegida.id, { ...QUIZ_PUERTA, rango })}
             onSimulacro={() => onQuiz(elegida.id, { ...SIMULACRO_PRACTICA, rango })}
@@ -90,22 +100,24 @@ export function Estudio({ onBack, onQuiz }: { onBack: () => void; onQuiz: (curso
         ) : modo === "tarjetas" ? (
           <Tarjetas
             contenido={elegida.contenido}
+            cursoId={elegida.id}
             indice={tarjeta}
             girada={girada}
             onGirar={() => setGirada((valor) => !valor)}
             onCambiar={(siguiente) => { setTarjeta(siguiente); setGirada(false); }}
           />
         ) : (
-          <Conceptos contenido={elegida.contenido} />
+          <Conceptos contenido={elegida.contenido} cursoId={elegida.id} />
         )}
       </main>
     </div>
   );
 }
 
-function Modos({ contenido, rango, onRango, onQuiz, onSimulacro, onTarjetas, onConceptos }: { contenido: ContenidoCurso; rango?: RangoPeriodoEstudio; onRango: (rango: RangoPeriodoEstudio) => void; onQuiz: () => void; onSimulacro: () => void; onTarjetas: () => void; onConceptos: () => void }) {
+function Modos({ contenido, cursoId, rango, resumen, resumenHoy, onRango, onQuiz, onSimulacro, onTarjetas, onConceptos }: { contenido: ContenidoCurso; cursoId: number; rango?: RangoPeriodoEstudio; resumen: ResumenEstudio; resumenHoy: ResumenEstudio; onRango: (rango: RangoPeriodoEstudio) => void; onQuiz: () => void; onSimulacro: () => void; onTarjetas: () => void; onConceptos: () => void }) {
   const tipo = tipoPeriodoCurso(contenido.nombre);
   const periodos = periodosDisponibles(contenido.preguntas, tipo);
+  const actividadHoy = resumenHoy.porCursoActividad.get(cursoId) ?? { cuestionario: 0, flashcards: 0, lectura: 0 };
   const opciones = [
     { icono: BookOpen, titulo: "Cuestionario", texto: "12 preguntas · necesitas 10 correctas para aprobar.", accion: onQuiz },
     { icono: ClipboardCheck, titulo: "Simulacro de práctica", texto: "30 preguntas · 0.5 puntos por respuesta correcta.", accion: onSimulacro },
@@ -115,6 +127,11 @@ function Modos({ contenido, rango, onRango, onQuiz, onSimulacro, onTarjetas, onC
   return (
     <>
       <p className="qz-intro">Escoge cómo quieres repasar. Puedes alternar entre recordar, responder y leer antes de volver al cuestionario.</p>
+      <section className="card" style={{ padding: "13px 14px", marginBottom: 14 }}>
+        <span className="eyebrow">Tu estudio en este curso</span>
+        <p style={{ margin: "5px 0", fontSize: 15 }}>{minutos(resumenHoy.porCurso.get(cursoId) ?? 0)} hoy · {minutos(resumen.porCurso.get(cursoId) ?? 0)} acumulados</p>
+        <small style={{ color: "var(--ink2)" }}>Cuestionarios {minutos(actividadHoy.cuestionario)} · tarjetas {minutos(actividadHoy.flashcards)} · lectura {minutos(actividadHoy.lectura)} hoy</small>
+      </section>
       {rango && periodos.length > 0 && (
         <section className="qz-rango" aria-label="Contenido incluido en el cuestionario">
           <span className="eyebrow">Contenido del cuestionario</span>
@@ -149,7 +166,8 @@ function Modos({ contenido, rango, onRango, onQuiz, onSimulacro, onTarjetas, onC
   );
 }
 
-function Tarjetas({ contenido, indice, girada, onGirar, onCambiar }: { contenido: ContenidoCurso; indice: number; girada: boolean; onGirar: () => void; onCambiar: (indice: number) => void }) {
+function Tarjetas({ contenido, cursoId, indice, girada, onGirar, onCambiar }: { contenido: ContenidoCurso; cursoId: number; indice: number; girada: boolean; onGirar: () => void; onCambiar: (indice: number) => void }) {
+  useTiempoEstudio(cursoId, "flashcards");
   const actual = contenido.tarjetas[indice];
   return (
     <section>
@@ -173,7 +191,8 @@ function Tarjetas({ contenido, indice, girada, onGirar, onCambiar }: { contenido
   );
 }
 
-function Conceptos({ contenido }: { contenido: ContenidoCurso }) {
+function Conceptos({ contenido, cursoId }: { contenido: ContenidoCurso; cursoId: number }) {
+  useTiempoEstudio(cursoId, "lectura");
   return (
     <section style={{ display: "grid", gap: 12 }}>
       <p className="qz-intro" style={{ margin: 0 }}>Lee una idea, tapa el texto y trata de explicarla con tus propias palabras antes de avanzar.</p>
@@ -187,4 +206,32 @@ function Conceptos({ contenido }: { contenido: ContenidoCurso }) {
       ))}
     </section>
   );
+}
+
+function minutos(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 60_000));
+  return total >= 60 ? `${Math.floor(total / 60)} h ${total % 60} min` : `${total} min`;
+}
+
+/** Cuenta únicamente mientras la aplicación está en primer plano. */
+function useTiempoEstudio(cursoId: number, tipoActividad: TipoActividadEstudio) {
+  const registro = useRef({ activo: false, inicio: 0, acumulado: 0 });
+  useEffect(() => {
+    const estado = registro.current;
+    const iniciar = () => {
+      if (!estado.activo) { estado.activo = true; estado.inicio = Date.now(); }
+    };
+    const detener = () => {
+      if (estado.activo) { estado.acumulado += Date.now() - estado.inicio; estado.activo = false; }
+    };
+    const alCambiarVisibilidad = () => document.visibilityState === "visible" ? iniciar() : detener();
+    if (document.visibilityState === "visible") iniciar();
+    document.addEventListener("visibilitychange", alCambiarVisibilidad);
+    return () => {
+      document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      detener();
+      void registrarTiempoEstudio({ cursoId, tipoActividad, duracionMs: estado.acumulado });
+      registro.current = { activo: false, inicio: 0, acumulado: 0 };
+    };
+  }, [cursoId, tipoActividad]);
 }

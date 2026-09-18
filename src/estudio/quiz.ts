@@ -1,10 +1,10 @@
 import { db } from "../db/db";
-import { hoyISO } from "../lib/fecha";
 import { motorControl } from "../control/servicio";
 import { seleccionarParaQuiz, registrarRespuesta } from "./preguntas";
-import type { EstadoQuiz, SesionEstudio } from "./tipos";
+import type { EstadoQuiz } from "./tipos";
 import type { OrigenCreditoEstudio, ResultadoCreditoEstudio } from "../control/tipos";
 import type { RangoPeriodoEstudio } from "./periodos";
+import { registrarTiempoEstudio } from "./sesiones";
 
 export function crearQuiz(preguntas: EstadoQuiz["preguntas"]): EstadoQuiz {
   return {
@@ -62,18 +62,13 @@ export async function finalizarQuiz(
   quiz: EstadoQuiz,
   paquete?: string,
 ): Promise<ResultadoCreditoEstudio | undefined> {
-  const sesion: Omit<SesionEstudio, "id"> = {
-    fecha: hoyISO(),
+  const sesionId = await registrarTiempoEstudio({
     cursoId: quiz.cursoId ?? undefined,
-    respondidas: quiz.preguntas.length,
-    correctas: quiz.correctas,
+    tipoActividad: "cuestionario",
     duracionMs: Date.now() - quiz.inicio,
-    // Solo se escribe después de que Android confirme el crédito. Un quiz
-    // aprobado al llegar al tope sigue siendo estudio, no minutos ganados.
-    minutosGanados: 0,
-    creada: Date.now(),
-  };
-  const sesionId = await db.sesionesEstudio.add(sesion as SesionEstudio);
+    respondidas: quiz.respuestas.filter((respuesta) => respuesta != null).length,
+    correctas: quiz.correctas,
+  });
 
   if (paquete) {
     try {
@@ -81,7 +76,7 @@ export async function finalizarQuiz(
         paquete,
         origen: "quiz" satisfies OrigenCreditoEstudio,
       });
-      if (resultado.concedido) await db.sesionesEstudio.update(sesionId, { minutosGanados: 15 });
+      if (resultado.concedido && sesionId != null) await db.sesionesEstudio.update(sesionId, { minutosGanados: 15 });
       return resultado;
     } catch {
       // En web/mock no hay motor nativo; el crédito queda solo en IndexedDB.

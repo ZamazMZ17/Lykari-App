@@ -34,6 +34,23 @@ export function Quiz({
   const [quiz, setQuiz] = useState<EstadoQuiz | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const quizRef = useRef<EstadoQuiz | null>(null);
+  const progresoGuardado = useRef(false);
+
+  useEffect(() => { quizRef.current = quiz; }, [quiz]);
+
+  const guardarProgreso = useCallback(async () => {
+    const actual = quizRef.current;
+    if (!actual || actual.fase === "resultado" || progresoGuardado.current) return;
+    progresoGuardado.current = true;
+    await finalizarQuiz(actual);
+  }, []);
+
+  useEffect(() => {
+    const alCerrarDesdeSistema = () => { void guardarProgreso(); };
+    window.addEventListener("lykari:quiz-cerrar", alCerrarDesdeSistema);
+    return () => window.removeEventListener("lykari:quiz-cerrar", alCerrarDesdeSistema);
+  }, [guardarProgreso]);
 
   const cursos = useLiveQuery(cursosActivos, [], []);
   const totalPreguntas = useLiveQuery(contarPreguntas, [], 0);
@@ -52,6 +69,7 @@ export function Quiz({
         setError(`No hay ${configuracion.cantidad} preguntas disponibles para este rango.`);
         return;
       }
+      progresoGuardado.current = false;
       setQuiz(q);
     } catch {
       setError("No se pudieron cargar las preguntas.");
@@ -110,6 +128,7 @@ export function Quiz({
           }
         }}
         onSalir={onBack}
+        onRegistrado={() => { progresoGuardado.current = true; }}
         paqueteDestino={paqueteDestino}
       />
     );
@@ -120,7 +139,7 @@ export function Quiz({
       quiz={quiz}
       onResponder={(opcion) => setQuiz(responder(quiz, opcion))}
       onSiguiente={() => setQuiz(siguiente(quiz))}
-      onSalir={onBack}
+      onSalir={() => { void guardarProgreso().finally(onBack); }}
     />
   );
 }
@@ -403,12 +422,14 @@ function Resultado({
   onReintentar,
   onSalir,
   paqueteDestino,
+  onRegistrado,
 }: {
   quiz: EstadoQuiz;
   configuracion: ConfiguracionQuiz;
   onReintentar: () => void;
   onSalir: () => void;
   paqueteDestino?: string;
+  onRegistrado: () => void;
 }) {
   const esPuerta = configuracion.tipo === "puerta";
   const paso = esPuerta && aprobo(quiz, configuracion.umbral ?? 10);
@@ -422,6 +443,7 @@ function Resultado({
       if (terminado.current) return;
       terminado.current = true;
       const resultado = await finalizarQuiz(quiz, paso ? paqueteDestino : undefined);
+      onRegistrado();
       if (!cancelado) {
         setGuardado(true);
         setCredito(!paso ? "sin_destino" : !paqueteDestino ? "sin_destino" : resultado?.concedido ? "concedido" : "denegado");
@@ -429,7 +451,7 @@ function Resultado({
     }
     void guardar();
     return () => { cancelado = true; };
-  }, [quiz, paso, paqueteDestino]);
+  }, [quiz, paso, paqueteDestino, onRegistrado]);
 
   const porcentaje = Math.round((quiz.correctas / quiz.preguntas.length) * 100);
   const puntaje = quiz.correctas * (configuracion.puntosPorRespuesta ?? 0);

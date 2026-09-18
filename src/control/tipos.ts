@@ -131,6 +131,7 @@ export const APPS_PUERTA_ESTUDIO_INICIAL: string[] = [
   "com.supercell.clashroyale",
   "com.dts.freefireth",
   "com.dts.freefiremax",
+  "com.facebook.katana", // Facebook
 ];
 
 /** Un crédito es de una sola app; el motor nativo decide su duración y tope. */
